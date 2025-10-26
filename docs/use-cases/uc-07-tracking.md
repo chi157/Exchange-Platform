@@ -10,7 +10,8 @@ Title: Shipment Tracking
 - 若交付方式為 `賣貨便`，寄件人必須在建立或更新 Shipment 時提供有效的物流編號（tracking number）；系統不會自動從運輸商拉取狀態，但會在 UI 顯示可點擊的查詢連結供對方查詢。
 
 觸發條件:
-- 每位寄件人（Trader A、Trader B）在 UI 或透過 API 主動設定或更新該方所寄出的 Shipment（包含選擇交付方式與填寫物流編號），或在運送過程中手動新增 shipment event。
+- 每位寄件人（Trader A、Trader B）在 UI 主動設定或更新該方所寄出的 Shipment（包含選擇交付方式與填寫物流編號），或在運送過程中手動新增 shipment event。
+
 
 主要流程:
 1. 每位寄件人（Trader A 與 Trader B）各自登入系統並在自己的寄件頁面或交換明細中，手動新增該方所寄出 Shipment 的 event（例如：PICKED_UP、IN_TRANSIT、DELIVERED）、選擇交付方式（`賣貨便` 或 `face_to_face`），或標記為「面交」。
