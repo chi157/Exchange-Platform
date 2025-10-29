@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# macOS 系統檔
+.DS_Store
+
+# Maven build 產物
+target/
+
+# VS Code
+.vscode/
+
+# IntelliJ / IDEA
+.idea/
+
+# 日誌
+*.log
