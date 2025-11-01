@@ -1,9 +1,9 @@
 # 軟體設計文件（Software Architecture Design Document, SADD）
 
-產品：Exchange-Platform（明星小卡以物易物交換平台）
-版本：v0.1（草案）
-狀態：草擬中（與 SRS / Use Cases 同步演進）
-參考：docs/software-requirements-specification.md、docs/use-cases/*、docs/use-cases/state-indicators.md
+產品：Exchange-Platform（明星小卡以物易物交換平台）</br>
+版本：v0.1（草案）</br>
+狀態：草擬中（與 SRS / Use Cases 同步演進）</br>
+參考：docs/software-requirements-specification.md、docs/use-cases/*、docs/use-cases/state-indicators.md</br>
 
 ## 1. 系統概觀
 
