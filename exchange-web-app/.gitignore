@@ -44,8 +44,7 @@ target/
 .bmad-infrastructure-devops/
 .claude/
 .gemini/
-.github/
-.web-bundles/
+web-bundles/
 
 
 # IntelliJ / IDEA
