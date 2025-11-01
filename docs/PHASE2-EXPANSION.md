@@ -67,7 +67,7 @@
 ## API 草案（選摘）
 
 - Listings（增強）
-	- GET /api/listings?page=&size=&q=&sort=createdAt,desc&status=ACTIVE
+	- GET /api/listings?page=&size=&q=&sort=createdAt,desc&status=ACTIVE（頁碼 page 為 1 起算）
 	- GET /api/listings/{id}
 	- POST /api/listings（需登入）
 	- PATCH /api/listings/{id}/status（owner 或 admin）

@@ -32,9 +32,11 @@ public class ListingController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ListingDTO>> list(@RequestParam(required = false) Integer limit,
-                                                 @RequestParam(required = false) Integer offset) {
-        return ResponseEntity.ok(listingService.list(limit, offset));
+    public ResponseEntity<List<ListingDTO>> list(@RequestParam(required = false) Integer page,
+                                                 @RequestParam(required = false) Integer size,
+                                                 @RequestParam(required = false) String q,
+                                                 @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(listingService.list(page, size, q, sort));
     }
 
     @ExceptionHandler(ListingService.UnauthorizedException.class)

@@ -66,7 +66,7 @@
 - GET `/api/listings/{id}`
 	- 200 OK（存在）／404 Not Found（不存在）
 - GET `/api/listings`
-	- 200 OK，回傳列表（MVP 未加分頁）
+	- 200 OK，回傳列表；支援 `page`（1 起算）、`size`、`q`（關鍵字搜尋 title/description）、`sort`（`createdAt|updatedAt|id`，`asc|desc`，預設 `createdAt,desc`）
 
 ### Proposals
 - POST `/api/proposals`（需登入）
