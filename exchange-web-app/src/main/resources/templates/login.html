@@ -11,7 +11,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--purple-lighter) 0%, var(--purple-light) 100%);
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
         }
         .auth-container {
             background: white;
@@ -20,18 +20,19 @@
             padding: 40px;
             width: 100%;
             max-width: 420px;
+            border: 2px solid var(--surface-200);
         }
         .auth-header {
             text-align: center;
             margin-bottom: 32px;
         }
         .auth-header h1 {
-            color: var(--purple);
+            color: var(--brand-700);
             font-size: 32px;
             margin-bottom: 8px;
         }
         .auth-header p {
-            color: var(--text-secondary);
+            color: var(--text-600);
             font-size: 14px;
         }
         .form-group {
@@ -40,8 +41,8 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: var(--text-primary);
-            font-weight: 500;
+            color: var(--text-900);
+            font-weight: 600;
             font-size: 14px;
         }
         .form-group input {
@@ -52,56 +53,59 @@
             font-size: 15px;
             transition: all 0.3s;
             box-sizing: border-box;
+            background: white;
         }
         .form-group input:focus {
             outline: none;
-            border-color: var(--purple);
-            box-shadow: 0 0 0 4px rgba(106, 0, 214, 0.12);
+            border-color: var(--brand-600);
+            box-shadow: 0 0 0 3px rgba(106, 0, 214, 0.1);
         }
         .btn-primary {
             width: 100%;
             padding: 16px;
-            background: var(--purple);
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 17px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.3);
+            box-shadow: 0 4px 16px rgba(106, 0, 214, 0.3);
         }
         .btn-primary:hover {
-            background: var(--purple-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(106, 0, 214, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(106, 0, 214, 0.4);
         }
         .btn-primary:active {
-            transform: translateY(0);
+            transform: translateY(-1px);
         }
         .auth-footer {
             text-align: center;
             margin-top: 24px;
             padding-top: 24px;
-            border-top: 1px solid var(--surface-200);
+            border-top: 2px solid var(--surface-200);
         }
         .auth-footer a {
-            color: var(--purple);
+            color: var(--brand-600);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
+            transition: all 0.3s;
         }
         .auth-footer a:hover {
+            color: var(--brand-700);
             text-decoration: underline;
         }
         .error-message {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 6px;
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 14px 16px;
+            border-radius: 10px;
             margin-bottom: 20px;
             font-size: 14px;
             display: none;
+            border: 2px solid #fca5a5;
         }
         .error-message.show {
             display: block;
