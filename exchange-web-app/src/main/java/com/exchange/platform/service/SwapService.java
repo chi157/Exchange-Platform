@@ -38,6 +38,33 @@ public class SwapService {
         return toDTO(swap);
     }
 
+    public SwapDTO confirmReceived(Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(id).orElseThrow(NotFoundException::new);
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) throw new ForbiddenException();
+
+        // Idempotent: if already completed, just return current state
+        boolean isA = swap.getAUserId().equals(userId);
+        if (isA) {
+            if (swap.getAConfirmedAt() == null) swap.setAConfirmedAt(java.time.LocalDateTime.now());
+        } else {
+            if (swap.getBConfirmedAt() == null) swap.setBConfirmedAt(java.time.LocalDateTime.now());
+        }
+
+        // If both confirmed, mark completed
+        if (swap.getAConfirmedAt() != null && swap.getBConfirmedAt() != null) {
+            if (swap.getStatus() != Swap.Status.COMPLETED) {
+                swap.setStatus(Swap.Status.COMPLETED);
+                if (swap.getCompletedAt() == null) swap.setCompletedAt(java.time.LocalDateTime.now());
+            }
+        }
+
+        swap = swapRepository.save(swap);
+        return toDTO(swap);
+    }
+
     public SwapDTO toDTO(Swap s) {
         return SwapDTO.builder()
                 .id(s.getId())
@@ -49,6 +76,8 @@ public class SwapService {
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
                 .completedAt(s.getCompletedAt())
+        .aConfirmedAt(s.getAConfirmedAt())
+        .bConfirmedAt(s.getBConfirmedAt())
                 .build();
     }
 

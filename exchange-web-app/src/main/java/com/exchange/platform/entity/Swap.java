@@ -55,6 +55,13 @@ public class Swap {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    // M5: Per-user delivery confirmations
+    @Column(name = "a_confirmed_at")
+    private LocalDateTime aConfirmedAt;
+
+    @Column(name = "b_confirmed_at")
+    private LocalDateTime bConfirmedAt;
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

@@ -30,6 +30,11 @@ public class SwapController {
         return ResponseEntity.ok(swapService.getById(id, session));
     }
 
+    @PostMapping("/{id}/confirm-received")
+    public ResponseEntity<SwapDTO> confirmReceived(@PathVariable Long id, HttpSession session) {
+        return ResponseEntity.ok(swapService.confirmReceived(id, session));
+    }
+
     @ExceptionHandler(SwapService.UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); }
 
