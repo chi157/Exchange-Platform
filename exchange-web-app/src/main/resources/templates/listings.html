@@ -179,6 +179,147 @@
             font-size: 32px;
             margin: 20px 0;
         }
+        
+        /* 提案按鈕 */
+        .btn-proposal {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .btn-proposal:hover {
+            background: #218838;
+            border-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        /* 彈出視窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--surface-200);
+            padding-bottom: 15px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: var(--brand-700);
+            font-size: 24px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-500);
+            transition: all 0.3s;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .close-btn:hover {
+            background: var(--surface-100);
+            color: var(--text-900);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--surface-300);
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-600);
+            box-shadow: 0 0 0 3px rgba(106, 0, 214, 0.1);
+        }
+        .btn-submit-proposal {
+            width: 100%;
+            padding: 14px;
+            background: var(--brand-600);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.3);
+        }
+        .btn-submit-proposal:hover {
+            background: var(--brand-700);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(106, 0, 214, 0.4);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0); 
+            }
+        }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
     <meta name="color-scheme" content="light">
@@ -243,7 +384,18 @@
         <div class="card" th:each="it : ${items}">
             <div class="item-title" th:text="${it.title}">標題</div>
             <div class="item-desc" th:text="${it.description}">描述</div>
-            <div class="muted" style="margin-top:8px;">ID: <span th:text="${it.id}">1</span> ・ Owner: <span th:text="${it.ownerId}">1</span> ・ 建立：<span th:text="${it.createdAt}">time</span></div>
+            <div class="muted" style="margin-top:8px;">
+                📌 ID: <span th:text="${it.id}">1</span> ・ 
+                👤 Owner: <span th:text="${it.ownerId}">1</span> ・ 
+                📅 建立：<span th:text="${it.createdAt}">time</span>
+            </div>
+            <div style="margin-top: 16px;">
+                <button class="btn-proposal" 
+                        th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
+                        onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">
+                    📝 提出提案
+                </button>
+            </div>
         </div>
     </div>
     <div class="card empty" th:if="${items == null or items.isEmpty()}">
@@ -251,10 +403,98 @@
     </div>
 
     <div class="pager">
-        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page > 1 ? page-1 : 1})}">上一頁</a>
-        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page+1})}">下一頁</a>
+        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page > 1 ? page-1 : 1})}">⬅️ 上一頁</a>
+        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page+1})}">下一頁 ➡️</a>
     </div>
 </div>
+
+<!-- 提案彈出視窗 -->
+<div id="proposalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📝 提出提案</h2>
+            <button class="close-btn" onclick="closeProposalModal()">×</button>
+        </div>
+        <div>
+            <p style="color: var(--text-600); margin-bottom: 20px;">
+                物品：<strong id="modalListingTitle" style="color: var(--brand-700);">-</strong>
+            </p>
+            <form id="proposalForm">
+                <input type="hidden" id="listingId" name="listingId">
+                <div class="form-group">
+                    <label for="message">提案訊息（選填）</label>
+                    <textarea id="message" name="message" placeholder="例如：我想用我的 XXX 交換您的物品..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit-proposal">🚀 送出提案</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentListingId = null;
+    
+    function openProposalModal(listingId, listingTitle) {
+        currentListingId = listingId;
+        document.getElementById('listingId').value = listingId;
+        document.getElementById('modalListingTitle').textContent = listingTitle;
+        document.getElementById('proposalModal').classList.add('show');
+        document.getElementById('message').value = '';
+    }
+    
+    function closeProposalModal() {
+        document.getElementById('proposalModal').classList.remove('show');
+    }
+    
+    // 點擊背景關閉
+    document.getElementById('proposalModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeProposalModal();
+        }
+    });
+    
+    // 提交提案
+    document.getElementById('proposalForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const listingId = document.getElementById('listingId').value;
+        const message = document.getElementById('message').value;
+        
+        try {
+            const response = await fetch('/api/proposals', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    listingId: parseInt(listingId),
+                    message: message || null
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ 提案已送出！');
+                closeProposalModal();
+                // 可選：導向到我的提案頁面
+                // window.location.href = '/ui/proposals/mine';
+            } else if (response.status === 401) {
+                alert('❌ 請先登入');
+                window.location.href = '/ui/auth/login';
+            } else if (response.status === 403) {
+                alert('❌ 您沒有權限執行此操作');
+            } else if (response.status === 409) {
+                alert('⚠️ 您已經對此物品提出過提案了');
+            } else if (response.status === 400) {
+                alert('❌ 資料格式錯誤，請檢查輸入');
+            } else {
+                alert('❌ 提案送出失敗，請稍後再試');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ 網路錯誤，請稍後再試');
+        }
+    });
+</script>
 
 </body>
 </html>
