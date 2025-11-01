@@ -912,5 +912,386 @@ mvn test
 
 ---
 
+## 第五階段：安全與認證 (Security) (2025-11-01 晚上)
+
+### 使用者決策
+1. **選擇開發順序**
+   - Entity 和 Service 完成後，詢問下一階段
+   - AI 提供三個選項：完整 Security / 跳過 Security / 簡化版
+   - **使用者選擇**：選項 1 - 按照計畫執行第三階段（完整 Spring Security）
+
+2. **編碼問題處理策略**
+   - AI 使用 PowerShell 建立檔案時遇到 UTF-8 BOM 編碼問題
+   - AI 主動停止執行，說明問題
+   - **使用者決策**：手動處理編碼問題（使用 VS Code 轉換為 UTF-8 無 BOM）
+
+### AI 執行內容
+
+#### 1. DTO 層建立（Data Transfer Objects）
+
+**建立 4 個 DTO 類別**：
+
+**LoginRequest.java**
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginRequest {
+    @NotBlank(message = "Email 不可為空")
+    @Email(message = "Email 格式不正確")
+    private String email;
+    
+    @NotBlank(message = "密碼不可為空")
+    private String password;
+}
+```
+
+**RegisterRequest.java**
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class RegisterRequest {
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+    
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+    
+    @NotBlank(message = "Display name is required")
+    @Size(max = 100, message = "Display name must not exceed 100 characters")
+    private String displayName;
+}
+```
+
+**AuthResponse.java**
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+    private Long userId;
+    private String email;
+    private String displayName;
+    private String message;
+    private Boolean success;
+}
+```
+
+**UserDTO.java**
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDTO {
+    private Long id;
+    private String email;
+    private String displayName;
+    private Boolean verified;
+    private Set<String> roles;
+    private Integer riskScore;
+    private Boolean isBlacklisted;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+```
+
+#### 2. Security 層實作
+
+**CustomUserDetailsService.java**
+- 實作 Spring Security 的 `UserDetailsService` 介面
+- 從資料庫載入使用者資料
+- 轉換為 Spring Security 的 `UserDetails` 物件
+- 處理角色權限（roles → GrantedAuthority）
+- 檢查帳號狀態（verified, blacklisted）
+
+```java
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
+    private final UserRepository userRepository;
+    
+    @Override
+    public UserDetails loadUserByUsername(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        
+        return new org.springframework.security.core.userdetails.User(
+            user.getEmail(),
+            user.getPasswordHash(),
+            user.getVerified(),              // enabled
+            true,                             // accountNonExpired
+            true,                             // credentialsNonExpired
+            !user.getIsBlacklisted(),        // accountNonLocked
+            getAuthorities(user)
+        );
+    }
+}
+```
+
+**SecurityConfig.java**
+- Spring Security 核心配置
+- 配置密碼編碼器（BCrypt）
+- 配置認證提供者（DaoAuthenticationProvider）
+- 配置 HTTP 安全規則
+- 設定公開路徑（/api/auth/** 無需認證）
+
+```java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        http
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            );
+        return http.build();
+    }
+}
+```
+
+#### 3. AuthService 實作
+
+**核心功能**：
+- **註冊（register）**：建立新使用者，密碼使用 BCrypt 加密
+- **登入（login）**：驗證帳號密碼，建立 Session
+- **登出（logout）**：清除 Session
+- **取得當前使用者（getCurrentUser）**：從 SecurityContext 取得登入資訊
+
+```java
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AuthService {
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    
+    public AuthResponse register(RegisterRequest request) {
+        // 密碼加密
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        
+        // 建立使用者
+        User user = userService.registerUser(
+            request.getEmail(),
+            encodedPassword,
+            request.getDisplayName()
+        );
+        
+        return AuthResponse.builder()
+            .userId(user.getId())
+            .email(user.getEmail())
+            .displayName(user.getDisplayName())
+            .message("Registration successful")
+            .success(true)
+            .build();
+    }
+    
+    public AuthResponse login(LoginRequest request, HttpSession session) {
+        // 使用 Spring Security 驗證
+        Authentication authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                request.getEmail(),
+                request.getPassword()
+            )
+        );
+        
+        // 設定到 SecurityContext 和 Session
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        session.setAttribute("SPRING_SECURITY_CONTEXT", 
+            SecurityContextHolder.getContext());
+        
+        // 載入使用者資料
+        User user = userService.getUserByEmail(request.getEmail());
+        
+        return AuthResponse.builder()
+            .userId(user.getId())
+            .email(user.getEmail())
+            .displayName(user.getDisplayName())
+            .message("Login successful")
+            .success(true)
+            .build();
+    }
+}
+```
+
+#### 4. AuthController 實作
+
+**REST API 端點**：
+- `POST /api/auth/register` - 註冊新使用者
+- `POST /api/auth/login` - 使用者登入
+- `POST /api/auth/logout` - 使用者登出
+- `GET /api/auth/me` - 取得當前登入使用者資訊
+
+```java
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@Slf4j
+public class AuthController {
+    private final AuthService authService;
+    
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(
+            @Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+    
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpSession session) {
+        AuthResponse response = authService.login(request, session);
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpSession session) {
+        authService.logout(session);
+        return ResponseEntity.noContent().build();
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser() {
+        UserDTO user = authService.getCurrentUser();
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(user);
+    }
+}
+```
+
+#### 5. 編碼問題處理
+
+**問題發現**：
+- PowerShell 使用 `[System.IO.File]::WriteAllText()` 建立的檔案包含 UTF-8 BOM
+- Java 編譯器報錯：`illegal character: '\ufeff'`
+- 影響 8 個檔案（所有新建立的 Java 檔案）
+
+**AI 處理方式**：
+```
+❌ 嘗試方案 1：調整 PowerShell 編碼參數 → 失敗
+❌ 嘗試方案 2：使用不同的寫入方法 → 仍有 BOM
+✅ 最終方案：主動停止執行，說明問題，建議使用者手動處理
+```
+
+**使用者處理**：
+- 使用 VS Code 打開所有檔案
+- 將編碼從 "UTF-8 with BOM" 改為 "UTF-8"
+- 儲存所有檔案
+
+**影響檔案清單**：
+1. `dto/LoginRequest.java`
+2. `dto/RegisterRequest.java`
+3. `dto/AuthResponse.java`
+4. `dto/UserDTO.java`
+5. `security/CustomUserDetailsService.java`
+6. `security/SecurityConfig.java`
+7. `service/AuthService.java`
+8. `controller/AuthController.java`
+
+### 修正成果總結
+
+#### ✅ 已完成的實作
+
+| 類別 | 檔案名稱 | 功能 | 狀態 |
+|------|---------|------|------|
+| DTO | LoginRequest | 登入請求驗證 | ✅ 已建立 |
+| DTO | RegisterRequest | 註冊請求驗證 | ✅ 已建立 |
+| DTO | AuthResponse | 認證回應 | ✅ 已建立 |
+| DTO | UserDTO | 使用者資料傳輸 | ✅ 已建立 |
+| Security | CustomUserDetailsService | Spring Security 使用者載入 | ✅ 已建立 |
+| Security | SecurityConfig | 安全配置 | ✅ 已建立 |
+| Service | AuthService | 認證業務邏輯 | ✅ 已建立 |
+| Controller | AuthController | 認證 API 端點 | ✅ 已建立 |
+
+#### 📊 第三階段完成度
+
+**安全與認證功能**：
+- ✅ Spring Security 整合
+- ✅ BCrypt 密碼加密
+- ✅ Session 管理
+- ✅ 使用者註冊
+- ✅ 使用者登入/登出
+- ✅ 當前使用者資訊查詢
+- ✅ 角色權限管理（roles → ROLE_*）
+- ✅ 黑名單檢查（accountNonLocked）
+
+**API 安全規則**：
+- ✅ `/api/auth/**` - 公開路徑（無需認證）
+- ✅ `/api/public/**` - 公開路徑（預留）
+- ✅ 其他所有路徑 - 需要認證
+
+### 協作模式
+
+**使用者主導**：
+- 選擇完整的 Spring Security 實作（選項 1）
+- 手動處理編碼問題（VS Code 轉換）
+- 要求 AI 在繼續前記錄協作過程
+
+**AI 執行**：
+- 使用 PowerShell 建立檔案結構
+- 生成完整的 Security 層程式碼
+- 遇到編碼問題主動停止
+- 提供清楚的問題說明和修正建議
+- 等待使用者確認後繼續
+
+### 技術亮點
+
+1. **Security 架構**：
+   - 使用 Spring Security 標準架構
+   - DaoAuthenticationProvider 整合資料庫認證
+   - BCrypt 密碼加密（安全性高）
+   - Session-based 認證（適合 Web 應用）
+
+2. **DTO 設計**：
+   - 使用 Jakarta Validation 註解驗證
+   - 清楚分離請求/回應物件
+   - Lombok 簡化程式碼
+
+3. **錯誤處理**：
+   - AI 主動偵測編碼問題
+   - 提供具體的錯誤說明
+   - 建議明確的修正步驟
+
+### 待辦事項
+
+**第三階段後續工作**：
+- [ ] 編譯專案確認無錯誤
+- [ ] 撰寫 AuthService 測試
+- [ ] 測試 API 端點（Postman/curl）
+- [ ] 修正 UserService.registerUser() 簽名（目前缺少 passwordHash 參數）
+
+**第四階段：核心交易流程**（待開始）
+- [ ] ListingController
+- [ ] ProposalController
+- [ ] SwapController
+- [ ] SearchController
+
+---
+
 *此文件將持續更新，記錄所有開發過程與決策*
 
