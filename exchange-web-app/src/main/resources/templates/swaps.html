@@ -8,35 +8,35 @@
 </head>
 <body>
     <div class="container">
-        <header style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-            <div style="font-size: 20px; font-weight: 700; color: var(--brand-700);">Exchange Platform</div>
-            <nav style="display: flex; gap: 8px;">
-                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/listings">刊登列表</a>
-                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/mine">我的提案</a>
-                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/received">收到的提案</a>
-                <a class="link-btn active" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/swaps/mine">我的交換</a>
+        <header>
+            <div class="brand">🔄 Exchange Platform</div>
+            <nav>
+                <a class="link-btn" href="/ui/listings">📋 刊登列表</a>
+                <a class="link-btn" href="/ui/proposals/mine">📤 我的提案</a>
+                <a class="link-btn" href="/ui/proposals/received">📥 收到的提案</a>
+                <a class="link-btn" href="/ui/swaps/mine">🔄 我的交換</a>
                 <form action="/ui/auth/logout" method="post" style="display: inline;">
-                    <button type="submit" class="link-btn" style="cursor: pointer; background: var(--surface-50); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); font-size: 14px;">登出</button>
+                    <button type="submit" class="link-btn">🚪 登出</button>
                 </form>
             </nav>
         </header>
 
-        <h1>我的交換</h1>
+        <h1>🔄 我的交換</h1>
 
         <div class="list" th:if="${items != null and !items.isEmpty()}">
             <div class="card" th:each="swap : ${items}">
                 <div class="item-title">
-                    交換 #<span th:text="${swap.id}">1</span>
+                    🔄 交換 #<span th:text="${swap.id}">1</span>
                     <span class="badge" th:text="${swap.status}" 
                           th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
                 </div>
-                <div class="muted" style="margin-top:8px;">
-                    Proposal ID: <span th:text="${swap.proposalId}">1</span>  
-                    對方 ID: <span th:text="${swap.aUserId}">1</span>/<span th:text="${swap.bUserId}">2</span>  
-                    建立：<span th:text="${#temporals.format(swap.createdAt, 'yyyy-MM-dd HH:mm')}">time</span>
+                <div class="muted" style="margin-top:12px;">
+                    📝 Proposal ID: <span th:text="${swap.proposalId}">1</span> ・ 
+                    👥 對方 ID: <span th:text="${swap.aUserId}">1</span>/<span th:text="${swap.bUserId}">2</span> ・ 
+                    📅 建立：<span th:text="${#temporals.format(swap.createdAt, 'yyyy-MM-dd HH:mm')}">time</span>
                 </div>
-                <div style="margin-top: 12px;">
-                    <a th:href="@{/ui/swaps/{id}(id=${swap.id})}" class="btn-view">查看詳情 </a>
+                <div style="margin-top: 16px;">
+                    <a th:href="@{/ui/swaps/{id}(id=${swap.id})}" class="btn-view">👁️ 查看詳情</a>
                 </div>
             </div>
         </div>
@@ -47,57 +47,203 @@
 
         <div class="pagination" th:if="${items != null and !items.isEmpty()}">
             <a th:href="@{/ui/swaps/mine(page=${page - 1}, size=${size}, sort=${sort})}" 
-               th:if="${page > 1}">&laquo; 上一頁</a>
+               th:if="${page > 1}">⬅️ 上一頁</a>
             <span>第 <span th:text="${page}">1</span> 頁</span>
             <a th:href="@{/ui/swaps/mine(page=${page + 1}, size=${size}, sort=${sort})}" 
-               th:if="${items.size() == size}">下一頁 &raquo;</a>
+               th:if="${items.size() == size}">下一頁 ➡️</a>
         </div>
 
-        <div style="margin-top: 30px;">
-            <a th:href="@{/ui/listings}" class="btn-back"> 返回物品列表</a>
+        <div style="margin-top: 30px; text-align: center;">
+            <a th:href="@{/ui/listings}" class="btn-back">⬅️ 返回物品列表</a>
         </div>
     </div>
 
     <style>
+        /* 整體置中布局 */
+        body { 
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); 
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+        }
+        
+        /* 統一置中的 Header */
+        header { 
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+        .brand { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--brand-700);
+        }
+        header nav { 
+            display: flex; 
+            gap: 12px; 
+        }
+        
+        /* 明確的按鈕樣式 */
+        .link-btn { 
+            text-decoration: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700); 
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .link-btn:hover { 
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--brand-700);
+            font-size: 32px;
+            margin: 20px 0;
+        }
+        
+        .list {
+            display: grid;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        /* 明顯區分的卡片 */
+        .card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--surface-200);
+            transition: all 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(106, 0, 214, 0.15);
+            border-color: var(--brand-300);
+            transform: translateY(-2px);
+        }
+        
+        .item-title { 
+            font-weight: 700; 
+            color: var(--text-900);
+            font-size: 18px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .muted { 
+            color: var(--text-500); 
+            font-size: 13px;
+            background: var(--surface-50);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
         .badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.85em;
-            font-weight: 600;
-            margin-left: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .badge-pending {
             background: #fef3cd;
             color: #856404;
+            border: 2px solid #f0d98f;
         }
         .badge-progress {
             background: #d1ecf1;
             color: #0c5460;
+            border: 2px solid #9fdbeb;
         }
         .badge-success {
             background: #d4edda;
             color: #155724;
+            border: 2px solid #a3d9b1;
         }
         .badge-danger {
             background: #f8d7da;
             color: #721c24;
+            border: 2px solid #f1aeb5;
         }
+        
         .btn-back, .btn-view {
             display: inline-block;
             padding: 10px 20px;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
+            background: white;
+            color: var(--brand-700);
             text-decoration: none;
-            border-radius: 6px;
-            transition: background 0.3s;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 2px solid var(--brand-600);
+            font-weight: 600;
         }
         .btn-back:hover, .btn-view:hover {
-            background: var(--purple-lighter);
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
         }
         .btn-view {
             font-size: 14px;
-            padding: 8px 16px;
+            padding: 10px 18px;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0;
+            justify-content: center;
+            align-items: center;
+        }
+        .pagination a {
+            padding: 10px 20px;
+            background: white;
+            color: var(--brand-700);
+            text-decoration: none;
+            border-radius: 12px;
+            border: 2px solid var(--brand-600);
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .pagination a:hover {
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+        }
+        .pagination span {
+            font-weight: 600;
+            color: var(--brand-700);
+        }
+        
+        .empty {
+            text-align: center;
+            color: var(--text-500);
+            padding: 40px;
+            font-size: 16px;
         }
     </style>
 </body>
