@@ -10,5 +10,6 @@
   },
   "github.copilot.chat.agent.autoFix": true,
   "chat.tools.autoApprove": false,
-  "java.compile.nullAnalysis.mode": "disabled"
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

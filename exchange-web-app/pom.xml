@@ -112,7 +112,21 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+	
+		<dependency>
+			<groupId>org.apereo.cas</groupId>
+			<artifactId>cas-server-core-api-audit</artifactId>
+			<version>7.2.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.32</version> <!-- 版本可略不同 -->
+			<scope>provided</scope>
+		</dependency>
+
+ </dependencies>
 
 	<build>
 		<plugins>
