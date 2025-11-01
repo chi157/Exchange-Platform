@@ -14,6 +14,7 @@
                 <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/listings">刊登列表</a>
                 <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/mine">我的提案</a>
                 <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/received">收到的提案</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/swaps/mine">我的交換</a>
                 <form action="/ui/auth/logout" method="post" style="display: inline;">
                     <button type="submit" class="link-btn" style="cursor: pointer; background: var(--surface-50); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); font-size: 14px;">登出</button>
                 </form>
@@ -41,6 +42,11 @@
                     Listing ID: <span th:text="${it.listingId}">1</span> ・ 
                     提案者 ID: <span th:text="${it.proposerId}">1</span> ・ 
                     建立：<span th:text="${#temporals.format(it.createdAt, 'yyyy-MM-dd HH:mm')}">time</span>
+                </div>
+                <!-- 僅在「收到的提案」且狀態為 PENDING 時顯示操作按鈕 -->
+                <div th:if="${viewType == 'received' and it.status.name() == 'PENDING'}" style="margin-top: 12px; display: flex; gap: 8px;">
+                    <button class="btn-accept" th:onclick="'acceptProposal(' + ${it.id} + ')'">✓ 接受</button>
+                    <button class="btn-reject" th:onclick="'rejectProposal(' + ${it.id} + ')'">✗ 拒絕</button>
                 </div>
             </div>
         </div>
@@ -115,6 +121,84 @@
         .btn-back:hover {
             background: var(--purple-lighter);
         }
+        .btn-accept, .btn-reject {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-accept {
+            background: #28a745;
+            color: white;
+        }
+        .btn-accept:hover {
+            background: #218838;
+        }
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-reject:hover {
+            background: #c82333;
+        }
     </style>
+
+    <script>
+        async function acceptProposal(proposalId) {
+            if (!confirm('確定要接受此提案嗎？接受後將建立交換交易。')) return;
+            
+            try {
+                const response = await fetch(`/api/proposals/${proposalId}/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    alert('提案已接受！交換交易已建立。');
+                    location.reload();
+                } else if (response.status === 401) {
+                    alert('請先登入');
+                    window.location.href = '/ui/auth/login';
+                } else if (response.status === 403) {
+                    alert('您沒有權限執行此操作');
+                } else if (response.status === 409) {
+                    alert('此提案已被處理或物品已被鎖定');
+                } else {
+                    alert('操作失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('網路錯誤，請稍後再試');
+            }
+        }
+
+        async function rejectProposal(proposalId) {
+            if (!confirm('確定要拒絕此提案嗎？')) return;
+            
+            try {
+                const response = await fetch(`/api/proposals/${proposalId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    alert('提案已拒絕');
+                    location.reload();
+                } else if (response.status === 401) {
+                    alert('請先登入');
+                    window.location.href = '/ui/auth/login';
+                } else if (response.status === 403) {
+                    alert('您沒有權限執行此操作');
+                } else {
+                    alert('操作失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('網路錯誤，請稍後再試');
+            }
+        }
+    </script>
 </body>
 </html>

@@ -26,6 +26,18 @@ public class ShipmentService {
 
     private static final String SESSION_USER_ID = "userId";
 
+    public ShipmentDTO getMyShipment(Long swapId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) throw new ForbiddenException();
+
+        return shipmentRepository.findBySwapIdAndSenderId(swapId, userId)
+                .map(this::toDTO)
+                .orElseThrow(NotFoundException::new);
+    }
+
     public ShipmentDTO upsertMyShipment(Long swapId, UpsertShipmentRequest req, HttpSession session) {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) throw new UnauthorizedException();
