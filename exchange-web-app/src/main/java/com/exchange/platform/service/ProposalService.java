@@ -8,6 +8,10 @@ import com.exchange.platform.repository.ListingRepository;
 import com.exchange.platform.repository.ProposalRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +77,55 @@ public class ProposalService {
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<ProposalDTO> listMine(HttpSession session, Integer page, Integer size, String sort) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+        Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
+        Page<Proposal> pg = proposalRepository.findByProposerId(userId, pageable);
+        return pg.stream().map(this::toDTO).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<ProposalDTO> listReceived(HttpSession session, Integer page, Integer size, String sort) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+        Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
+        Page<Proposal> pg = proposalRepository.findByReceiverIdLegacy(userId, pageable);
+        return pg.stream().map(this::toDTO).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<ProposalDTO> listByListing(Long listingId, Integer page, Integer size, String sort) {
+        Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
+        Page<Proposal> pg = proposalRepository.findByListingId(listingId, pageable);
+        return pg.stream().map(this::toDTO).toList();
+    }
+
+    private int toPageIndex(Integer page) {
+        // 1-based -> 0-based
+        return (page == null || page <= 1) ? 0 : page - 1;
+    }
+
+    private int toPageSize(Integer size) {
+        return (size == null || size <= 0) ? 10 : Math.min(size, 100);
+    }
+
+    private Sort parseSort(String sort) {
+        String prop = "createdAt";
+        Sort.Direction dir = Sort.Direction.DESC;
+        if (sort != null && !sort.isBlank()) {
+            String[] parts = sort.split(",");
+            if (parts.length >= 1 && !parts[0].isBlank()) prop = parts[0].trim();
+            if (parts.length >= 2) {
+                String d = parts[1].trim().toUpperCase();
+                if ("ASC".equals(d)) dir = Sort.Direction.ASC; else if ("DESC".equals(d)) dir = Sort.Direction.DESC;
+            }
+        }
+        if (!prop.equals("createdAt") && !prop.equals("updatedAt") && !prop.equals("id")) prop = "createdAt";
+        return Sort.by(dir, prop);
     }
 
     public static class UnauthorizedException extends RuntimeException {}

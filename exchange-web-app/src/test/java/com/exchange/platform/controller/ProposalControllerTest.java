@@ -89,4 +89,28 @@ class ProposalControllerTest {
         mockMvc.perform(post("/api/proposals/999/accept"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("GET /api/proposals/mine -> 200 list")
+    void listMine_ok() throws Exception {
+        Mockito.when(proposalService.listMine(any(), any(), any(), any()))
+                .thenReturn(java.util.List.of(
+                        ProposalDTO.builder().id(1L).listingId(10L).proposerId(2L).status(Proposal.Status.PENDING).build()
+                ));
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/proposals/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    @DisplayName("GET /api/proposals/received -> 200 list")
+    void listReceived_ok() throws Exception {
+        Mockito.when(proposalService.listReceived(any(), any(), any(), any()))
+                .thenReturn(java.util.List.of(
+                        ProposalDTO.builder().id(2L).listingId(11L).proposerId(3L).status(Proposal.Status.PENDING).build()
+                ));
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/proposals/received"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(2));
+    }
 }

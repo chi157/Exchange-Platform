@@ -33,6 +33,22 @@ public class ProposalController {
         return ResponseEntity.ok(proposalService.reject(id, session));
     }
 
+    @GetMapping("/mine")
+    public ResponseEntity<java.util.List<ProposalDTO>> listMine(@RequestParam(required = false) Integer page,
+                                                                @RequestParam(required = false) Integer size,
+                                                                @RequestParam(required = false) String sort,
+                                                                HttpSession session) {
+        return ResponseEntity.ok(proposalService.listMine(session, page, size, sort));
+    }
+
+    @GetMapping("/received")
+    public ResponseEntity<java.util.List<ProposalDTO>> listReceived(@RequestParam(required = false) Integer page,
+                                                                    @RequestParam(required = false) Integer size,
+                                                                    @RequestParam(required = false) String sort,
+                                                                    HttpSession session) {
+        return ResponseEntity.ok(proposalService.listReceived(session, page, size, sort));
+    }
+
     @ExceptionHandler(ProposalService.UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); }
 

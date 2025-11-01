@@ -18,6 +18,7 @@ import java.util.List;
 public class ListingController {
 
     private final ListingService listingService;
+    private final com.exchange.platform.service.ProposalService proposalService;
 
     @PostMapping
     public ResponseEntity<ListingDTO> create(@Valid @RequestBody CreateListingRequest request, HttpSession session) {
@@ -37,6 +38,14 @@ public class ListingController {
                                                  @RequestParam(required = false) String q,
                                                  @RequestParam(required = false) String sort) {
         return ResponseEntity.ok(listingService.list(page, size, q, sort));
+    }
+
+    @GetMapping("/{id}/proposals")
+    public ResponseEntity<java.util.List<com.exchange.platform.dto.ProposalDTO>> listProposalsByListing(@PathVariable Long id,
+                                                                                                         @RequestParam(required = false) Integer page,
+                                                                                                         @RequestParam(required = false) Integer size,
+                                                                                                         @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(this.proposalService.listByListing(id, page, size, sort));
     }
 
     @ExceptionHandler(ListingService.UnauthorizedException.class)
