@@ -201,6 +201,25 @@
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
         
+        /* 新增刊登按鈕 */
+        .btn-create-listing {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            box-shadow: 0 4px 16px rgba(106, 0, 214, 0.3);
+        }
+        .btn-create-listing:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(106, 0, 214, 0.4);
+        }
+        
         /* 彈出視窗 */
         .modal {
             display: none;
@@ -350,6 +369,12 @@
 
     <h1>📋 刊登列表</h1>
 
+    <div style="text-align: center; margin: 20px 0;">
+        <button class="btn-create-listing" onclick="openCreateListingModal()">
+            ➕ 新增刊登物品
+        </button>
+    </div>
+
     <div class="card" style="margin-top: 16px;">
         <form class="filters" method="get" th:action="@{/ui/listings}">
             <div style="width: 70%;">
@@ -431,9 +456,33 @@
     </div>
 </div>
 
+<!-- 新增刊登彈出視窗 -->
+<div id="createListingModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>➕ 新增刊登物品</h2>
+            <button class="close-btn" onclick="closeCreateListingModal()">×</button>
+        </div>
+        <div>
+            <form id="createListingForm">
+                <div class="form-group">
+                    <label for="newListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
+                    <input type="text" id="newListingTitle" name="title" required placeholder="例如：二手書籍、電子產品等">
+                </div>
+                <div class="form-group">
+                    <label for="newListingDescription">物品描述（選填）</label>
+                    <textarea id="newListingDescription" name="description" placeholder="詳細描述您的物品狀況、購買時間等..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit-proposal">🚀 建立刊登</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentListingId = null;
     
+    // === 提案相關函數 ===
     function openProposalModal(listingId, listingTitle) {
         currentListingId = listingId;
         document.getElementById('listingId').value = listingId;
@@ -488,6 +537,67 @@
                 alert('❌ 資料格式錯誤，請檢查輸入');
             } else {
                 alert('❌ 提案送出失敗，請稍後再試');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ 網路錯誤，請稍後再試');
+        }
+    });
+    
+    // === 新增刊登相關函數 ===
+    function openCreateListingModal() {
+        document.getElementById('createListingModal').classList.add('show');
+        document.getElementById('newListingTitle').value = '';
+        document.getElementById('newListingDescription').value = '';
+    }
+    
+    function closeCreateListingModal() {
+        document.getElementById('createListingModal').classList.remove('show');
+    }
+    
+    // 點擊背景關閉
+    document.getElementById('createListingModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCreateListingModal();
+        }
+    });
+    
+    // 提交新增刊登
+    document.getElementById('createListingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const title = document.getElementById('newListingTitle').value;
+        const description = document.getElementById('newListingDescription').value;
+        
+        if (!title || title.trim() === '') {
+            alert('❌ 請輸入物品標題');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/listings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: title.trim(),
+                    description: description.trim() || null
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ 刊登已建立成功！');
+                closeCreateListingModal();
+                // 重新載入頁面以顯示新刊登
+                window.location.reload();
+            } else if (response.status === 401) {
+                alert('❌ 請先登入');
+                window.location.href = '/ui/auth/login';
+            } else if (response.status === 400) {
+                alert('❌ 資料格式錯誤，請檢查輸入');
+            } else {
+                alert('❌ 建立刊登失敗，請稍後再試');
             }
         } catch (error) {
             console.error('Error:', error);
