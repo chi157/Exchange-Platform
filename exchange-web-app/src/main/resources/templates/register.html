@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>註冊 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--purple-lighter) 0%, var(--purple-light) 100%);
+        }
+        .auth-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(106, 0, 214, 0.15);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-header h1 {
+            color: var(--purple);
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .auth-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--surface-300);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(106, 0, 214, 0.1);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--purple);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+        .btn-primary:hover {
+            background: var(--purple-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.3);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--surface-200);
+        }
+        .auth-footer a {
+            color: var(--purple);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        .error-message, .success-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+        }
+        .success-message {
+            background: #efe;
+            color: #3c3;
+        }
+        .error-message.show, .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>📝 註冊</h1>
+            <p>建立您的 Exchange Platform 帳號</p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="email">電子郵件</label>
+                <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="displayName">顯示名稱</label>
+                <input type="text" id="displayName" name="displayName" required placeholder="您的名稱">
+            </div>
+
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" required placeholder="至少 6 個字元">
+            </div>
+
+            <button type="submit" class="btn-primary">註冊</button>
+        </form>
+
+        <div class="auth-footer">
+            已經有帳號？<a th:href="@{/ui/auth/login}">立即登入</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const displayName = document.getElementById('displayName').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, displayName, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successDiv.textContent = '註冊成功！3 秒後自動跳轉登入頁面...';
+                    successDiv.classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = '/ui/auth/login';
+                    }, 3000);
+                } else {
+                    errorDiv.textContent = data.message || '註冊失敗，請稍後再試';
+                    errorDiv.classList.add('show');
+                }
+            } catch (error) {
+                errorDiv.textContent = '註冊時發生錯誤，請稍後再試';
+                errorDiv.classList.add('show');
+            }
+        });
+    </script>
+</body>
+</html>

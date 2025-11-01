@@ -26,6 +26,11 @@ public class UiProposalController {
                        @RequestParam(required = false) String sort,
                        HttpSession session,
                        Model model) {
+        // 如果未登入，重定向到登入頁
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/ui/auth/login";
+        }
+
         Integer pageArg = (page == null || page <= 0) ? 1 : page;
         Integer sizeArg = (size == null || size <= 0) ? 10 : Math.min(size, 100);
         String sortArg = (sort == null || sort.isBlank()) ? "createdAt,DESC" : sort;
@@ -47,6 +52,11 @@ public class UiProposalController {
                           @RequestParam(required = false) String sort,
                           HttpSession session,
                           Model model) {
+        // 如果未登入，重定向到登入頁
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/ui/auth/login";
+        }
+
         Integer pageArg = (page == null || page <= 0) ? 1 : page;
         Integer sizeArg = (size == null || size <= 0) ? 10 : Math.min(size, 100);
         String sortArg = (sort == null || sort.isBlank()) ? "createdAt,DESC" : sort;
