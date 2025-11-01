@@ -22,6 +22,7 @@ public class ProposalService {
 
     private final ProposalRepository proposalRepository;
     private final ListingRepository listingRepository;
+    private final com.exchange.platform.repository.SwapRepository swapRepository;
     private static final String SESSION_USER_ID = "userId";
 
     public ProposalDTO create(CreateProposalRequest req, HttpSession session) {
@@ -50,9 +51,28 @@ public class ProposalService {
         Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
         Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
         if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+        // Prevent duplicate accepts on locked/completed listings
+        if (listing.getStatus() != null && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE) {
+            throw new ConflictException();
+        }
 
         p.setStatus(Proposal.Status.ACCEPTED);
-        return toDTO(proposalRepository.save(p));
+        proposalRepository.save(p);
+
+        // Create Swap and lock listing
+        com.exchange.platform.entity.Swap swap = com.exchange.platform.entity.Swap.builder()
+                .listingId(listing.getId())
+                .proposalId(p.getId())
+                .aUserId(listing.getOwnerId())
+                .bUserId(p.getProposerId())
+                .status(com.exchange.platform.entity.Swap.Status.IN_PROGRESS)
+                .build();
+        swapRepository.save(swap);
+
+        listing.setStatus(com.exchange.platform.entity.Listing.Status.LOCKED);
+        listingRepository.save(listing);
+
+        return toDTO(p);
     }
 
     public ProposalDTO reject(Long proposalId, HttpSession session) {
@@ -131,4 +151,5 @@ public class ProposalService {
     public static class UnauthorizedException extends RuntimeException {}
     public static class NotFoundException extends RuntimeException {}
     public static class ForbiddenException extends RuntimeException {}
+    public static class ConflictException extends RuntimeException {}
 }

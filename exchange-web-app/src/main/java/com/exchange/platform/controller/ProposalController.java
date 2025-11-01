@@ -57,4 +57,7 @@ public class ProposalController {
 
     @ExceptionHandler(ProposalService.NotFoundException.class)
     public ResponseEntity<Void> handleNotFound() { return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); }
+
+    @ExceptionHandler(ProposalService.ConflictException.class)
+    public ResponseEntity<Void> handleConflict() { return ResponseEntity.status(HttpStatus.CONFLICT).build(); }
 }
