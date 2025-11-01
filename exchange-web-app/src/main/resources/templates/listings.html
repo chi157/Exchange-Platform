@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刊登列表 - Exchange Platform</title>
+    <link rel="stylesheet" href="/css/theme.css">
+    <style>
+        /* 簡易頁面布局 */
+        .container { max-width: 980px; margin: 0 auto; padding: 16px; }
+        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        header nav { display: flex; gap: 8px; }
+        .brand { font-size: 20px; font-weight: 700; color: var(--brand-700); }
+        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: var(--elev-1); border: 1px solid var(--surface-200); }
+        .list { display: grid; gap: 12px; margin-top: 16px; }
+        .item-title { font-weight: 600; color: var(--text-900); }
+        .item-desc { color: var(--text-600); margin-top: 4px; white-space: pre-wrap; }
+        .muted { color: var(--text-500); font-size: 12px; }
+        form.filters { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 8px; align-items: end; }
+        input[type="text"], select, input[type="number"] { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--surface-300); background: var(--surface-0); color: var(--text-900); }
+        button.btn { padding: 8px 14px; border: 0; border-radius: 10px; background: var(--brand-600); color: white; font-weight: 600; box-shadow: var(--elev-1); cursor: pointer; }
+        button.btn:hover { background: var(--brand-700); }
+        .pager { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
+        .link-btn { text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px; }
+        .link-btn:hover { background: var(--surface-100); }
+        .empty { text-align: center; color: var(--text-500); padding: 24px; }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#6a00d6">
+    <meta name="description" content="M1 刊登搜尋/分頁">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="referrer" content="same-origin">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Exchange Platform">
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="brand">Exchange Platform</div>
+        <nav>
+            <a class="link-btn" href="/ui/listings">刊登列表</a>
+            <a class="link-btn" href="/ui/proposals/mine">我的提案</a>
+            <a class="link-btn" href="/ui/proposals/received">收到的提案</a>
+        </nav>
+    </header>
+
+    <div class="card" style="margin-top: 16px;">
+        <form class="filters" method="get" th:action="@{/ui/listings}">
+            <div>
+                <label class="muted">關鍵字</label>
+                <input type="text" name="q" placeholder="輸入關鍵字" th:value="${q}">
+            </div>
+            <div>
+                <label class="muted">排序</label>
+                <select name="sort" th:value="${sort}">
+                    <option value="createdAt,DESC">最新</option>
+                    <option value="createdAt,ASC">最舊</option>
+                    <option value="updatedAt,DESC">最近更新</option>
+                    <option value="id,ASC">ID 由小到大</option>
+                    <option value="id,DESC">ID 由大到小</option>
+                </select>
+            </div>
+            <div>
+                <label class="muted">頁碼</label>
+                <input type="number" min="1" name="page" th:value="${page}">
+            </div>
+            <div>
+                <label class="muted">每頁</label>
+                <input type="number" min="1" max="100" name="size" th:value="${size}">
+            </div>
+            <div>
+                <button class="btn" type="submit">查詢</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="list" th:if="${items != null and !items.isEmpty()}">
+        <div class="card" th:each="it : ${items}">
+            <div class="item-title" th:text="${it.title}">標題</div>
+            <div class="item-desc" th:text="${it.description}">描述</div>
+            <div class="muted" style="margin-top:8px;">ID: <span th:text="${it.id}">1</span> ・ Owner: <span th:text="${it.ownerId}">1</span> ・ 建立：<span th:text="${it.createdAt}">time</span></div>
+        </div>
+    </div>
+    <div class="card empty" th:if="${items == null or items.isEmpty()}">
+        沒有資料，請嘗試調整條件或頁碼。
+    </div>
+
+    <div class="pager">
+        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page > 1 ? page-1 : 1})}">上一頁</a>
+        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page+1})}">下一頁</a>
+    </div>
+</div>
+
+</body>
+</html>

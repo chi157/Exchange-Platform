@@ -62,5 +62,6 @@ public class Listing {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public enum Status { ACTIVE, LOCKED, COMPLETED }
+    // 包含 AVAILABLE 作為舊資料相容值，行為視同 ACTIVE
+    public enum Status { ACTIVE, LOCKED, COMPLETED, AVAILABLE }
 }

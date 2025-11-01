@@ -49,6 +49,14 @@ public class ProposalController {
         return ResponseEntity.ok(proposalService.listReceived(session, page, size, sort));
     }
 
+    @GetMapping("/by-listing/{listingId}")
+    public ResponseEntity<java.util.List<ProposalDTO>> listByListing(@PathVariable Long listingId,
+                                                                     @RequestParam(required = false) Integer page,
+                                                                     @RequestParam(required = false) Integer size,
+                                                                     @RequestParam(required = false) String sort) {
+        return ResponseEntity.ok(proposalService.listByListing(listingId, page, size, sort));
+    }
+
     @ExceptionHandler(ProposalService.UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); }
 
