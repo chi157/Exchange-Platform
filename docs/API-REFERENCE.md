@@ -240,6 +240,8 @@ DTO（回應）概形：
   "aUserId": 1,
   "bUserId": 2,
   "status": "IN_PROGRESS",
+  "aConfirmedAt": null,
+  "bConfirmedAt": null,
   "createdAt": "2025-11-02T02:00:00",
   "updatedAt": "2025-11-02T02:00:00",
   "completedAt": null
@@ -270,6 +272,31 @@ curl -Method GET "http://localhost:8080/api/swaps/1" -Headers @{"Cookie"="<cooki
 
 重點行為：
 - 重複接受同一刊登上的其它提案 → 409 Conflict（因該 Listing 已被鎖定 LOCKED）
+
+---
+
+## 收貨確認（M5）
+
+雙方各自呼叫確認收貨；當兩方都確認後，Swap 會標記為 `COMPLETED` 並填入 `completedAt`。
+
+### POST /api/swaps/{id}/confirm-received
+- 用途：由「目前登入使用者」（限該 Swap 參與者）確認已收貨
+- 回應：200 OK + SwapDTO（具備 `aConfirmedAt`/`bConfirmedAt` 欄位與最新 `status`）
+- 錯誤：
+  - 401 未登入
+  - 403 非該 Swap 參與者
+  - 404 Swap 不存在
+- 行為：
+  - 冪等：同一使用者重複呼叫不會出錯，狀態維持不變
+  - 當雙方皆確認後，`status` 變為 `COMPLETED`，並填入 `completedAt`
+
+測試（PowerShell）：
+```powershell
+curl -Method POST "http://localhost:8080/api/swaps/1/confirm-received" -Headers @{"Cookie"="<cookie>"}
+```
+
+備註：
+- 自動逾時完成（timeout auto-complete）可於後續擴充（目前未內建排程）；現階段以雙方主動確認為準。
 
 ---
 

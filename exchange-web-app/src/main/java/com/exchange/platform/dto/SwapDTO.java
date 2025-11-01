@@ -21,6 +21,8 @@ public class SwapDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime completedAt;
+    private LocalDateTime aConfirmedAt;
+    private LocalDateTime bConfirmedAt;
 
     @JsonProperty("aUserId")
     public Long getAUserId() {
@@ -30,5 +32,15 @@ public class SwapDTO {
     @JsonProperty("bUserId")
     public Long getBUserId() {
         return bUserId;
+    }
+
+    @JsonProperty("aConfirmedAt")
+    public LocalDateTime getAConfirmedAt() {
+        return aConfirmedAt;
+    }
+
+    @JsonProperty("bConfirmedAt")
+    public LocalDateTime getBConfirmedAt() {
+        return bConfirmedAt;
     }
 }
