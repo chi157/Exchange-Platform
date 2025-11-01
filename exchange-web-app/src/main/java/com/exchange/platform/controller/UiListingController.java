@@ -54,6 +54,7 @@ public class UiListingController {
         model.addAttribute("size", sizeArg);
         model.addAttribute("q", q == null ? "" : q);
         model.addAttribute("sort", sortArg);
+        model.addAttribute("currentUserId", session.getAttribute("userId"));
         return "listings";
     }
 }
