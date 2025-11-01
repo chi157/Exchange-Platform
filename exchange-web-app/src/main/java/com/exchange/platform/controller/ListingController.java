@@ -1,0 +1,49 @@
+package com.exchange.platform.controller;
+
+import com.exchange.platform.dto.CreateListingRequest;
+import com.exchange.platform.dto.ListingDTO;
+import com.exchange.platform.service.ListingService;
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/listings")
+@RequiredArgsConstructor
+public class ListingController {
+
+    private final ListingService listingService;
+
+    @PostMapping
+    public ResponseEntity<ListingDTO> create(@Valid @RequestBody CreateListingRequest request, HttpSession session) {
+        ListingDTO dto = listingService.create(request, session);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ListingDTO> getById(@PathVariable Long id) {
+        ListingDTO dto = listingService.getById(id);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ListingDTO>> list(@RequestParam(required = false) Integer limit,
+                                                 @RequestParam(required = false) Integer offset) {
+        return ResponseEntity.ok(listingService.list(limit, offset));
+    }
+
+    @ExceptionHandler(ListingService.UnauthorizedException.class)
+    public ResponseEntity<Void> handleUnauthorized() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    @ExceptionHandler(ListingService.NotFoundException.class)
+    public ResponseEntity<Void> handleNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+}
