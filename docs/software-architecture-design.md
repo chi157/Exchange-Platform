@@ -22,12 +22,12 @@
 ### 1.2 系統整體運作圖（System Architecture Diagram）
 ```mermaid
 flowchart LR
-  A[瀏覽器(Thymeleaf SSR + JS)] <-->|HTTPS| B[Spring Boot 應用MVC / Security / WebSocket]
+  A[瀏覽器<br/>"(Thymeleaf SSR + JS)"] <-->|HTTPS| B[Spring Boot 應用<br/>MVC / Security / WebSocket]
   B --> C[Service 層]
-  C --> D[(MySQL 8)]
-  C --> E[(物件儲存(圖片/證據))]
+  C --> D["(MySQL 8)"]
+  C --> E["(物件儲存"<br/>"(圖片/證據))"]
   C --> F[SMTP/Email]
-  B --- G[(WebSocket/STOMP)]
+  B --- G["(WebSocket/STOMP)"]
 ```
 
 ## 2. 模組分解
