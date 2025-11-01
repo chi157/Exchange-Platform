@@ -16,7 +16,8 @@
 - 最小欄位：id, title, description, ownerId, createdAt, updatedAt
 - API：
   - GET /api/listings/{id}
-  - GET /api/listings?limit=&offset= （若未提供則預設 limit=10, offset=0）
+  - GET /api/listings?page=&size=&q=&sort （頁碼從 1 開始；size 預設 10；q 可搜尋 title/description；sort=屬性[,ASC|DESC]，允許屬性：id, createdAt, updatedAt）
+  - GET /api/listings/{id}/proposals?page=&size=&sort（列出該 listing 的 proposals）
   - POST /api/listings（需登入）
 
 3) Proposals（交換提案）
@@ -25,6 +26,8 @@
   - POST /api/proposals（需登入）
   - POST /api/proposals/{id}/accept（listing 擁有者）
   - POST /api/proposals/{id}/reject（listing 擁有者）
+  - GET  /api/proposals/mine?page=&size=&sort（列出我提出的 proposals；需登入）
+  - GET  /api/proposals/received?page=&size=&sort（列出我收到的 proposals，即我擁有之 listings 的 proposals；需登入）
 
 ## Out of Scope（MVP 不納入）
 
@@ -52,8 +55,13 @@
 ### 執行（本機）
 
 ```powershell
+# 方式 A：使用本機 MySQL（application.yml）
 cd "E:\NCU\1141\Software Engineering\Exchange-Platform\exchange-web-app"
 mvn -DskipTests spring-boot:run
+
+# 方式 B：使用 H2（測試用設定），啟動時套用 test profile（快速本機驗證）
+cd "E:\NCU\1141\Software Engineering\Exchange-Platform\exchange-web-app"
+mvn -DskipTests -Dspring-boot.run.profiles=test spring-boot:run
 ```
 
 ### 測試（H2）
@@ -94,9 +102,15 @@ mvn test
 }
 ```
 
-6) 查詢 Listing：GET /api/listings?limit=10&offset=0
+6) 查詢 Listing：GET /api/listings?page=1&size=10&q=&sort=createdAt,DESC
 
 7) 取得單筆：GET /api/listings/{id}
+
+8) 列出我的提案：GET /api/proposals/mine?page=1&size=10
+
+9) 列出我收到的提案：GET /api/proposals/received?page=1&size=10
+
+10) 列出某個刊登的提案：GET /api/listings/{id}/proposals?page=1&size=10
 
 ---
 

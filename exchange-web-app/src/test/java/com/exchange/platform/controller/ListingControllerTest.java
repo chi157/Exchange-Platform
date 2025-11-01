@@ -3,6 +3,9 @@ package com.exchange.platform.controller;
 import com.exchange.platform.dto.CreateListingRequest;
 import com.exchange.platform.dto.ListingDTO;
 import com.exchange.platform.service.ListingService;
+import com.exchange.platform.service.ProposalService;
+import com.exchange.platform.dto.ProposalDTO;
+import com.exchange.platform.entity.Proposal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -29,6 +32,9 @@ class ListingControllerTest {
 
     @MockBean
     private ListingService listingService;
+
+        @MockBean
+        private ProposalService proposalService;
 
     @Test
     @DisplayName("POST /api/listings -> 201 when created")
@@ -70,5 +76,18 @@ class ListingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[1].id").value(2));
+    }
+
+    @Test
+    @DisplayName("GET /api/listings/{id}/proposals -> 200 list")
+    void listProposalsByListing_ok() throws Exception {
+        Mockito.when(proposalService.listByListing(eq(1L), any(), any(), any()))
+                .thenReturn(java.util.List.of(
+                        ProposalDTO.builder().id(100L).listingId(1L).proposerId(9L).status(Proposal.Status.PENDING).build()
+                ));
+
+        mockMvc.perform(get("/api/listings/1/proposals"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(100));
     }
 }
