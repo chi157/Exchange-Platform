@@ -193,12 +193,34 @@
             transition: all 0.3s;
             font-size: 14px;
             margin-top: 12px;
+            margin-right: 8px;
         }
         .btn-proposal:hover {
             background: #218838;
             border-color: #218838;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        /* 編輯按鈕 */
+        .btn-edit {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #ffc107;
+            color: #333;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        .btn-edit:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
         }
         
         /* 新增刊登按鈕 */
@@ -415,7 +437,16 @@
                 📅 建立：<span th:text="${it.createdAt}">time</span>
             </div>
             <div style="margin-top: 16px;">
-                <button class="btn-proposal" 
+                <!-- 只對自己的物品顯示編輯按鈕 -->
+                <button th:if="${it.ownerId == currentUserId}" 
+                        class="btn-edit" 
+                        th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}, data-listing-description=${it.description}"
+                        onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
+                    ✏️ 編輯
+                </button>
+                <!-- 只對不是自己的物品顯示提案按鈕 -->
+                <button th:if="${it.ownerId != currentUserId}" 
+                        class="btn-proposal" 
                         th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
                         onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">
                     📝 提出提案
@@ -479,6 +510,30 @@
     </div>
 </div>
 
+<!-- 編輯刊登彈出視窗 -->
+<div id="editListingModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>✏️ 編輯刊登物品</h2>
+            <button class="close-btn" onclick="closeEditListingModal()">×</button>
+        </div>
+        <div>
+            <form id="editListingForm">
+                <input type="hidden" id="editListingId">
+                <div class="form-group">
+                    <label for="editListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
+                    <input type="text" id="editListingTitle" name="title" required placeholder="例如：二手書籍、電子產品等">
+                </div>
+                <div class="form-group">
+                    <label for="editListingDescription">物品描述（選填）</label>
+                    <textarea id="editListingDescription" name="description" placeholder="詳細描述您的物品狀況、購買時間等..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit-proposal">💾 儲存變更</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentListingId = null;
     
@@ -530,7 +585,7 @@
                 alert('❌ 請先登入');
                 window.location.href = '/ui/auth/login';
             } else if (response.status === 403) {
-                alert('❌ 您沒有權限執行此操作');
+                alert('❌ 不能對自己的物品提出提案');
             } else if (response.status === 409) {
                 alert('⚠️ 您已經對此物品提出過提案了');
             } else if (response.status === 400) {
@@ -598,6 +653,73 @@
                 alert('❌ 資料格式錯誤，請檢查輸入');
             } else {
                 alert('❌ 建立刊登失敗，請稍後再試');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ 網路錯誤，請稍後再試');
+        }
+    });
+
+    // === 編輯刊登相關函數 ===
+    function openEditListingModal(listingId, listingTitle, listingDescription) {
+        document.getElementById('editListingId').value = listingId;
+        document.getElementById('editListingTitle').value = listingTitle;
+        document.getElementById('editListingDescription').value = listingDescription || '';
+        document.getElementById('editListingModal').classList.add('show');
+    }
+    
+    function closeEditListingModal() {
+        document.getElementById('editListingModal').classList.remove('show');
+    }
+    
+    // 點擊背景關閉
+    document.getElementById('editListingModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeEditListingModal();
+        }
+    });
+    
+    // 提交編輯刊登
+    document.getElementById('editListingForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const listingId = document.getElementById('editListingId').value;
+        const title = document.getElementById('editListingTitle').value;
+        const description = document.getElementById('editListingDescription').value;
+        
+        if (!title || title.trim() === '') {
+            alert('❌ 請輸入物品標題');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/listings/${listingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title: title.trim(),
+                    description: description.trim() || null
+                })
+            });
+            
+            if (response.ok) {
+                alert('✅ 刊登已更新成功！');
+                closeEditListingModal();
+                // 重新載入頁面以顯示更新
+                window.location.reload();
+            } else if (response.status === 401) {
+                alert('❌ 請先登入');
+                window.location.href = '/ui/auth/login';
+            } else if (response.status === 403) {
+                alert('❌ 您沒有權限編輯此物品');
+            } else if (response.status === 409) {
+                alert('⚠️ 此物品已有待處理的提案，無法編輯');
+            } else if (response.status === 400) {
+                alert('❌ 資料格式錯誤，請檢查輸入');
+            } else {
+                alert('❌ 更新刊登失敗，請稍後再試');
             }
         } catch (error) {
             console.error('Error:', error);

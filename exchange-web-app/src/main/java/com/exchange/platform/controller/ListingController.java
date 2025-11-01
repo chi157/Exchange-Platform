@@ -40,6 +40,14 @@ public class ListingController {
         return ResponseEntity.ok(listingService.list(page, size, q, sort));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ListingDTO> update(@PathVariable Long id,
+                                            @Valid @RequestBody CreateListingRequest request,
+                                            HttpSession session) {
+        ListingDTO dto = listingService.update(id, request, session);
+        return ResponseEntity.ok(dto);
+    }
+
     @GetMapping("/{id}/proposals")
     public ResponseEntity<java.util.List<com.exchange.platform.dto.ProposalDTO>> listProposalsByListing(@PathVariable Long id,
                                                                                                          @RequestParam(required = false) Integer page,
@@ -56,5 +64,15 @@ public class ListingController {
     @ExceptionHandler(ListingService.NotFoundException.class)
     public ResponseEntity<Void> handleNotFound() {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @ExceptionHandler(ListingService.ForbiddenException.class)
+    public ResponseEntity<Void> handleForbidden() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    }
+
+    @ExceptionHandler(ListingService.ConflictException.class)
+    public ResponseEntity<Void> handleConflict() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 }

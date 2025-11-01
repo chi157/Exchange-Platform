@@ -32,6 +32,11 @@ public class ProposalService {
         Listing listing = listingRepository.findById(req.getListingId())
                 .orElseThrow(NotFoundException::new);
 
+        // 檢查是否為自己的物品
+        if (listing.getOwnerId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
         // 檢查是否已經對該 listing 提出過 PENDING 提案
         boolean hasPendingProposal = proposalRepository
                 .findByProposerIdAndListingIdAndStatus(userId, listing.getId(), Proposal.Status.PENDING)

@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public class ListingService {
 
     private final ListingRepository listingRepository;
+    private final com.exchange.platform.repository.ProposalRepository proposalRepository;
     private static final String SESSION_USER_ID = "userId"; // 與 AuthService 相同 key
 
     public ListingDTO create(CreateListingRequest request, HttpSession session) {
@@ -97,6 +98,38 @@ public class ListingService {
                 .build();
     }
 
+    public ListingDTO update(Long id, CreateListingRequest request, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        Listing listing = listingRepository.findById(id).orElseThrow(NotFoundException::new);
+        
+        // 檢查是否為自己的物品
+        if (!listing.getOwnerId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 檢查是否有 pending proposal
+        boolean hasPendingProposal = proposalRepository
+                .findByListingId(id, PageRequest.of(0, 1))
+                .stream()
+                .anyMatch(p -> p.getStatus() == com.exchange.platform.entity.Proposal.Status.PENDING);
+        
+        if (hasPendingProposal) {
+            throw new ConflictException();
+        }
+
+        listing.setTitle(request.getTitle());
+        listing.setDescription(request.getDescription());
+        listing = listingRepository.save(listing);
+        
+        return toDTO(listing);
+    }
+
     public static class UnauthorizedException extends RuntimeException {}
     public static class NotFoundException extends RuntimeException {}
+    public static class ForbiddenException extends RuntimeException {}
+    public static class ConflictException extends RuntimeException {}
 }
