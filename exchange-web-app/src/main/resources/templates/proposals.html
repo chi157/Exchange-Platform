@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提案列表 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+</head>
+<body>
+    <div class="container">
+        <h1 th:text="${viewType == 'mine' ? '我提出的提案' : '我收到的提案'}">提案列表</h1>
+        
+        <div class="tabs" style="margin: 20px 0;">
+            <a th:href="@{/ui/proposals/mine}" 
+               th:class="${viewType == 'mine' ? 'tab active' : 'tab'}">我提出的</a>
+            <a th:href="@{/ui/proposals/received}" 
+               th:class="${viewType == 'received' ? 'tab active' : 'tab'}">我收到的</a>
+        </div>
+
+        <div class="list" th:if="${items != null and !items.isEmpty()}">
+            <div class="card" th:each="it : ${items}">
+                <div class="item-title">
+                    提案 #<span th:text="${it.id}">1</span>
+                    <span class="badge" th:text="${it.status}" 
+                          th:classappend="${it.status.name() == 'PENDING' ? 'badge-pending' : (it.status.name() == 'ACCEPTED' ? 'badge-success' : 'badge-danger')}">狀態</span>
+                </div>
+                <div class="item-desc" th:text="${it.message ?: '(無留言)'}">留言內容</div>
+                <div class="muted" style="margin-top:8px;">
+                    Listing ID: <span th:text="${it.listingId}">1</span> ・ 
+                    提案者 ID: <span th:text="${it.proposerId}">1</span> ・ 
+                    建立：<span th:text="${#temporals.format(it.createdAt, 'yyyy-MM-dd HH:mm')}">time</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card empty" th:if="${items == null or items.isEmpty()}">
+            <p>目前沒有提案</p>
+        </div>
+
+        <div class="pagination" th:if="${items != null and !items.isEmpty()}">
+            <a th:href="@{${viewType == 'mine' ? '/ui/proposals/mine' : '/ui/proposals/received'}(page=${page - 1}, size=${size}, sort=${sort})}" 
+               th:if="${page > 1}">&laquo; 上一頁</a>
+            <span>第 <span th:text="${page}">1</span> 頁</span>
+            <a th:href="@{${viewType == 'mine' ? '/ui/proposals/mine' : '/ui/proposals/received'}(page=${page + 1}, size=${size}, sort=${sort})}" 
+               th:if="${items.size() == size}">下一頁 &raquo;</a>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a th:href="@{/ui/listings}" class="btn-back">← 返回物品列表</a>
+        </div>
+    </div>
+
+    <style>
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid var(--purple-light);
+        }
+        .tab {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--text-primary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab:hover {
+            background: var(--purple-lighter);
+        }
+        .tab.active {
+            color: var(--purple);
+            border-bottom-color: var(--purple);
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge-pending {
+            background: #fef3cd;
+            color: #856404;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .btn-back:hover {
+            background: var(--purple-lighter);
+        }
+    </style>
+</body>
+</html>

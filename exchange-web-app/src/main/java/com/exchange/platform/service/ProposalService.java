@@ -52,7 +52,9 @@ public class ProposalService {
         Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
         if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
         // Prevent duplicate accepts on locked/completed listings
-        if (listing.getStatus() != null && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE) {
+    if (listing.getStatus() != null
+        && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE
+        && listing.getStatus() != com.exchange.platform.entity.Listing.Status.AVAILABLE) {
             throw new ConflictException();
         }
 
