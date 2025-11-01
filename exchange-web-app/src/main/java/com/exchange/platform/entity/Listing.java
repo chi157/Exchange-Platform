@@ -27,8 +27,13 @@ public class Listing {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "owner_id", nullable = false)
+    // 與現有資料表相容：DB 同時存在 user_id 與 owner_id 皆為 NOT NULL
+    // 我們以 ownerId 對應 user_id，並新增 legacy 欄位對應 owner_id，以避免插入失敗
+    @Column(name = "user_id", nullable = false)
     private Long ownerId;
+
+    @Column(name = "owner_id", nullable = false)
+    private Long ownerIdLegacy;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -41,6 +46,9 @@ public class Listing {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
+        if (this.ownerIdLegacy == null) {
+            this.ownerIdLegacy = this.ownerId;
+        }
     }
 
     @PreUpdate

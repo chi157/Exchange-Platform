@@ -1,0 +1,81 @@
+package com.exchange.platform.service;
+
+import com.exchange.platform.dto.CreateProposalRequest;
+import com.exchange.platform.dto.ProposalDTO;
+import com.exchange.platform.entity.Listing;
+import com.exchange.platform.entity.Proposal;
+import com.exchange.platform.repository.ListingRepository;
+import com.exchange.platform.repository.ProposalRepository;
+import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class ProposalService {
+
+    private final ProposalRepository proposalRepository;
+    private final ListingRepository listingRepository;
+    private static final String SESSION_USER_ID = "userId";
+
+    public ProposalDTO create(CreateProposalRequest req, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Listing listing = listingRepository.findById(req.getListingId())
+                .orElseThrow(NotFoundException::new);
+
+        Proposal p = Proposal.builder()
+                .listingId(listing.getId())
+                .proposerId(userId)
+                .message(req.getMessage())
+                .status(Proposal.Status.PENDING)
+                .build();
+    // Set legacy receiver_id as listing owner for compatibility with existing DB
+    p.setReceiverIdLegacy(listing.getOwnerId());
+        p = proposalRepository.save(p);
+        return toDTO(p);
+    }
+
+    public ProposalDTO accept(Long proposalId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
+        Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
+        if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+
+        p.setStatus(Proposal.Status.ACCEPTED);
+        return toDTO(proposalRepository.save(p));
+    }
+
+    public ProposalDTO reject(Long proposalId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
+        Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
+        if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+
+        p.setStatus(Proposal.Status.REJECTED);
+        return toDTO(proposalRepository.save(p));
+    }
+
+    private ProposalDTO toDTO(Proposal p) {
+        return ProposalDTO.builder()
+                .id(p.getId())
+                .listingId(p.getListingId())
+                .proposerId(p.getProposerId())
+                .message(p.getMessage())
+                .status(p.getStatus())
+                .createdAt(p.getCreatedAt())
+                .updatedAt(p.getUpdatedAt())
+                .build();
+    }
+
+    public static class UnauthorizedException extends RuntimeException {}
+    public static class NotFoundException extends RuntimeException {}
+    public static class ForbiddenException extends RuntimeException {}
+}
