@@ -2,6 +2,7 @@ package com.exchange.platform.controller;
 
 import com.exchange.platform.dto.ListingDTO;
 import com.exchange.platform.service.ListingService;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,7 +21,11 @@ public class UiListingController {
 
     // Home redirect to listings
     @GetMapping({"", "/"})
-    public String home() {
+    public String home(HttpSession session) {
+        // 如果未登入，重定向到登入頁
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/ui/auth/login";
+        }
         return "redirect:/ui/listings";
     }
 
@@ -30,7 +35,13 @@ public class UiListingController {
                            @RequestParam(required = false) Integer size,
                            @RequestParam(required = false) String q,
                            @RequestParam(required = false) String sort,
+                           HttpSession session,
                            Model model) {
+        // 如果未登入，重定向到登入頁
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/ui/auth/login";
+        }
+
         // 預設值（與後端 API 對齊：page 1 起算、size 預設 10）
         Integer pageArg = (page == null || page <= 0) ? 1 : page;
         Integer sizeArg = (size == null || size <= 0) ? 10 : Math.min(size, 100);

@@ -8,6 +8,18 @@
 </head>
 <body>
     <div class="container">
+        <header style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div style="font-size: 20px; font-weight: 700; color: var(--brand-700);">Exchange Platform</div>
+            <nav style="display: flex; gap: 8px;">
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/listings">刊登列表</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/mine">我的提案</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/received">收到的提案</a>
+                <form action="/ui/auth/logout" method="post" style="display: inline;">
+                    <button type="submit" class="link-btn" style="cursor: pointer; background: var(--surface-50); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); font-size: 14px;">登出</button>
+                </form>
+            </nav>
+        </header>
+
         <h1 th:text="${viewType == 'mine' ? '我提出的提案' : '我收到的提案'}">提案列表</h1>
         
         <div class="tabs" style="margin: 20px 0;">
