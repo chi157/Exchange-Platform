@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: exchange-web-app
+  mvc:
+    pathmatch:
+      matching-strategy: path_pattern_parser
