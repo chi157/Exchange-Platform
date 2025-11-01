@@ -75,6 +75,13 @@ spring:
   websocket:
     allowed-origins: "*"
 
+  mvc:
+    servlet:
+      path: /
+  web:
+    resources:
+      add-mappings: false  # 暫時禁用靜態資源映射  
+
 # Logging Configuration (合併所有 logging 配置到這裡)
 logging:
   level:
