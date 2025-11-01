@@ -156,14 +156,44 @@
         /* 置中的分頁器 */
         .pager { 
             display: flex; 
-            gap: 12px; 
+            gap: 8px; 
             margin-top: 24px; 
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
         }
         .pager .link-btn {
-            min-width: 100px;
+            min-width: 45px;
+            padding: 10px 16px;
             text-align: center;
+        }
+        .pager .page-num {
+            min-width: 45px;
+            padding: 10px 16px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 12px;
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700);
+            background: white;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .pager .page-num:hover {
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        .pager .page-num.active {
+            background: var(--brand-600);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.3);
+        }
+        .pager .page-ellipsis {
+            padding: 10px 8px;
+            color: var(--text-500);
         }
         
         .empty { 
@@ -458,9 +488,68 @@
         沒有資料，請嘗試調整條件或頁碼。
     </div>
 
-    <div class="pager">
-        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page > 1 ? page-1 : 1})}">⬅️ 上一頁</a>
-        <a class="link-btn" th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page+1})}">下一頁 ➡️</a>
+    <!-- 分頁導航 -->
+    <div class="pager" th:if="${totalPages > 0}">
+        <!-- 上一頁按鈕 -->
+        <a th:if="${page > 1}" 
+           class="link-btn" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
+            ⬅️
+        </a>
+        
+        <!-- 第一頁 -->
+        <a th:if="${page > 3}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=1)}">
+            1
+        </a>
+        
+        <!-- 省略號 -->
+        <span th:if="${page > 4}" class="page-ellipsis">...</span>
+        
+        <!-- 當前頁前2頁 -->
+        <a th:if="${page > 2}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 2})}">
+            [[${page - 2}]]
+        </a>
+        <a th:if="${page > 1}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
+            [[${page - 1}]]
+        </a>
+        
+        <!-- 當前頁 -->
+        <span class="page-num active">[[${page}]]</span>
+        
+        <!-- 當前頁後2頁 -->
+        <a th:if="${page < totalPages}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
+            [[${page + 1}]]
+        </a>
+        <a th:if="${page < totalPages - 1}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 2})}">
+            [[${page + 2}]]
+        </a>
+        
+        <!-- 省略號 -->
+        <span th:if="${page < totalPages - 3}" class="page-ellipsis">...</span>
+        
+        <!-- 最後一頁 -->
+        <a th:if="${page < totalPages - 2}" 
+           class="page-num" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${totalPages})}">
+            [[${totalPages}]]
+        </a>
+        
+        <!-- 下一頁按鈕 -->
+        <a th:if="${page < totalPages}" 
+           class="link-btn" 
+           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
+            ➡️
+        </a>
     </div>
 </div>
 
