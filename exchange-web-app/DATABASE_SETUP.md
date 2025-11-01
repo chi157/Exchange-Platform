@@ -5,7 +5,7 @@
 在執行應用程式之前，請先在 MySQL 中建立資料庫：
 
 ```sql
-CREATE DATABASE exchange_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE exchange_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ## 2. 設定資料庫連線
@@ -15,7 +15,7 @@ CREATE DATABASE exchange_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/exchange_platform?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Taipei
+    url: jdbc:mysql://localhost:3306/exchange_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Taipei
     username: your_mysql_username  # 修改為你的 MySQL 使用者名稱
     password: your_mysql_password  # 修改為你的 MySQL 密碼
 ```
@@ -52,7 +52,7 @@ spring:
 ### 問題：連線失敗
 - 確認 MySQL 服務正在執行
 - 確認使用者名稱和密碼正確
-- 確認資料庫 `exchange_platform` 已建立
+- 確認資料庫 `exchange_db` 已建立
 
 ### 問題：Flyway migration 失敗
 - 檢查 SQL 語法是否正確
