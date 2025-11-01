@@ -41,6 +41,11 @@ public class Listing {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 16)
+    @Builder.Default
+    private Status status = Status.ACTIVE;
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
@@ -49,10 +54,13 @@ public class Listing {
         if (this.ownerIdLegacy == null) {
             this.ownerIdLegacy = this.ownerId;
         }
+        if (this.status == null) this.status = Status.ACTIVE;
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public enum Status { ACTIVE, LOCKED, COMPLETED }
 }

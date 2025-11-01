@@ -229,6 +229,50 @@ curl -Method GET "http://localhost:8080/api/proposals/received?page=1&size=10" -
 
 ---
 
+## 交換 Swaps（M3）
+
+DTO（回應）概形：
+```json
+{
+  "id": 1,
+  "listingId": 7,
+  "proposalId": 101,
+  "aUserId": 1,
+  "bUserId": 2,
+  "status": "IN_PROGRESS",
+  "createdAt": "2025-11-02T02:00:00",
+  "updatedAt": "2025-11-02T02:00:00",
+  "completedAt": null
+}
+```
+
+建立時機：當刊登擁有者「接受」一筆提案時，系統自動建立 Swap，並將該 Listing 標記為 LOCKED，避免重複受理。
+
+### GET /api/swaps/mine
+- 用途：列出我參與的所有 Swaps（包含我當 A 或 B）
+- 參數：`page`, `size`, `sort`（1-based；允許欄位：id, createdAt, updatedAt）
+- 回應：200 OK + SwapDTO[]
+- 錯誤：401 未登入
+
+測試：
+```powershell
+curl -Method GET "http://localhost:8080/api/swaps/mine?page=1&size=10" -Headers @{"Cookie"="<cookie>"}
+```
+
+### GET /api/swaps/{id}
+- 用途：取得單筆 Swap 詳情（限參與者）
+- 回應：200 OK + SwapDTO；403 非參與者；404 不存在；401 未登入
+
+測試：
+```powershell
+curl -Method GET "http://localhost:8080/api/swaps/1" -Headers @{"Cookie"="<cookie>"}
+```
+
+重點行為：
+- 重複接受同一刊登上的其它提案 → 409 Conflict（因該 Listing 已被鎖定 LOCKED）
+
+---
+
 ## 狀態碼與邊界規則彙整
 - 2xx：成功（201 Created 用於新增）
 - 400：參數或驗證錯誤（例如註冊輸入不合法）
