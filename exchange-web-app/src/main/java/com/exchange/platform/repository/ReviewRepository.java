@@ -20,6 +20,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     Optional<Review> findBySwapIdAndReviewerId(Long swapId, Long reviewerId);
 
+    // 檢查是否已經評價過
+    boolean existsBySwapIdAndReviewerId(Long swapId, Long reviewerId);
+
     @Query("SELECT AVG(CAST(json_extract(r.scores, '$.overall') AS double)) FROM Review r WHERE r.reviewee.id = :userId")
     Double getAverageScoreByRevieweeId(@Param("userId") Long userId);
 }

@@ -23,4 +23,7 @@ public interface ProposalRepository extends JpaRepository<Proposal, Long> {
 
     @Query("SELECT p FROM Proposal p WHERE p.expiresAt < :now AND p.status = 'PENDING'")
     List<Proposal> findExpiredProposals(@Param("now") LocalDateTime now);
+    
+    // 根據狀態和過期時間查詢提案
+    List<Proposal> findByStatusAndExpiresAtBefore(Proposal.ProposalStatus status, LocalDateTime dateTime);
 }

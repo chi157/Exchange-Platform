@@ -16,8 +16,12 @@ public interface SwapRepository extends JpaRepository<Swap, Long> {
 
     List<Swap> findByStatus(Swap.SwapStatus status);
 
+    // 查詢使用者參與的所有交換
     @Query("SELECT s FROM Swap s WHERE s.userA.id = :userId OR s.userB.id = :userId")
     List<Swap> findByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT s FROM Swap s WHERE s.userA.id = :userAId OR s.userB.id = :userBId")
+    List<Swap> findByUserAIdOrUserBId(@Param("userAId") Long userAId, @Param("userBId") Long userBId);
 
     @Query("SELECT s FROM Swap s WHERE (s.userA.id = :userId OR s.userB.id = :userId) AND s.status = :status")
     List<Swap> findByUserIdAndStatus(@Param("userId") Long userId, @Param("status") Swap.SwapStatus status);

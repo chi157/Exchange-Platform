@@ -79,6 +79,11 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
+# Spring Cloud Configuration
+spring.cloud:
+  compatibility-verifier:
+    enabled: false
+
 # Application Custom Properties
 app:
   upload:
