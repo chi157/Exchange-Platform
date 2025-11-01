@@ -114,7 +114,8 @@
         /* 統一置中的過濾表單 */
         form.filters { 
             display: grid; 
-            grid-template-columns: 2fr 1fr 80px 80px auto; 
+            /* grid-template-columns: 2fr 1fr 80px 80px auto;  */
+            grid-template-columns:auto auto auto auto auto; 
             gap: 12px; 
             align-items: end; 
         }
@@ -210,7 +211,7 @@
 
     <div class="card" style="margin-top: 16px;">
         <form class="filters" method="get" th:action="@{/ui/listings}">
-            <div>
+            <div style="width: 70%;">
                 <label class="muted">關鍵字</label>
                 <input type="text" name="q" placeholder="輸入關鍵字" th:value="${q}">
             </div>
