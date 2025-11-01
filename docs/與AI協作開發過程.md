@@ -1288,6 +1288,64 @@ public class AuthController {
 **第四階段：核心交易流程**（待開始）
 - [ ] ListingController
 - [ ] ProposalController
+
+---
+
+## 第六階段：Spring Security CSRF 問題排查與修正 (2025-11-01 深夜)
+
+### 問題發生
+- Postman 測試 POST /api/auth/register 失敗
+- 錯誤：403 Forbidden - "Invalid CSRF token"
+- SecurityConfig 中的 .csrf(csrf -> csrf.disable()) 未生效
+
+### 問題排查歷程
+
+#### 1. CSRF 配置語法嘗試
+- Lambda 語法：.csrf(csrf -> csrf.disable())
+- 舊版語法：.csrf().disable()
+- 方法參考：.csrf(AbstractHttpConfigurer::disable)
+- 路徑排除：.csrf(csrf -> csrf.ignoringRequestMatchers("/api/auth/**"))
+- 配置檔：spring.security.csrf.enabled: false
+
+#### 2. 發現根本問題
+- SecurityConfig.filterChain() 方法未執行
+- 日誌訊息未出現
+- Spring Security 仍使用預設配置
+
+#### 3. 搜尋重複 Bean
+- 發現兩個 SecurityFilterChain beans (apiChain + filterChain)
+- 發現兩個 UserDetailsService 依賴注入
+- Spring 配置衝突導致 SecurityConfig 失效
+
+#### 4. 最終修正
+- 移除重複的 apiChain() 方法
+- 移除重複的 userDetailsService2 欄位
+- 保留單一 filterChain() 配置
+- 使用 AbstractHttpConfigurer::disable 禁用 CSRF
+
+#### 5. Maven 編譯問題
+- Maven 增量編譯未偵測檔案變更
+- 需手動刪除 target/ 目錄強制重新編譯
+
+### 協作模式
+- 使用者報告測試錯誤並提供詳細截圖
+- AI 嘗試多種方法排查問題
+- 使用者要求搜尋重複 Bean 定義
+- AI 發現並修正重複配置
+- 使用者撤銷 AI 的修改並手動測試
+
+### 技術發現
+- Spring Security 6.x 不支援 YAML 配置 CSRF
+- 多個 SecurityFilterChain beans 會導致配置衝突
+- Maven 增量編譯有時無法偵測變更
+- SecurityConfig 必須正確載入才能生效
+
+### 待驗證
+- [ ] 重新啟動應用程式
+- [ ] 確認 SecurityConfig 日誌出現
+- [ ] 確認無 CsrfFilter
+- [ ] Postman 測試 POST /api/auth/register
+- [ ] 預期 201/200 回應（非 403）
 - [ ] SwapController
 - [ ] SearchController
 

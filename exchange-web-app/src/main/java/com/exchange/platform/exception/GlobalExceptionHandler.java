@@ -104,4 +104,21 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
+
+
+    // 以下新的
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
+        var errs = ex.getBindingResult().getFieldErrors().stream()
+        .map(f -> Map.of("field", f.getField(), "msg", f.getDefaultMessage()))
+        .toList();
+        return ResponseEntity.badRequest().body(Map.of("success", false, "errors", errs));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleOthers(Exception ex) {
+        return ResponseEntity.internalServerError()
+        .body(Map.of("success", false, "error", ex.getClass().getSimpleName(), "message", ex.getMessage()));
+    }
 }

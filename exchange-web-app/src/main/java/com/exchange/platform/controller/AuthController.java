@@ -49,9 +49,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
+    public ResponseEntity<UserDTO> getCurrentUser(HttpSession session) {
         log.debug("GET /api/auth/me");
-        UserDTO user = authService.getCurrentUser();
+        UserDTO user = authService.getCurrentUser(session);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
