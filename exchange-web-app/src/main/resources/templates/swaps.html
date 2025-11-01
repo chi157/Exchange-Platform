@@ -1,0 +1,104 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的交換 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+</head>
+<body>
+    <div class="container">
+        <header style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div style="font-size: 20px; font-weight: 700; color: var(--brand-700);">Exchange Platform</div>
+            <nav style="display: flex; gap: 8px;">
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/listings">刊登列表</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/mine">我的提案</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/received">收到的提案</a>
+                <a class="link-btn active" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--purple); color: white; background: var(--purple); font-size: 14px;" href="/ui/swaps/mine">我的交換</a>
+                <form action="/ui/auth/logout" method="post" style="display: inline;">
+                    <button type="submit" class="link-btn" style="cursor: pointer; background: var(--surface-50); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); font-size: 14px;">登出</button>
+                </form>
+            </nav>
+        </header>
+
+        <h1>我的交換</h1>
+
+        <div class="list" th:if="${items != null and !items.isEmpty()}">
+            <div class="card" th:each="swap : ${items}">
+                <div class="item-title">
+                    交換 #<span th:text="${swap.id}">1</span>
+                    <span class="badge" th:text="${swap.status}" 
+                          th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
+                </div>
+                <div class="muted" style="margin-top:8px;">
+                    Proposal ID: <span th:text="${swap.proposalId}">1</span>  
+                    對方 ID: <span th:text="${swap.aUserId}">1</span>/<span th:text="${swap.bUserId}">2</span>  
+                    建立：<span th:text="${#temporals.format(swap.createdAt, 'yyyy-MM-dd HH:mm')}">time</span>
+                </div>
+                <div style="margin-top: 12px;">
+                    <a th:href="@{/ui/swaps/{id}(id=${swap.id})}" class="btn-view">查看詳情 </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card empty" th:if="${items == null or items.isEmpty()}">
+            <p>目前沒有交換</p>
+        </div>
+
+        <div class="pagination" th:if="${items != null and !items.isEmpty()}">
+            <a th:href="@{/ui/swaps/mine(page=${page - 1}, size=${size}, sort=${sort})}" 
+               th:if="${page > 1}">&laquo; 上一頁</a>
+            <span>第 <span th:text="${page}">1</span> 頁</span>
+            <a th:href="@{/ui/swaps/mine(page=${page + 1}, size=${size}, sort=${sort})}" 
+               th:if="${items.size() == size}">下一頁 &raquo;</a>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a th:href="@{/ui/listings}" class="btn-back"> 返回物品列表</a>
+        </div>
+    </div>
+
+    <style>
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge-pending {
+            background: #fef3cd;
+            color: #856404;
+        }
+        .badge-progress {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn-back, .btn-view {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .btn-back:hover, .btn-view:hover {
+            background: var(--purple-lighter);
+        }
+        .btn-view {
+            font-size: 14px;
+            padding: 8px 16px;
+        }
+    </style>
+</body>
+</html>

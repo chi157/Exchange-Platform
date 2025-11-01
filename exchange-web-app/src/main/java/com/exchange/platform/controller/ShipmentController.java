@@ -18,6 +18,14 @@ public class ShipmentController {
 
     private final ShipmentService shipmentService;
 
+    // 取得我在該 Swap 的出貨資料
+    @GetMapping("/swaps/{id}/shipments/my")
+    public ResponseEntity<ShipmentDTO> getMyShipment(@PathVariable("id") Long swapId,
+                                                     HttpSession session) {
+        ShipmentDTO dto = shipmentService.getMyShipment(swapId, session);
+        return ResponseEntity.ok(dto);
+    }
+
     // 建立或更新我在該 Swap 的出貨資料
     @PostMapping("/swaps/{id}/shipments/my")
     public ResponseEntity<ShipmentDTO> upsertMyShipment(@PathVariable("id") Long swapId,

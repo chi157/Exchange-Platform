@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交換詳情 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+</head>
+<body>
+    <div class="container">
+        <header style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div style="font-size: 20px; font-weight: 700; color: var(--brand-700);">Exchange Platform</div>
+            <nav style="display: flex; gap: 8px;">
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/listings">刊登列表</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/mine">我的提案</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/proposals/received">收到的提案</a>
+                <a class="link-btn" style="text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px;" href="/ui/swaps/mine">我的交換</a>
+                <form action="/ui/auth/logout" method="post" style="display: inline;">
+                    <button type="submit" class="link-btn" style="cursor: pointer; background: var(--surface-50); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); font-size: 14px;">登出</button>
+                </form>
+            </nav>
+        </header>
+
+        <h1>交換詳情 #<span th:text="${swap.id}">1</span></h1>
+
+        <div class="card">
+            <h2>交換資訊</h2>
+            <div class="info-row">
+                <span class="label">狀態：</span>
+                <span class="badge" th:text="${swap.status}" 
+                      th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
+            </div>
+            <div class="info-row">
+                <span class="label">提案 ID：</span>
+                <span th:text="${swap.proposalId}">1</span>
+            </div>
+            <div class="info-row">
+                <span class="label">使用者 A ID：</span>
+                <span th:text="${swap.aUserId}">1</span>
+            </div>
+            <div class="info-row">
+                <span class="label">使用者 B ID：</span>
+                <span th:text="${swap.bUserId}">2</span>
+            </div>
+            <div class="info-row">
+                <span class="label">建立時間：</span>
+                <span th:text="${#temporals.format(swap.createdAt, 'yyyy-MM-dd HH:mm:ss')}">time</span>
+            </div>
+            <div class="info-row" th:if="${swap.completedAt != null}">
+                <span class="label">完成時間：</span>
+                <span th:text="${#temporals.format(swap.completedAt, 'yyyy-MM-dd HH:mm:ss')}">time</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>收貨確認狀態</h2>
+            <div class="info-row">
+                <span class="label">使用者 A 確認：</span>
+                <span th:if="${swap.aConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.aConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
+                <span th:if="${swap.aConfirmedAt == null}" class="not-confirmed">尚未確認</span>
+            </div>
+            <div class="info-row">
+                <span class="label">使用者 B 確認：</span>
+                <span th:if="${swap.bConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.bConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
+                <span th:if="${swap.bConfirmedAt == null}" class="not-confirmed">尚未確認</span>
+            </div>
+
+            <div th:if="${swap.status.name() == 'IN_PROGRESS'}" style="margin-top: 20px;">
+                <button class="btn-confirm" onclick="confirmReceived()"> 確認收貨</button>
+                <p class="hint">確認收貨後，若雙方皆確認則交換將自動完成</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a th:href="@{/ui/swaps/mine}" class="btn-back"> 返回交換列表</a>
+        </div>
+    </div>
+
+    <style>
+        .info-row {
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 120px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        .badge-pending {
+            background: #fef3cd;
+            color: #856404;
+        }
+        .badge-progress {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .confirmed {
+            color: #155724;
+            font-weight: 600;
+        }
+        .not-confirmed {
+            color: #856404;
+        }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        .btn-back:hover {
+            background: var(--purple-lighter);
+        }
+        .btn-confirm {
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn-confirm:hover {
+            background: #218838;
+        }
+        .hint {
+            margin-top: 10px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-style: italic;
+        }
+    </style>
+
+    <script th:inline="javascript">
+        const swapId = /*[[${swap.id}]]*/ 1;
+
+        async function confirmReceived() {
+            if (!confirm('確定要確認收貨嗎？此操作無法撤回。')) return;
+            
+            try {
+                const response = await fetch(`/api/swaps/${swapId}/confirm-received`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    alert('收貨確認成功！');
+                    location.reload();
+                } else if (response.status === 401) {
+                    alert('請先登入');
+                    window.location.href = '/ui/auth/login';
+                } else if (response.status === 403) {
+                    alert('您沒有權限執行此操作');
+                } else {
+                    alert('操作失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('網路錯誤，請稍後再試');
+            }
+        }
+    </script>
+</body>
+</html>
