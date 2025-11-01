@@ -6,24 +6,178 @@
     <title>刊登列表 - Exchange Platform</title>
     <link rel="stylesheet" href="/css/theme.css">
     <style>
-        /* 簡易頁面布局 */
-        .container { max-width: 980px; margin: 0 auto; padding: 16px; }
-        header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-        header nav { display: flex; gap: 8px; }
-        .brand { font-size: 20px; font-weight: 700; color: var(--brand-700); }
-        .card { background: white; border-radius: 12px; padding: 16px; box-shadow: var(--elev-1); border: 1px solid var(--surface-200); }
-        .list { display: grid; gap: 12px; margin-top: 16px; }
-        .item-title { font-weight: 600; color: var(--text-900); }
-        .item-desc { color: var(--text-600); margin-top: 4px; white-space: pre-wrap; }
-        .muted { color: var(--text-500); font-size: 12px; }
-        form.filters { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 8px; align-items: end; }
-        input[type="text"], select, input[type="number"] { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--surface-300); background: var(--surface-0); color: var(--text-900); }
-        button.btn { padding: 8px 14px; border: 0; border-radius: 10px; background: var(--brand-600); color: white; font-weight: 600; box-shadow: var(--elev-1); cursor: pointer; }
-        button.btn:hover { background: var(--brand-700); }
-        .pager { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
-        .link-btn { text-decoration: none; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--surface-300); color: var(--brand-700); background: var(--surface-50); font-size: 14px; }
-        .link-btn:hover { background: var(--surface-100); }
-        .empty { text-align: center; color: var(--text-500); padding: 24px; }
+        /* 整體置中布局 */
+        body { 
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); 
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+        }
+        
+        /* 統一置中的 Header */
+        header { 
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+        .brand { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--brand-700);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand::before {
+            content: "🔄";
+            font-size: 28px;
+        }
+        header nav { 
+            display: flex; 
+            gap: 12px; 
+        }
+        
+        /* 明確的按鈕樣式 */
+        .link-btn { 
+            text-decoration: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700); 
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .link-btn:hover { 
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        
+        /* 明顯區分的卡片 */
+        .card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 24px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--surface-200);
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(106, 0, 214, 0.15);
+            border-color: var(--brand-300);
+            transform: translateY(-2px);
+        }
+        
+        .list { 
+            display: grid; 
+            gap: 16px; 
+            margin-top: 20px; 
+        }
+        .item-title { 
+            font-weight: 700; 
+            color: var(--text-900);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .item-desc { 
+            color: var(--text-600); 
+            margin-top: 8px; 
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        .muted { 
+            color: var(--text-500); 
+            font-size: 13px;
+            background: var(--surface-50);
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 12px;
+        }
+        
+        /* 統一置中的過濾表單 */
+        form.filters { 
+            display: grid; 
+            grid-template-columns: 2fr 1fr 80px 80px auto; 
+            gap: 12px; 
+            align-items: end; 
+        }
+        input[type="text"], select, input[type="number"] { 
+            padding: 10px 14px; 
+            border-radius: 10px; 
+            border: 2px solid var(--surface-300); 
+            background: white;
+            color: var(--text-900);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus, select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--brand-600);
+            box-shadow: 0 0 0 3px rgba(106, 0, 214, 0.1);
+        }
+        
+        /* 明確的主要按鈕 */
+        button.btn { 
+            padding: 10px 24px; 
+            border: 0; 
+            border-radius: 12px; 
+            background: var(--brand-600); 
+            color: white; 
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+        button.btn:hover { 
+            background: var(--brand-700);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(106, 0, 214, 0.4);
+        }
+        
+        /* 置中的分頁器 */
+        .pager { 
+            display: flex; 
+            gap: 12px; 
+            margin-top: 24px; 
+            justify-content: center;
+            align-items: center;
+        }
+        .pager .link-btn {
+            min-width: 100px;
+            text-align: center;
+        }
+        
+        .empty { 
+            text-align: center; 
+            color: var(--text-500); 
+            padding: 40px;
+            font-size: 16px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--brand-700);
+            font-size: 32px;
+            margin: 20px 0;
+        }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
     <meta name="color-scheme" content="light">
@@ -42,15 +196,17 @@
     <header>
         <div class="brand">Exchange Platform</div>
         <nav>
-            <a class="link-btn" href="/ui/listings">刊登列表</a>
-            <a class="link-btn" href="/ui/proposals/mine">我的提案</a>
-            <a class="link-btn" href="/ui/proposals/received">收到的提案</a>
-            <a class="link-btn" href="/ui/swaps/mine">我的交換</a>
+            <a class="link-btn" href="/ui/listings">📋 刊登列表</a>
+            <a class="link-btn" href="/ui/proposals/mine">📤 我的提案</a>
+            <a class="link-btn" href="/ui/proposals/received">📥 收到的提案</a>
+            <a class="link-btn" href="/ui/swaps/mine">🔄 我的交換</a>
             <form action="/ui/auth/logout" method="post" style="display: inline;">
-                <button type="submit" class="link-btn" style="cursor: pointer; background: none;">登出</button>
+                <button type="submit" class="link-btn">🚪 登出</button>
             </form>
         </nav>
     </header>
+
+    <h1>📋 刊登列表</h1>
 
     <div class="card" style="margin-top: 16px;">
         <form class="filters" method="get" th:action="@{/ui/listings}">
