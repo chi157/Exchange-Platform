@@ -54,7 +54,7 @@
 
         <!-- M4: 物流資訊管理 -->
         <div class="card">
-            <h2>我的物流資訊</h2>
+            <h2>我的寄出物流資訊</h2>
             <div id="shipmentForm">
                 <div class="form-group">
                     <label for="deliveryMethod">配送方式：</label>
@@ -83,6 +83,14 @@
                     <strong>追蹤網址：</strong> <a id="savedTrackingUrl" href="#" target="_blank"></a>
                 </p>
                 <button class="btn-edit" onclick="editShipment()">編輯物流資訊</button>
+            </div>
+        </div>
+
+        <!-- 對方的物流資訊 -->
+        <div class="card">
+            <h2>對方的寄出物流資訊</h2>
+            <div id="otherShipmentInfo">
+                <p class="muted">載入中...</p>
             </div>
         </div>
 
@@ -215,13 +223,23 @@
             border-radius: 6px;
             font-size: 14px;
         }
+        .muted {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
     </style>
 
     <script th:inline="javascript">
         const swapId = /*[[${swap.id}]]*/ 1;
+        const currentUserId = /*[[${currentUserId}]]*/ 1;
+        const aUserId = /*[[${swap.aUserId}]]*/ 1;
+        const bUserId = /*[[${swap.bUserId}]]*/ 1;
 
-        // Load existing shipment on page load
-        window.addEventListener('DOMContentLoaded', loadMyShipment);
+        // Load existing shipments on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMyShipment();
+            loadOtherShipment();
+        });
 
         async function loadMyShipment() {
             try {
@@ -237,6 +255,45 @@
                 console.error('Error loading shipment:', error);
                 document.getElementById('shipmentForm').style.display = 'block';
             }
+        }
+
+        async function loadOtherShipment() {
+            // Determine the other party's user ID
+            const otherUserId = (currentUserId === aUserId) ? bUserId : aUserId;
+            
+            try {
+                // Fetch all shipments for this swap and find the other party's
+                const response = await fetch(`/api/swaps/${swapId}/shipments`);
+                if (response.ok) {
+                    const shipments = await response.json();
+                    // Find the shipment sent by the other party
+                    const otherShipment = shipments.find(s => s.senderId === otherUserId);
+                    if (otherShipment) {
+                        displayOtherShipmentInfo(otherShipment);
+                    } else {
+                        document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">對方尚未設定物流資訊</p>';
+                    }
+                } else if (response.status === 404) {
+                    document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">對方尚未設定物流資訊</p>';
+                }
+            } catch (error) {
+                console.error('Error loading other shipment:', error);
+                document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">載入失敗</p>';
+            }
+        }
+
+        function displayOtherShipmentInfo(shipment) {
+            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '賣貨便（ShipNow）' : '面交';
+            let html = `<p><strong>配送方式：</strong> ${methodText}</p>`;
+            
+            if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
+                html += `<p><strong>追蹤號碼：</strong> ${shipment.trackingNumber}</p>`;
+                if (shipment.trackingUrl) {
+                    html += `<p><strong>追蹤網址：</strong> <a href="${shipment.trackingUrl}" target="_blank">${shipment.trackingUrl}</a></p>`;
+                }
+            }
+            
+            document.getElementById('otherShipmentInfo').innerHTML = html;
         }
 
         function displayShipmentInfo(shipment) {

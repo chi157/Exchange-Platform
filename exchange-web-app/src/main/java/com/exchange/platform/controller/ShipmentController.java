@@ -26,6 +26,14 @@ public class ShipmentController {
         return ResponseEntity.ok(dto);
     }
 
+    // 取得該 Swap 的所有物流資料（雙方的）
+    @GetMapping("/swaps/{id}/shipments")
+    public ResponseEntity<java.util.List<ShipmentDTO>> getAllShipments(@PathVariable("id") Long swapId,
+                                                                       HttpSession session) {
+        java.util.List<ShipmentDTO> dtos = shipmentService.getAllShipments(swapId, session);
+        return ResponseEntity.ok(dtos);
+    }
+
     // 建立或更新我在該 Swap 的出貨資料
     @PostMapping("/swaps/{id}/shipments/my")
     public ResponseEntity<ShipmentDTO> upsertMyShipment(@PathVariable("id") Long swapId,
