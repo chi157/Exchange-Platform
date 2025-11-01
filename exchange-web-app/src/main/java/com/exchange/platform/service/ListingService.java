@@ -65,6 +65,24 @@ public class ListingService {
         return pg.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Page<ListingDTO> listPage(Integer page, Integer size, String q, String sort) {
+        // 1-based page number from API; convert to 0-based for Spring Data
+        int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
+        int pageSize = (size == null || size <= 0) ? 5 : Math.min(size, 100);
+
+        Sort sortSpec = parseSort(sort);
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
+
+        Page<Listing> pg;
+        if (q != null && !q.isBlank()) {
+            pg = listingRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
+        } else {
+            pg = listingRepository.findAll(pageable);
+        }
+        return pg.map(this::toDTO);
+    }
+
     private Sort parseSort(String sort) {
         // 支援格式: "createdAt,desc" 或 "createdAt,asc"；預設 createdAt desc
         String prop = "createdAt";
