@@ -39,8 +39,14 @@ build/
 # Maven build 產物
 target/
 
-# VS Code
-.vscode/
+# bmad method
+.bmad-core/
+.bmad-infrastructure-devops/
+.claude/
+.gemini/
+.github/
+.web-bundles/
+
 
 # IntelliJ / IDEA
 .idea/
