@@ -23,8 +23,9 @@
 	- 接受提案時建立 Swap，將 Listing 標記鎖定或變更狀態（避免重複成交）。
 	- Swap 結構：雙方 userId、對應的 listing/proposal 關聯、狀態（PENDING/IN_PROGRESS/COMPLETED/CANCELED）。
 - M4 手動物流（Shipment）與事件（UC-07）
-	- 每個 Swap 允許雙向各一筆 Shipment（A→B, B→A）；delivery_method 僅「賣貨便」或「面交」。
-	- 賣貨便需 tracking_number；事件 events[]（狀態、備註、時間）手動新增。
+	- 每個 Swap 允許雙向各一筆 Shipment（A→B, B→A），唯一約束 (swap_id, sender_id)。
+	- delivery_method 僅 shipnow（賣貨便）或 face_to_face（面交）。
+	- 賣貨便可帶 tracking_number / tracking_url；事件 events[]（狀態、備註、時間）手動新增，且僅 sender 本人可新增。
 - M5 收貨確認（UC-08）
 	- 雙方分別確認收貨；雙方皆確認或逾時自動完成 → Swap 標記 COMPLETED。
 - M6 評價（UC-09）
@@ -82,8 +83,9 @@
 	- GET /api/swaps/mine
 	- GET /api/swaps/{id}
 - Shipments（每個 Swap 各自一筆）
-	- POST /api/swaps/{id}/shipments/my（建立或更新：delivery_method, tracking_number）
-	- POST /api/shipments/{id}/events（新增事件：status, note, at）
+	- POST /api/swaps/{id}/shipments/my（建立或更新：delivery_method, tracking_number, tracking_url；需為該 Swap 參與者）
+	- POST /api/shipments/{id}/events（新增事件：status, note, at；僅 sender 本人）
+	- 後續可擴：GET /api/swaps/{id}/shipments/my、GET /api/shipments/{id}/events
 - Delivery Confirmation
 	- POST /api/swaps/{id}/confirm-received（我已收到）
 - Reviews
