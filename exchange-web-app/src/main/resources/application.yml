@@ -7,3 +7,16 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: path_pattern_parser
+  datasource:
+    url: jdbc:mysql://localhost:3306/exchange_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Taipei&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456789
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
