@@ -305,3 +305,79 @@ $env:SPRING_PROFILES_ACTIVE='test'; mvn -DskipTests spring-boot:run
 ---
 
 以上內容對齊現有控制器與測試（截至 2025-11-02，branch: feature/mvp2）。若未來 API 形狀變動（例如加入分頁中繼資料），本檔會同步更新。
+
+---
+
+## 出貨 Shipments（M4）
+
+每個 Swap 的雙方各自最多擁有「一筆」出貨資料（唯一約束：同一 `swapId` + `senderId` 只會有一筆）。只有出貨方（sender）本人可以建立/更新自己的出貨資料，並且只有 sender 本人可以對該出貨新增事件。
+
+ShipmentDTO（回應）概形：
+```json
+{
+  "id": 10,
+  "swapId": 1,
+  "senderId": 2,
+  "deliveryMethod": "SHIPNOW",
+  "trackingNumber": "1122-3344-5566",
+  "trackingUrl": "https://track.example/1122-3344-5566",
+  "lastStatus": "PACKED",
+  "shippedAt": null,
+  "createdAt": "2025-11-02T02:00:00",
+  "updatedAt": "2025-11-02T02:00:00"
+}
+```
+
+支援的 deliveryMethod 值：
+- 請求值（不分大小寫）："shipnow" 或 "face_to_face"
+- 回應枚舉："SHIPNOW" 或 "FACE_TO_FACE"
+
+### POST /api/swaps/{id}/shipments/my
+- 用途：建立或更新「我」在該 Swap 的出貨資訊（需登入、需為該 Swap 參與者）
+- 請求（JSON）：
+```json
+{
+  "deliveryMethod": "shipnow",
+  "trackingNumber": "1122-3344-5566",
+  "trackingUrl": "https://track.example/1122-3344-5566"
+}
+```
+- 回應：200 OK + ShipmentDTO（首次建立亦回 200）
+- 錯誤：
+  - 401 未登入
+  - 403 非該 Swap 參與者
+  - 404 Swap 不存在
+  - 400 deliveryMethod 非法（僅允許 shipnow 或 face_to_face）
+
+測試（PowerShell）：
+```powershell
+curl -Method POST "http://localhost:8080/api/swaps/1/shipments/my" -Headers @{"Cookie"="<cookie>"} -ContentType "application/json" -Body '{"deliveryMethod":"shipnow","trackingNumber":"1122-3344-5566","trackingUrl":"https://track.example/1122-3344-5566"}'
+```
+
+### POST /api/shipments/{id}/events
+- 用途：在指定 Shipment 新增事件（需登入、僅 sender 本人可新增）
+- 請求（JSON）：
+```json
+{
+  "status": "PACKED",
+  "note": "已妥善包裝",
+  "at": "2025-11-02T12:34:56"
+}
+```
+- 回應：201 Created（無 body）
+- 錯誤：
+- 401 未登入
+- 403 非該 Shipment 的 sender
+- 404 Shipment 不存在
+- 400 參數錯誤（status 為必填非空，at 為必填時間）
+
+測試（PowerShell）：
+```powershell
+curl -Method POST "http://localhost:8080/api/shipments/10/events" -Headers @{"Cookie"="<cookie>"} -ContentType "application/json" -Body '{"status":"PACKED","note":"已妥善包裝","at":"2025-11-02T12:34:56"}' -i
+```
+
+備註：
+- 事件新增後，系統會同步更新 Shipment.lastStatus = 請求中的 status。
+- 目前未提供查詢事件列表與查詢「我的」Shipment 的 GET 端點；如有需要可在後續 M4.1 擴充：
+  - GET /api/swaps/{id}/shipments/my（回傳我在該 Swap 的 ShipmentDTO）
+  - GET /api/shipments/{id}/events（回傳 ShipmentEventDTO[]）
