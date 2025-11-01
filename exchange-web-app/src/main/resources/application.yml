@@ -4,7 +4,7 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:mysql://localhost:3306/exchange_platform?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Taipei
+    url: jdbc:mysql://localhost:3306/exchange_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Taipei
     username: root
     password: 123456789
     driver-class-name: com.mysql.cj.jdbc.Driver

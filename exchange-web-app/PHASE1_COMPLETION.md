@@ -126,7 +126,7 @@ swaps (1) ──> (0..*) disputes
 ### 立即執行
 1. **設定 MySQL 資料庫**:
    ```sql
-   CREATE DATABASE exchange_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   CREATE DATABASE exchange_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
 
 2. **修改 application.yml**:
