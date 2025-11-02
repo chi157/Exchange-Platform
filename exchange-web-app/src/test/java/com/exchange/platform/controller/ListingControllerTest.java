@@ -66,7 +66,7 @@ class ListingControllerTest {
     @Test
     @DisplayName("GET /api/listings -> 200 list")
     void list_ok() throws Exception {
-        Mockito.when(listingService.list(any(), any(), any(), any()))
+        Mockito.when(listingService.list(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(
                         ListingDTO.builder().id(1L).title("A").ownerId(1L).build(),
                         ListingDTO.builder().id(2L).title("B").ownerId(2L).build()
