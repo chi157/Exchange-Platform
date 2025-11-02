@@ -184,6 +184,41 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+        .radio-group-container {
+            padding-top: 8px;
+        }
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid var(--surface-300);
+            background-color: #fff;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .radio-label:hover {
+            border-color: var(--brand-400);
+        }
+        .radio-label input[type="radio"] {
+            display: none;
+        }
+        .radio-label.selected {
+            border-color: var(--brand-600);
+            background-color: var(--brand-50);
+            color: var(--brand-700);
+            box-shadow: 0 2px 6px rgba(106, 0, 214, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -255,9 +290,20 @@
                         <label for="newConditionRating">品相等級 (1-10)</label>
                         <input type="number" id="newConditionRating" name="conditionRating" min="1" max="10" placeholder="9">
                     </div>
-                    <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 28px;">
-                        <input type="checkbox" id="newHasProtection" name="hasProtection" value="true" style="width: auto;">
-                        <label for="newHasProtection" style="margin: 0;">有保護措施</label>
+                    <div class="form-group">
+                        <label>保護措施</label>
+                        <div class="radio-group-container">
+                            <div class="radio-group" id="hasProtectionGroup">
+                                <label class="radio-label selected">
+                                    <input type="radio" name="hasProtection" value="true" checked>
+                                    ✅ 有保護措施
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="hasProtection" value="false">
+                                    ❌ 沒有保護措施
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -279,12 +325,30 @@
                 </div>
             </div>
             
-            <button type="submit" class="btn-submit">🚀 建立刊登</button>
+                        <button type="submit" class="btn-submit">🚀 建立刊登</button>
         </form>
     </div>
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radioGroup = document.getElementById('hasProtectionGroup');
+        if (radioGroup) {
+            const radioLabels = radioGroup.querySelectorAll('.radio-label');
+
+            radioLabels.forEach(label => {
+                label.addEventListener('click', function() {
+                    // Remove selected class from all labels in the group
+                    radioLabels.forEach(lbl => lbl.classList.remove('selected'));
+                    // Add selected class to the clicked label
+                    this.classList.add('selected');
+                    // Ensure the radio button inside is checked
+                    this.querySelector('input[type="radio"]').checked = true;
+                });
+            });
+        }
+    });
+
     let selectedFiles = [];
     const MAX_FILES = 5;
 
@@ -361,26 +425,37 @@
             return [];
         }
 
-        const formData = new FormData();
-        selectedFiles.forEach(file => {
-            formData.append('files', file);
-        });
-
+        const uploadedFileNames = [];
+        
         try {
-            const response = await fetch('/ui/api/images/upload', {
-                method: 'POST',
-                body: formData
-            });
+            // 逐一上傳每張圖片
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/ui/api/images/upload', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            if (!response.ok) {
-                throw new Error('圖片上傳失敗');
+                if (!response.ok) {
+                    throw new Error(`圖片 ${i + 1} 上傳失敗`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success && result.fileName) {
+                    uploadedFileNames.push(result.fileName);
+                } else {
+                    throw new Error(`圖片 ${i + 1} 上傳失敗：${result.message || '未知錯誤'}`);
+                }
             }
-
-            const result = await response.json();
-            return result.fileNames;
+            
+            return uploadedFileNames;
         } catch (error) {
             console.error('上傳圖片時發生錯誤:', error);
-            alert('圖片上傳失敗，請稍後再試。');
+            alert(`圖片上傳失敗：${error.message}`);
             return null;
         }
     }
