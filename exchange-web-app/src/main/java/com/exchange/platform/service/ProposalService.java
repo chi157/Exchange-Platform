@@ -216,7 +216,7 @@ public class ProposalService {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) throw new UnauthorizedException();
         Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
-        Page<Proposal> pg = proposalRepository.findByProposerId(userId, pageable);
+        Page<Proposal> pg = proposalRepository.findByProposerIdWithItems(userId, pageable);
         return pg.stream().map(this::toDTO).toList();
     }
 
@@ -225,7 +225,7 @@ public class ProposalService {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) throw new UnauthorizedException();
         Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
-        Page<Proposal> pg = proposalRepository.findByReceiverIdLegacy(userId, pageable);
+        Page<Proposal> pg = proposalRepository.findByReceiverIdLegacyWithItems(userId, pageable);
         return pg.stream().map(this::toDTO).toList();
     }
 
