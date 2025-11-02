@@ -48,7 +48,9 @@ public class ListingService {
     }
 
     @Transactional(readOnly = true)
-    public List<ListingDTO> list(Integer page, Integer size, String q, String sort) {
+    public List<ListingDTO> list(Integer page, Integer size, String q, String sort, HttpSession session) {
+        Long currentUserId = (Long) session.getAttribute(SESSION_USER_ID);
+        
         // 1-based page number from API; convert to 0-based for Spring Data
         int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
         int pageSize = (size == null || size <= 0) ? 10 : Math.min(size, 100);
@@ -62,7 +64,7 @@ public class ListingService {
         } else {
             pg = listingRepository.findAll(pageable);
         }
-        return pg.stream().map(this::toDTO).collect(Collectors.toList());
+        return pg.stream().map(l -> toDTO(l, currentUserId)).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -106,11 +108,17 @@ public class ListingService {
     }
 
     private ListingDTO toDTO(Listing l) {
+        return toDTO(l, null);
+    }
+    
+    private ListingDTO toDTO(Listing l, Long currentUserId) {
         return ListingDTO.builder()
                 .id(l.getId())
                 .title(l.getTitle())
                 .description(l.getDescription())
                 .ownerId(l.getOwnerId())
+                .status(l.getStatus())
+                .isMine(currentUserId != null && l.getOwnerId().equals(currentUserId))
                 .createdAt(l.getCreatedAt())
                 .updatedAt(l.getUpdatedAt())
                 .build();

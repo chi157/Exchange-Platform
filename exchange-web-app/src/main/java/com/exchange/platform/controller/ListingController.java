@@ -36,8 +36,9 @@ public class ListingController {
     public ResponseEntity<List<ListingDTO>> list(@RequestParam(required = false) Integer page,
                                                  @RequestParam(required = false) Integer size,
                                                  @RequestParam(required = false) String q,
-                                                 @RequestParam(required = false) String sort) {
-        return ResponseEntity.ok(listingService.list(page, size, q, sort));
+                                                 @RequestParam(required = false) String sort,
+                                                 HttpSession session) {
+        return ResponseEntity.ok(listingService.list(page, size, q, sort, session));
     }
 
     @PutMapping("/{id}")
