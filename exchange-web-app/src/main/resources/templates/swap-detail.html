@@ -25,6 +25,58 @@
 
         <div class="card">
             <h2>📋 交換資訊</h2>
+            
+            <!-- 交換物品詳情 -->
+            <div style="margin: 16px 0; padding: 16px; background: var(--surface-50); border-radius: 12px; border: 2px solid var(--surface-200);">
+                <!-- 提案者提供的物品 -->
+                <div style="margin-bottom: 16px;">
+                    <div style="font-weight: 700; color: var(--brand-700); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        <span>🎁 提案者提供的物品</span>
+                        <span style="font-size: 12px; color: var(--text-600); font-weight: 400;">
+                            (提案者 ID: <span th:text="${swap.proposerId}">-</span>)
+                        </span>
+                    </div>
+                    <div th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty()}">
+                        <div th:each="item : ${swap.proposerItems}" 
+                             style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--brand-500);">
+                            <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingTitle}">物品標題</div>
+                            <div style="font-size: 12px; color: var(--text-600);">
+                                ID: <span th:text="${item.listingId}">1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty()}" 
+                         style="padding: 8px; color: var(--text-500); font-size: 14px;">
+                        未提供物品資訊
+                    </div>
+                </div>
+                
+                <!-- 交換箭頭 -->
+                <div style="text-align: center; margin: 12px 0;">
+                    <span style="font-size: 20px; color: var(--brand-600);">⇅</span>
+                </div>
+                
+                <!-- 接收者的物品 -->
+                <div>
+                    <div style="font-weight: 700; color: var(--success-700); margin-bottom: 8px;">
+                        💎 接收者的物品
+                    </div>
+                    <div th:if="${swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
+                        <div th:each="item : ${swap.receiverItems}" 
+                             style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--success-500);">
+                            <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingTitle}">物品標題</div>
+                            <div style="font-size: 12px; color: var(--text-600);">
+                                ID: <span th:text="${item.listingId}">1</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${swap.receiverItems == null or swap.receiverItems.isEmpty()}" 
+                         style="padding: 8px; color: var(--text-500); font-size: 14px;">
+                        未指定物品
+                    </div>
+                </div>
+            </div>
+            
             <div class="info-row">
                 <span class="label">狀態：</span>
                 <span class="badge" th:text="${swap.status}" 
