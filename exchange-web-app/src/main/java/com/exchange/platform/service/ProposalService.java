@@ -4,6 +4,7 @@ import com.exchange.platform.dto.CreateProposalRequest;
 import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.Proposal;
+import com.exchange.platform.entity.ProposalItem;
 import com.exchange.platform.repository.ListingRepository;
 import com.exchange.platform.repository.ProposalRepository;
 import jakarta.servlet.http.HttpSession;
@@ -14,6 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,31 +34,79 @@ public class ProposalService {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) throw new UnauthorizedException();
 
-        Listing listing = listingRepository.findById(req.getListingId())
+        // Validate receiver's listing (what proposer wants)
+        Listing receiverListing = listingRepository.findById(req.getListingId())
                 .orElseThrow(NotFoundException::new);
 
         // 檢查是否為自己的物品
-        if (listing.getOwnerId().equals(userId)) {
+        if (receiverListing.getOwnerId().equals(userId)) {
             throw new ForbiddenException();
+        }
+
+        // Validate proposer's listings (what proposer offers)
+        List<Listing> proposerListings = new ArrayList<>();
+        for (Long listingId : req.getProposerListingIds()) {
+            Listing listing = listingRepository.findById(listingId)
+                    .orElseThrow(() -> new NotFoundException());
+            
+            // Verify proposer owns these listings
+            if (!listing.getOwnerId().equals(userId)) {
+                throw new ForbiddenException();
+            }
+            
+            // Verify listings are available
+            if (listing.getStatus() != Listing.Status.AVAILABLE 
+                && listing.getStatus() != Listing.Status.ACTIVE) {
+                throw new ConflictException();
+            }
+            
+            proposerListings.add(listing);
         }
 
         // 檢查是否已經對該 listing 提出過 PENDING 提案
         boolean hasPendingProposal = proposalRepository
-                .findByProposerIdAndListingIdAndStatus(userId, listing.getId(), Proposal.Status.PENDING)
+                .findByProposerIdAndListingIdAndStatus(userId, receiverListing.getId(), Proposal.Status.PENDING)
                 .isPresent();
         if (hasPendingProposal) {
             throw new ConflictException();
         }
 
+        // Create proposal
         Proposal p = Proposal.builder()
-                .listingId(listing.getId())
+                .listingId(receiverListing.getId())
                 .proposerId(userId)
                 .message(req.getMessage())
                 .status(Proposal.Status.PENDING)
+                .proposalItems(new ArrayList<>())
                 .build();
-    // Set legacy receiver_id as listing owner for compatibility with existing DB
-    p.setReceiverIdLegacy(listing.getOwnerId());
+        
+        // Set legacy receiver_id as listing owner for compatibility with existing DB
+        p.setReceiverIdLegacy(receiverListing.getOwnerId());
+        
+        // Save proposal first to get ID
         p = proposalRepository.save(p);
+        
+        // Create ProposalItems for proposer's listings (what proposer offers)
+        for (Listing listing : proposerListings) {
+            ProposalItem item = ProposalItem.builder()
+                    .proposal(p)
+                    .listing(listing)
+                    .side(ProposalItem.Side.OFFERED)
+                    .build();
+            p.getProposalItems().add(item);
+        }
+        
+        // Create ProposalItem for receiver's listing (what proposer requests)
+        ProposalItem receiverItem = ProposalItem.builder()
+                .proposal(p)
+                .listing(receiverListing)
+                .side(ProposalItem.Side.REQUESTED)
+                .build();
+        p.getProposalItems().add(receiverItem);
+        
+        // Save again with items (cascade will save ProposalItems)
+        p = proposalRepository.save(p);
+        
         return toDTO(p);
     }
 
@@ -64,17 +117,29 @@ public class ProposalService {
         Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
         Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
         if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+        
         // Prevent duplicate accepts on locked/completed listings
-    if (listing.getStatus() != null
-        && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE
-        && listing.getStatus() != com.exchange.platform.entity.Listing.Status.AVAILABLE) {
+        if (listing.getStatus() != null
+            && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE
+            && listing.getStatus() != com.exchange.platform.entity.Listing.Status.AVAILABLE) {
             throw new ConflictException();
+        }
+
+        // Verify all proposer's listings are still available
+        for (ProposalItem item : p.getProposalItems()) {
+            if (item.getSide() == ProposalItem.Side.OFFERED) {
+                Listing proposerListing = item.getListing();
+                if (proposerListing.getStatus() != Listing.Status.AVAILABLE 
+                    && proposerListing.getStatus() != Listing.Status.ACTIVE) {
+                    throw new ConflictException();
+                }
+            }
         }
 
         p.setStatus(Proposal.Status.ACCEPTED);
         proposalRepository.save(p);
 
-        // Create Swap and lock listing
+        // Create Swap
         com.exchange.platform.entity.Swap swap = com.exchange.platform.entity.Swap.builder()
                 .listingId(listing.getId())
                 .proposalId(p.getId())
@@ -84,8 +149,17 @@ public class ProposalService {
                 .build();
         swapRepository.save(swap);
 
+        // Lock all involved listings
         listing.setStatus(com.exchange.platform.entity.Listing.Status.LOCKED);
         listingRepository.save(listing);
+        
+        for (ProposalItem item : p.getProposalItems()) {
+            if (item.getSide() == ProposalItem.Side.OFFERED) {
+                Listing proposerListing = item.getListing();
+                proposerListing.setStatus(Listing.Status.LOCKED);
+                listingRepository.save(proposerListing);
+            }
+        }
 
         return toDTO(p);
     }
@@ -103,6 +177,27 @@ public class ProposalService {
     }
 
     private ProposalDTO toDTO(Proposal p) {
+        // Separate items by side: OFFERED = proposer's items, REQUESTED = receiver's items
+        List<ProposalDTO.ProposalItemDTO> proposerItems = p.getProposalItems().stream()
+                .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
+                .map(item -> ProposalDTO.ProposalItemDTO.builder()
+                        .itemId(item.getId())
+                        .listingId(item.getListing().getId())
+                        .listingTitle(item.getListing().getTitle())
+                        .side("OFFERED")
+                        .build())
+                .collect(Collectors.toList());
+        
+        List<ProposalDTO.ProposalItemDTO> receiverItems = p.getProposalItems().stream()
+                .filter(item -> item.getSide() == ProposalItem.Side.REQUESTED)
+                .map(item -> ProposalDTO.ProposalItemDTO.builder()
+                        .itemId(item.getId())
+                        .listingId(item.getListing().getId())
+                        .listingTitle(item.getListing().getTitle())
+                        .side("REQUESTED")
+                        .build())
+                .collect(Collectors.toList());
+        
         return ProposalDTO.builder()
                 .id(p.getId())
                 .listingId(p.getListingId())
@@ -111,6 +206,8 @@ public class ProposalService {
                 .status(p.getStatus())
                 .createdAt(p.getCreatedAt())
                 .updatedAt(p.getUpdatedAt())
+                .proposerItems(proposerItems)
+                .receiverItems(receiverItems)
                 .build();
     }
 

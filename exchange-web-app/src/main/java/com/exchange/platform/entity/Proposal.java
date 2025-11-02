@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "proposals", indexes = {
@@ -39,6 +41,10 @@ public class Proposal {
 
     @Column(columnDefinition = "TEXT")
     private String message;
+
+    @OneToMany(mappedBy = "proposal", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProposalItem> proposalItems = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 16)
