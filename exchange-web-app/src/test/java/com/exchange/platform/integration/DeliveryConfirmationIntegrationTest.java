@@ -58,8 +58,15 @@ class DeliveryConfirmationIntegrationTest {
                 .andExpect(status().isOk()).andReturn();
         MockHttpSession sessionB = (MockHttpSession) loginB.getRequest().getSession(false);
 
+        // B creates a listing to offer in the proposal
+        MvcResult createdListingB = mockMvc.perform(post("/api/listings").session(sessionB)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Offer Item\",\"description\":\"BD\"}"))
+                .andExpect(status().isCreated()).andReturn();
+        Long proposerListingId = Long.valueOf(JsonPath.read(createdListingB.getResponse().getContentAsString(), "$.id").toString());
+
         // B creates proposal
-        String body = String.format("{\"listingId\":%d,\"message\":\"offer\"}", listingId);
+        String body = String.format("{\"listingId\":%d,\"proposerListingIds\":[%d],\"message\":\"offer\"}", listingId, proposerListingId);
         MvcResult p1 = mockMvc.perform(post("/api/proposals").session(sessionB).contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isCreated()).andReturn();
         Long proposalId = Long.valueOf(JsonPath.read(p1.getResponse().getContentAsString(), "$.id").toString());
@@ -91,5 +98,13 @@ class DeliveryConfirmationIntegrationTest {
                 .andExpect(jsonPath("$.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.completedAt").exists())
                 .andExpect(jsonPath("$.bConfirmedAt").exists());
+
+        mockMvc.perform(get("/api/listings/" + listingId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        mockMvc.perform(get("/api/listings/" + proposerListingId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
     }
 }

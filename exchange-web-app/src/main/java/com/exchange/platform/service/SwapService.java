@@ -2,8 +2,10 @@ package com.exchange.platform.service;
 
 import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.dto.SwapDTO;
+import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.ProposalItem;
 import com.exchange.platform.entity.Swap;
+import com.exchange.platform.repository.ListingRepository;
 import com.exchange.platform.repository.ProposalRepository;
 import com.exchange.platform.repository.SwapRepository;
 import jakarta.servlet.http.HttpSession;
@@ -26,6 +28,7 @@ public class SwapService {
 
     private final SwapRepository swapRepository;
     private final ProposalRepository proposalRepository;
+    private final ListingRepository listingRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
     private static final String SESSION_USER_ID = "userId";
 
@@ -71,6 +74,9 @@ public class SwapService {
         }
 
         swap = swapRepository.save(swap);
+        if (swap.getStatus() == Swap.Status.COMPLETED) {
+            finalizeListingsForCompletedSwap(swap);
+        }
         return toDTO(swap);
     }
 
@@ -151,6 +157,36 @@ public class SwapService {
                 .receiverDisplayName(receiverDisplayName)
                 .build();
     }
+
+            private void finalizeListingsForCompletedSwap(Swap swap) {
+                java.util.Set<Long> listingIdsToComplete = new java.util.HashSet<>();
+                if (swap.getListingId() != null) {
+                    listingIdsToComplete.add(swap.getListingId());
+                }
+
+                if (swap.getProposalId() != null) {
+                    proposalRepository.findById(swap.getProposalId()).ifPresent(proposal -> {
+                        proposal.getProposalItems().stream()
+                            .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
+                            .map(ProposalItem::getListing)
+                            .filter(java.util.Objects::nonNull)
+                            .map(Listing::getId)
+                            .forEach(listingIdsToComplete::add);
+                    });
+                }
+
+                if (listingIdsToComplete.isEmpty()) {
+                    return;
+                }
+
+                java.util.List<Listing> listings = listingRepository.findAllById(listingIdsToComplete);
+                for (Listing listing : listings) {
+                    if (listing.getStatus() != Listing.Status.COMPLETED) {
+                        listing.setStatus(Listing.Status.COMPLETED);
+                    }
+                }
+                listingRepository.saveAll(listings);
+            }
 
     private int toPageIndex(Integer page) { return (page == null || page <= 1) ? 0 : page - 1; }
     private int toPageSize(Integer size) { return (size == null || size <= 0) ? 10 : Math.min(size, 100); }
