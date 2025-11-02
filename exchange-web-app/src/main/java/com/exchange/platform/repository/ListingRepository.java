@@ -7,4 +7,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 	Page<Listing> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description, Pageable pageable);
+	
+	// 查詢指定擁有者的刊登
+	Page<Listing> findByOwnerId(Long ownerId, Pageable pageable);
+	
+	// 查詢指定擁有者的刊登（含搜尋）
+	Page<Listing> findByOwnerIdAndTitleContainingIgnoreCaseOrOwnerIdAndDescriptionContainingIgnoreCase(
+		Long ownerId1, String title, Long ownerId2, String description, Pageable pageable);
+	
+	// 排除指定擁有者的刊登
+	Page<Listing> findByOwnerIdNot(Long ownerId, Pageable pageable);
+	
+	// 排除指定擁有者的刊登（含搜尋）
+	Page<Listing> findByOwnerIdNotAndTitleContainingIgnoreCaseOrOwnerIdNotAndDescriptionContainingIgnoreCase(
+		Long ownerId1, String title, Long ownerId2, String description, Pageable pageable);
 }

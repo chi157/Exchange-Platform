@@ -69,7 +69,37 @@ public class ListingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ListingDTO> listPage(Integer page, Integer size, String q, String sort) {
+    public Page<ListingDTO> listPage(Integer page, Integer size, String q, String sort, Long excludeOwnerId) {
+        // 1-based page number from API; convert to 0-based for Spring Data
+        int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
+        int pageSize = (size == null || size <= 0) ? 5 : Math.min(size, 100);
+
+        Sort sortSpec = parseSort(sort);
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
+
+        Page<Listing> pg;
+        
+        // 排除特定擁有者的刊登
+        if (excludeOwnerId != null) {
+            if (q != null && !q.isBlank()) {
+                pg = listingRepository.findByOwnerIdNotAndTitleContainingIgnoreCaseOrOwnerIdNotAndDescriptionContainingIgnoreCase(
+                    excludeOwnerId, q, excludeOwnerId, q, pageable);
+            } else {
+                pg = listingRepository.findByOwnerIdNot(excludeOwnerId, pageable);
+            }
+        } else {
+            if (q != null && !q.isBlank()) {
+                pg = listingRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
+            } else {
+                pg = listingRepository.findAll(pageable);
+            }
+        }
+        
+        return pg.map(this::toDTO);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<ListingDTO> myListingsPage(Long ownerId, Integer page, Integer size, String q, String sort) {
         // 1-based page number from API; convert to 0-based for Spring Data
         int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
         int pageSize = (size == null || size <= 0) ? 5 : Math.min(size, 100);
@@ -79,11 +109,13 @@ public class ListingService {
 
         Page<Listing> pg;
         if (q != null && !q.isBlank()) {
-            pg = listingRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
+            // 搜尋當前使用者的刊登
+            pg = listingRepository.findByOwnerIdAndTitleContainingIgnoreCaseOrOwnerIdAndDescriptionContainingIgnoreCase(
+                ownerId, q, ownerId, q, pageable);
         } else {
-            pg = listingRepository.findAll(pageable);
+            pg = listingRepository.findByOwnerId(ownerId, pageable);
         }
-        return pg.map(this::toDTO);
+        return pg.map(l -> toDTO(l, ownerId));
     }
 
     private Sort parseSort(String sort) {
