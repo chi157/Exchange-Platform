@@ -1,5 +1,6 @@
 package com.exchange.platform.integration;
 
+import com.exchange.platform.dto.ListingDTO;
 import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.User;
 import com.exchange.platform.repository.ListingRepository;
@@ -87,5 +88,49 @@ class ListingPaginationOrderIntegrationTest {
         var page3 = listingService.listPage(3, 2, marker, "createdAt,ASC", null);
         assertThat(page3.getContent()).hasSize(2);
         assertThat(page3.getContent()).allMatch(dto -> dto.getStatus() == Listing.Status.COMPLETED);
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("My listings view mirrors trailing completed ordering")
+    void my_listings_page_includes_completed_at_tail() {
+        String marker = "mine-order-" + UUID.randomUUID();
+
+        User owner = userRepository.save(User.builder()
+                .email(marker + "@mail.test")
+                .passwordHash("hash")
+                .displayName("Owner")
+                .build());
+
+        listingRepository.save(Listing.builder()
+                .title(marker + "-mine-a1")
+                .description("active")
+                .ownerId(owner.getId())
+                .status(Listing.Status.ACTIVE)
+                .build());
+        listingRepository.save(Listing.builder()
+                .title(marker + "-mine-a2")
+                .description("locked")
+                .ownerId(owner.getId())
+                .status(Listing.Status.LOCKED)
+                .build());
+        listingRepository.save(Listing.builder()
+                .title(marker + "-mine-c1")
+                .description("completed")
+                .ownerId(owner.getId())
+                .status(Listing.Status.COMPLETED)
+                .build());
+
+        var page1 = listingService.myListingsPage(owner.getId(), 1, 2, marker, "createdAt,ASC");
+        assertThat(page1.getContent()).hasSize(2);
+        assertThat(page1.getContent())
+                .extracting(ListingDTO::getStatus)
+                .doesNotContain(Listing.Status.COMPLETED);
+
+        var page2 = listingService.myListingsPage(owner.getId(), 2, 2, marker, "createdAt,ASC");
+        assertThat(page2.getContent()).hasSize(1);
+        assertThat(page2.getContent())
+                .extracting(ListingDTO::getStatus)
+                .containsOnly(Listing.Status.COMPLETED);
     }
 }

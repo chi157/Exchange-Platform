@@ -607,20 +607,20 @@
     </div>
 
     <div class="list" th:if="${items != null and !items.isEmpty()}">
-        <div class="card" th:each="it : ${items}">
+        <div class="card" th:each="it : ${items}" th:with="statusName=${it.status != null ? it.status.name() : ''}">
             <div class="item-title">
                 <span th:text="${it.title}">標題</span>
                 <!-- 狀態標籤 -->
             <span class="status-badge status-available" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}">
+                th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}">
                     ✓ 可交換
                 </span>
                 <span class="status-badge status-locked" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}">
+                th:if="${statusName == 'LOCKED'}">
                     🔒 交換中
                 </span>
                 <span class="status-badge status-completed" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}">
+                th:if="${statusName == 'COMPLETED'}">
                     ✓ 已完成
                 </span>
             </div>
@@ -638,8 +638,8 @@
                         onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
                     ✏️ 編輯
                 </button>
-                <!-- 只對不是自己且狀態為可交換的物品顯示提案按鈕 -->
-        <button th:if="${it.ownerId != currentUserId and (it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE)}" 
+        <!-- 只對不是自己且狀態為可交換的物品顯示提案按鈕 -->
+    <button th:if="${it.ownerId != currentUserId and (statusName == 'ACTIVE' or statusName == 'AVAILABLE')}" 
                         class="btn-proposal" 
                         th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
                         onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">

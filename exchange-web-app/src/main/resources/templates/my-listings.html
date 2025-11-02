@@ -607,20 +607,20 @@
     </div>
 
     <div class="list" th:if="${items != null and !items.isEmpty()}">
-        <div class="card" th:each="it : ${items}">
+        <div class="card" th:each="it : ${items}" th:with="statusName=${it.status != null ? it.status.name() : ''}">
             <div class="item-title">
                 <span th:text="${it.title}">標題</span>
                 <!-- 狀態標籤 -->
             <span class="status-badge status-available" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}">
+                th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}">
                     ✓ 可交換
                 </span>
                 <span class="status-badge status-locked" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}">
+                th:if="${statusName == 'LOCKED'}">
                     🔒 交換中
                 </span>
                 <span class="status-badge status-completed" 
-                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}">
+                th:if="${statusName == 'COMPLETED'}">
                     ✓ 已完成
                 </span>
             </div>
@@ -632,17 +632,17 @@
             </div>
             <div style="margin-top: 16px;">
                 <!-- 只對可交換狀態的物品顯示編輯按鈕 -->
-                <button th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}" 
+                <button th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}" 
                         class="btn-edit" 
                         th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}, data-listing-description=${it.description}"
                         onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
                     ✏️ 編輯
                 </button>
                 <!-- 交換中或已完成的物品顯示狀態說明 -->
-                <span th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}" style="color: #f59e0b; font-size: 14px; margin-left: 8px;">
+                <span th:if="${statusName == 'LOCKED'}" style="color: #f59e0b; font-size: 14px; margin-left: 8px;">
                     ⚠️ 此物品正在交換中，無法編輯
                 </span>
-                <span th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}" style="color: #64748b; font-size: 14px; margin-left: 8px;">
+                <span th:if="${statusName == 'COMPLETED'}" style="color: #64748b; font-size: 14px; margin-left: 8px;">
                     ℹ️ 此物品交換已完成
                 </span>
             </div>

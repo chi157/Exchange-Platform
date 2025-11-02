@@ -84,20 +84,15 @@ public class ListingService {
         List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
         List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
 
-        long totalElements = nonCompletedAll.size() + completedAll.size();
-        long pageStart = (long) pageIndex * pageSize;
-        List<Listing> pageItems = new ArrayList<>();
+        // 合併兩個列表：未完成的在前，已完成的在後
+        List<Listing> allItems = new ArrayList<>(nonCompletedAll);
+        allItems.addAll(completedAll);
 
-        if (pageStart < nonCompletedAll.size()) {
-            long endNon = Math.min(nonCompletedAll.size(), pageStart + pageSize);
-            pageItems.addAll(nonCompletedAll.subList((int) pageStart, (int) endNon));
-        } else {
-            long completedOffset = pageStart - nonCompletedAll.size();
-            if (completedOffset < completedAll.size()) {
-                long endCompleted = Math.min(completedAll.size(), completedOffset + pageSize);
-                pageItems.addAll(completedAll.subList((int) completedOffset, (int) endCompleted));
-            }
-        }
+        long totalElements = allItems.size();
+        int pageStart = pageIndex * pageSize;
+        int pageEnd = Math.min(pageStart + pageSize, (int) totalElements);
+
+        List<Listing> pageItems = (pageStart < pageEnd) ? allItems.subList(pageStart, pageEnd) : new ArrayList<>();
 
         List<ListingDTO> content = pageItems.stream()
                 .map(this::toDTO)
@@ -119,20 +114,15 @@ public class ListingService {
         List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
         List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
 
-        long totalElements = nonCompletedAll.size() + completedAll.size();
-        long pageStart = (long) pageIndex * pageSize;
-        List<Listing> pageItems = new ArrayList<>();
+        // 合併兩個列表：未完成的在前，已完成的在後
+        List<Listing> allItems = new ArrayList<>(nonCompletedAll);
+        allItems.addAll(completedAll);
 
-        if (pageStart < nonCompletedAll.size()) {
-            long endNon = Math.min(nonCompletedAll.size(), pageStart + pageSize);
-            pageItems.addAll(nonCompletedAll.subList((int) pageStart, (int) endNon));
-        } else {
-            long completedOffset = pageStart - nonCompletedAll.size();
-            if (completedOffset < completedAll.size()) {
-                long endCompleted = Math.min(completedAll.size(), completedOffset + pageSize);
-                pageItems.addAll(completedAll.subList((int) completedOffset, (int) endCompleted));
-            }
-        }
+        long totalElements = allItems.size();
+        int pageStart = pageIndex * pageSize;
+        int pageEnd = Math.min(pageStart + pageSize, (int) totalElements);
+
+        List<Listing> pageItems = (pageStart < pageEnd) ? allItems.subList(pageStart, pageEnd) : new ArrayList<>();
 
         List<ListingDTO> content = pageItems.stream()
                 .map(l -> toDTO(l, ownerId))
@@ -169,10 +159,16 @@ public class ListingService {
         return (root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             if (ownerId != null) {
-                predicates.add(cb.equal(root.get("ownerId"), ownerId));
+                predicates.add(cb.or(
+                        cb.equal(root.get("ownerId"), ownerId),
+                        cb.equal(root.get("ownerIdLegacy"), ownerId)
+                ));
             }
             if (excludeOwnerId != null) {
-                predicates.add(cb.notEqual(root.get("ownerId"), excludeOwnerId));
+                predicates.add(cb.and(
+                        cb.notEqual(root.get("ownerId"), excludeOwnerId),
+                        cb.notEqual(root.get("ownerIdLegacy"), excludeOwnerId)
+                ));
             }
             if (q != null && !q.isBlank()) {
                 String like = "%" + q.toLowerCase() + "%";
@@ -197,18 +193,28 @@ public class ListingService {
     }
     
     private ListingDTO toDTO(Listing l, Long currentUserId) {
-        String ownerDisplayName = userRepository.findById(l.getOwnerId())
-                .map(user -> user.getDisplayName())
-                .orElse("未知使用者");
+    Long resolvedOwnerId = l.getOwnerId() != null ? l.getOwnerId() : l.getOwnerIdLegacy();
+    Long legacyOwnerId = l.getOwnerIdLegacy();
+
+    Long lookupOwnerId = resolvedOwnerId != null ? resolvedOwnerId : legacyOwnerId;
+    String ownerDisplayName = lookupOwnerId == null ? "未知使用者" :
+        userRepository.findById(lookupOwnerId)
+            .map(user -> user.getDisplayName())
+            .orElse("未知使用者");
+
+    boolean isMine = currentUserId != null && (
+        (resolvedOwnerId != null && resolvedOwnerId.equals(currentUserId)) ||
+        (legacyOwnerId != null && legacyOwnerId.equals(currentUserId))
+    );
         
         return ListingDTO.builder()
                 .id(l.getId())
                 .title(l.getTitle())
                 .description(l.getDescription())
-                .ownerId(l.getOwnerId())
+        .ownerId(lookupOwnerId)
                 .ownerDisplayName(ownerDisplayName)
                 .status(l.getStatus())
-                .isMine(currentUserId != null && l.getOwnerId().equals(currentUserId))
+        .isMine(isMine)
                 .createdAt(l.getCreatedAt())
                 .updatedAt(l.getUpdatedAt())
                 .build();
