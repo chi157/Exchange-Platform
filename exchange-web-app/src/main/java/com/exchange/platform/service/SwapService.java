@@ -1,7 +1,11 @@
 package com.exchange.platform.service;
 
+import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.dto.SwapDTO;
+import com.exchange.platform.entity.Proposal;
+import com.exchange.platform.entity.ProposalItem;
 import com.exchange.platform.entity.Swap;
+import com.exchange.platform.repository.ProposalRepository;
 import com.exchange.platform.repository.SwapRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +16,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class SwapService {
 
     private final SwapRepository swapRepository;
+    private final ProposalRepository proposalRepository;
     private static final String SESSION_USER_ID = "userId";
 
     @Transactional(readOnly = true)
@@ -66,6 +75,37 @@ public class SwapService {
     }
 
     public SwapDTO toDTO(Swap s) {
+        // Fetch proposal with items
+        final List<ProposalDTO.ProposalItemDTO>[] proposerItemsArray = new List[]{Collections.emptyList()};
+        final List<ProposalDTO.ProposalItemDTO>[] receiverItemsArray = new List[]{Collections.emptyList()};
+        final Long[] proposerIdArray = new Long[]{null};
+        
+        if (s.getProposalId() != null) {
+            proposalRepository.findById(s.getProposalId()).ifPresent(proposal -> {
+                proposerIdArray[0] = proposal.getProposerId();
+                
+                proposerItemsArray[0] = proposal.getProposalItems().stream()
+                        .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
+                        .map(item -> ProposalDTO.ProposalItemDTO.builder()
+                                .itemId(item.getId())
+                                .listingId(item.getListing().getId())
+                                .listingTitle(item.getListing().getTitle())
+                                .side("OFFERED")
+                                .build())
+                        .collect(Collectors.toList());
+                
+                receiverItemsArray[0] = proposal.getProposalItems().stream()
+                        .filter(item -> item.getSide() == ProposalItem.Side.REQUESTED)
+                        .map(item -> ProposalDTO.ProposalItemDTO.builder()
+                                .itemId(item.getId())
+                                .listingId(item.getListing().getId())
+                                .listingTitle(item.getListing().getTitle())
+                                .side("REQUESTED")
+                                .build())
+                        .collect(Collectors.toList());
+            });
+        }
+        
         return SwapDTO.builder()
                 .id(s.getId())
                 .listingId(s.getListingId())
@@ -76,8 +116,11 @@ public class SwapService {
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
                 .completedAt(s.getCompletedAt())
-        .aConfirmedAt(s.getAConfirmedAt())
-        .bConfirmedAt(s.getBConfirmedAt())
+                .aConfirmedAt(s.getAConfirmedAt())
+                .bConfirmedAt(s.getBConfirmedAt())
+                .proposerItems(proposerItemsArray[0])
+                .receiverItems(receiverItemsArray[0])
+                .proposerId(proposerIdArray[0])
                 .build();
     }
 
