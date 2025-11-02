@@ -514,6 +514,29 @@
         .no-listings-message a:hover {
             text-decoration: underline;
         }
+        
+        /* 狀態標籤 */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .status-available {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+        .status-locked {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        .status-completed {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            color: white;
+        }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
     <meta name="color-scheme" content="light">
@@ -585,7 +608,22 @@
 
     <div class="list" th:if="${items != null and !items.isEmpty()}">
         <div class="card" th:each="it : ${items}">
-            <div class="item-title" th:text="${it.title}">標題</div>
+            <div class="item-title">
+                <span th:text="${it.title}">標題</span>
+                <!-- 狀態標籤 -->
+            <span class="status-badge status-available" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}">
+                    ✓ 可交換
+                </span>
+                <span class="status-badge status-locked" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}">
+                    🔒 交換中
+                </span>
+                <span class="status-badge status-completed" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}">
+                    ✓ 已完成
+                </span>
+            </div>
             <div class="item-desc" th:text="${it.description}">描述</div>
             <div class="muted" style="margin-top:8px;">
                 📌 ID: <span th:text="${it.id}">1</span> ・ 
@@ -600,8 +638,8 @@
                         onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
                     ✏️ 編輯
                 </button>
-                <!-- 只對不是自己的物品顯示提案按鈕 -->
-                <button th:if="${it.ownerId != currentUserId}" 
+                <!-- 只對不是自己且狀態為可交換的物品顯示提案按鈕 -->
+        <button th:if="${it.ownerId != currentUserId and (it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE)}" 
                         class="btn-proposal" 
                         th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
                         onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">

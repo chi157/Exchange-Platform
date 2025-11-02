@@ -1,4 +1,4 @@
-﻿package com.exchange.platform.controller;
+package com.exchange.platform.controller;
 
 import com.exchange.platform.dto.AuthResponse;
 import com.exchange.platform.dto.UpdateProfileRequest;
