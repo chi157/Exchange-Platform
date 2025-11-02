@@ -33,7 +33,7 @@
                     <div style="font-weight: 700; color: var(--brand-700); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
                         <span>🎁 提案者提供的物品</span>
                         <span style="font-size: 12px; color: var(--text-600); font-weight: 400;">
-                            (提案者 ID: <span th:text="${swap.proposerId}">-</span>)
+                            (提案者: <span th:text="${swap.proposerDisplayName}">使用者名稱</span>)
                         </span>
                     </div>
                     <div th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty()}">
@@ -87,12 +87,12 @@
                 <span th:text="${swap.proposalId}">1</span>
             </div>
             <div class="info-row">
-                <span class="label">使用者 A ID：</span>
-                <span th:text="${swap.aUserId}">1</span>
+                <span class="label">使用者 A：</span>
+                <span th:text="${swap.aUserDisplayName}">使用者A</span>
             </div>
             <div class="info-row">
-                <span class="label">使用者 B ID：</span>
-                <span th:text="${swap.bUserId}">2</span>
+                <span class="label">使用者 B：</span>
+                <span th:text="${swap.bUserDisplayName}">使用者B</span>
             </div>
             <div class="info-row">
                 <span class="label">建立時間：</span>

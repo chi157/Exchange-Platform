@@ -13,6 +13,9 @@ public class ProposalDTO {
     private Long id;
     private Long listingId; // receiver's listing (for backward compatibility)
     private Long proposerId;
+    private String proposerDisplayName; // proposer's display name
+    private Long receiverId;
+    private String receiverDisplayName; // receiver's display name
     private String message;
     private Proposal.Status status;
     private LocalDateTime createdAt;
