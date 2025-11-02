@@ -118,6 +118,25 @@ public class UiListingController {
         
         return "my-listings";
     }
+
+    // M3: 新增刊登的專屬頁面
+    @GetMapping("/listings/new")
+    public String newListingForm(HttpSession session, Model model) {
+        // 如果未登入，重定向到登入頁
+        if (session.getAttribute("userId") == null) {
+            return "redirect:/ui/auth/login";
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        // 加入當前使用者的顯示名稱
+        String currentUserDisplayName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        model.addAttribute("currentUserId", userId);
+
+        return "create-listing";
+    }
     
     // === 圖片上傳相關 API ===
     

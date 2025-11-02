@@ -578,11 +578,11 @@
 
     <h1>📋 刊登列表</h1>
 
-    <!-- <div style="text-align: center; margin: 20px 0;">
-        <button class="btn-create-listing" onclick="openCreateListingModal()">
+    <div style="text-align: center; margin: 20px 0;">
+        <a href="/ui/listings/new" class="btn-create-listing" style="text-decoration: none;">
             ➕ 新增刊登物品
-        </button>
-    </div> -->
+        </a>
+    </div>
 
     <div class="card" style="margin-top: 16px;">
         <form class="filters" method="get" th:action="@{/ui/listings}">
@@ -793,85 +793,6 @@
                 </div>
                 
                 <button type="submit" class="btn-submit-proposal">🚀 送出提案</button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- 新增刊登彈出視窗 -->
-<div id="createListingModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2>➕ 新增刊登物品</h2>
-            <button class="close-btn" onclick="closeCreateListingModal()">×</button>
-        </div>
-        <div>
-            <form id="createListingForm">
-                <div class="form-group">
-                    <label for="newListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
-                    <input type="text" id="newListingTitle" name="title" required placeholder="例如：二手書籍、電子產品等">
-                </div>
-                <div class="form-group">
-                    <label for="newListingDescription">物品描述（選填）</label>
-                    <textarea id="newListingDescription" name="description" placeholder="詳細描述您的物品狀況、購買時間等..."></textarea>
-                </div>
-                
-                <!-- === 卡片屬性欄位 === -->
-                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
-                    <h4 style="margin: 0 0 12px 0; color: #495057;">📱 卡片資訊</h4>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <div class="form-group">
-                            <label for="newCardName">卡片名稱</label>
-                            <input type="text" id="newCardName" name="cardName" placeholder="例如：Jimin - Proof">
-                        </div>
-                        <div class="form-group">
-                            <label for="newGroupName">團體名稱</label>
-                            <input type="text" id="newGroupName" name="groupName" placeholder="例如：BTS">
-                        </div>
-                        <div class="form-group">
-                            <label for="newArtistName">藝人名稱</label>
-                            <input type="text" id="newArtistName" name="artistName" placeholder="例如：Jimin">
-                        </div>
-                        <div class="form-group">
-                            <label for="newCardSource">卡片來源</label>
-                            <select id="newCardSource" name="cardSource">
-                                <option value="">請選擇</option>
-                                <option value="ALBUM">專輯</option>
-                                <option value="CONCERT">演唱會</option>
-                                <option value="FAN_MEETING">粉絲見面會</option>
-                                <option value="EVENT_CARD">活動卡</option>
-                                <option value="SPECIAL_CARD">特典卡</option>
-                                <option value="UNOFFICIAL">非官方卡</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="newConditionRating">品相等級 (1-10)</label>
-                            <input type="number" id="newConditionRating" name="conditionRating" min="1" max="10" placeholder="9">
-                        </div>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="newHasProtection" name="hasProtection" value="true">
-                            <label for="newHasProtection" style="margin: 0;">有保護措施</label>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newRemarks">備註</label>
-                        <textarea id="newRemarks" name="remarks" placeholder="收藏狀況、特殊說明等..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newCardImages">卡片圖片 (最多5張)</label>
-                        <input type="file" id="newCardImages" accept="image/*" multiple onchange="addImage(this)" style="margin-bottom: 8px;">
-                        <div style="font-size: 12px; color: #888; margin-top: 4px;">若要選擇一張以上，請一次選取全部</div>
-                        <div id="imagePreviewContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
-                        <div style="font-size: 12px; color: #666; margin-top: 4px;">
-                            已選擇 <span id="imageCount">0</span>/5 張圖片
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-submit-proposal">🚀 建立刊登</button>
             </form>
         </div>
     </div>
