@@ -2,6 +2,7 @@ package com.exchange.platform.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 
@@ -45,6 +46,10 @@ public class Listing {
     @Column(name = "status", nullable = false, length = 16)
     @Builder.Default
     private Status status = Status.ACTIVE;
+
+    @Builder.Default
+    @Formula("(case when status = 'COMPLETED' then 1 else 0 end)")
+    private int statusRank = 0;
 
     @PrePersist
     public void prePersist() {

@@ -13,8 +13,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -77,35 +80,30 @@ public class ListingService {
         Sort sortSpec = parseSort(sort);
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
-        Page<Listing> pg;
-        
-        // 排除特定擁有者的刊登
-        if (excludeOwnerId != null) {
-            if (q != null && !q.isBlank()) {
-                pg = listingRepository.findByOwnerIdNotAndTitleContainingIgnoreCaseOrOwnerIdNotAndDescriptionContainingIgnoreCase(
-                    excludeOwnerId, q, excludeOwnerId, q, pageable);
-            } else {
-                pg = listingRepository.findByOwnerIdNot(excludeOwnerId, pageable);
-            }
+        Specification<Listing> baseSpec = buildBaseSpec(q, null, excludeOwnerId);
+        List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
+        List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
+
+        long totalElements = nonCompletedAll.size() + completedAll.size();
+        long pageStart = (long) pageIndex * pageSize;
+        List<Listing> pageItems = new ArrayList<>();
+
+        if (pageStart < nonCompletedAll.size()) {
+            long endNon = Math.min(nonCompletedAll.size(), pageStart + pageSize);
+            pageItems.addAll(nonCompletedAll.subList((int) pageStart, (int) endNon));
         } else {
-            if (q != null && !q.isBlank()) {
-                pg = listingRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
-            } else {
-                pg = listingRepository.findAll(pageable);
+            long completedOffset = pageStart - nonCompletedAll.size();
+            if (completedOffset < completedAll.size()) {
+                long endCompleted = Math.min(completedAll.size(), completedOffset + pageSize);
+                pageItems.addAll(completedAll.subList((int) completedOffset, (int) endCompleted));
             }
         }
-    // 轉為 DTO 並在頁面內將 COMPLETED 排在最後
-    List<ListingDTO> content = pg.getContent().stream()
-        .map(this::toDTO)
-        .sorted((a, b) -> {
-            int ra = (a.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
-            int rb = (b.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
-            if (ra != rb) return Integer.compare(ra, rb); // 非完成在前，完成在後
-            // 次排序依使用者選擇（與 parseSort 一致）
-            return secondaryCompare(a, b, sort);
-        })
-        .toList();
-    return new org.springframework.data.domain.PageImpl<>(content, pageable, pg.getTotalElements());
+
+        List<ListingDTO> content = pageItems.stream()
+                .map(this::toDTO)
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, totalElements);
     }
     
     @Transactional(readOnly = true)
@@ -117,25 +115,30 @@ public class ListingService {
     Sort sortSpec = parseSort(sort);
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
-        Page<Listing> pg;
-        if (q != null && !q.isBlank()) {
-            // 搜尋當前使用者的刊登
-            pg = listingRepository.findByOwnerIdAndTitleContainingIgnoreCaseOrOwnerIdAndDescriptionContainingIgnoreCase(
-                ownerId, q, ownerId, q, pageable);
+        Specification<Listing> baseSpec = buildBaseSpec(q, ownerId, null);
+        List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
+        List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
+
+        long totalElements = nonCompletedAll.size() + completedAll.size();
+        long pageStart = (long) pageIndex * pageSize;
+        List<Listing> pageItems = new ArrayList<>();
+
+        if (pageStart < nonCompletedAll.size()) {
+            long endNon = Math.min(nonCompletedAll.size(), pageStart + pageSize);
+            pageItems.addAll(nonCompletedAll.subList((int) pageStart, (int) endNon));
         } else {
-            pg = listingRepository.findByOwnerId(ownerId, pageable);
+            long completedOffset = pageStart - nonCompletedAll.size();
+            if (completedOffset < completedAll.size()) {
+                long endCompleted = Math.min(completedAll.size(), completedOffset + pageSize);
+                pageItems.addAll(completedAll.subList((int) completedOffset, (int) endCompleted));
+            }
         }
-    // 轉為 DTO 並在頁面內將 COMPLETED 排在最後
-    List<ListingDTO> content = pg.getContent().stream()
-        .map(l -> toDTO(l, ownerId))
-        .sorted((a, b) -> {
-            int ra = (a.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
-            int rb = (b.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
-            if (ra != rb) return Integer.compare(ra, rb);
-            return secondaryCompare(a, b, sort);
-        })
-        .toList();
-    return new org.springframework.data.domain.PageImpl<>(content, pageable, pg.getTotalElements());
+
+        List<ListingDTO> content = pageItems.stream()
+                .map(l -> toDTO(l, ownerId))
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, totalElements);
     }
 
     private Sort parseSort(String sort) {
@@ -157,26 +160,36 @@ public class ListingService {
         if (!prop.equals("createdAt") && !prop.equals("updatedAt") && !prop.equals("id")) {
             prop = "createdAt";
         }
-        return Sort.by(dir, prop);
+
+        Sort userSort = Sort.by(new Sort.Order(dir, prop));
+        return Sort.by(Sort.Order.asc("statusRank")).and(userSort);
     }
 
-    // 頁面內次排序：依使用者要求的欄位排序
-    private int secondaryCompare(ListingDTO a, ListingDTO b, String sort) {
-        String prop = "createdAt";
-        boolean asc = false; // 預設 DESC
-        if (sort != null && !sort.isBlank()) {
-            String[] parts = sort.split(",");
-            if (parts.length >= 1 && !parts[0].isBlank()) prop = parts[0].trim();
-            if (parts.length >= 2) asc = "ASC".equalsIgnoreCase(parts[1].trim());
-        }
-        int cmp = 0;
-        switch (prop) {
-            case "id" -> cmp = Long.compare(a.getId(), b.getId());
-            case "updatedAt" -> cmp = a.getUpdatedAt().compareTo(b.getUpdatedAt());
-            case "createdAt" -> cmp = a.getCreatedAt().compareTo(b.getCreatedAt());
-            default -> cmp = a.getCreatedAt().compareTo(b.getCreatedAt());
-        }
-        return asc ? cmp : -cmp;
+    private Specification<Listing> buildBaseSpec(String q, Long ownerId, Long excludeOwnerId) {
+        return (root, query, cb) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            if (ownerId != null) {
+                predicates.add(cb.equal(root.get("ownerId"), ownerId));
+            }
+            if (excludeOwnerId != null) {
+                predicates.add(cb.notEqual(root.get("ownerId"), excludeOwnerId));
+            }
+            if (q != null && !q.isBlank()) {
+                String like = "%" + q.toLowerCase() + "%";
+                jakarta.persistence.criteria.Predicate titleLike = cb.like(cb.lower(root.get("title")), like);
+                jakarta.persistence.criteria.Predicate descLike = cb.like(cb.lower(root.get("description")), like);
+                predicates.add(cb.or(titleLike, descLike));
+            }
+            return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+    }
+
+    private Specification<Listing> statusNotCompleted() {
+        return (root, query, cb) -> cb.notEqual(root.get("status"), Listing.Status.COMPLETED);
+    }
+
+    private Specification<Listing> statusCompleted() {
+        return (root, query, cb) -> cb.equal(root.get("status"), Listing.Status.COMPLETED);
     }
 
     private ListingDTO toDTO(Listing l) {
