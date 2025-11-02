@@ -3,6 +3,7 @@ package com.exchange.platform.service;
 import com.exchange.platform.dto.AuthResponse;
 import com.exchange.platform.dto.LoginRequest;
 import com.exchange.platform.dto.RegisterRequest;
+import com.exchange.platform.dto.UpdateProfileRequest;
 import com.exchange.platform.dto.UserDTO;
 import com.exchange.platform.entity.User;
 import com.exchange.platform.repository.UserRepository;
@@ -101,5 +102,48 @@ public class AuthService {
                         .updatedAt(u.getUpdatedAt())
                         .build())
                 .orElse(null);
+    }
+
+    public AuthResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        log.debug("Updating profile for user: {}", userId);
+
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("User not found")
+                    .build();
+        }
+
+        User user = userOpt.get();
+
+        // 如果要更改密碼，需要驗證當前密碼
+        if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
+            if (request.getCurrentPassword() == null || 
+                !user.getPasswordHash().equals(request.getCurrentPassword())) {
+                return AuthResponse.builder()
+                        .success(false)
+                        .message("當前密碼不正確")
+                        .build();
+            }
+            user.setPasswordHash(request.getNewPassword());
+            log.info("Password updated for user: {}", userId);
+        }
+
+        // 更新顯示名稱
+        if (request.getDisplayName() != null && !request.getDisplayName().isEmpty()) {
+            user.setDisplayName(request.getDisplayName());
+            log.info("Display name updated for user: {}", userId);
+        }
+
+        userRepository.save(user);
+
+        return AuthResponse.builder()
+                .success(true)
+                .message("個人資料更新成功")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .build();
     }
 }
