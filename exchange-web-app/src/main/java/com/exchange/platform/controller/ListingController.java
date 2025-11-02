@@ -56,6 +56,13 @@ public class ListingController {
                                                                                                          @RequestParam(required = false) String sort) {
         return ResponseEntity.ok(this.proposalService.listByListing(id, page, size, sort));
     }
+    
+    // 測試序列化方法
+    @GetMapping("/test-serialization")
+    public ResponseEntity<String> testSerialization(@RequestParam String[] fileNames) {
+        String result = listingService.testSerialization(java.util.Arrays.asList(fileNames));
+        return ResponseEntity.ok("Serialized: " + result);
+    }
 
     @ExceptionHandler(ListingService.UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorized() {

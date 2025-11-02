@@ -36,7 +36,9 @@ public class ListingService {
         }
 
         // 處理圖片路徑
+        System.out.println("DEBUG - create(): 接收到的圖片檔名清單: " + request.getImageFileNames());
         String imagePathsJson = serializeImagePaths(request.getImageFileNames());
+        System.out.println("DEBUG - create(): 序列化後的JSON: " + imagePathsJson);
         
         Listing listing = Listing.builder()
                 .title(request.getTitle())
@@ -270,11 +272,15 @@ public class ListingService {
 
     // === 圖片處理相關方法 ===
     private String serializeImagePaths(List<String> imageFileNames) {
+        System.out.println("DEBUG - serializeImagePaths(): 輸入參數: " + imageFileNames);
         if (imageFileNames == null || imageFileNames.isEmpty()) {
+            System.out.println("DEBUG - serializeImagePaths(): 圖片清單為空，返回null");
             return null;
         }
         // 簡單的JSON序列化，實際專案可使用Jackson
-        return "[\"" + String.join("\",\"", imageFileNames) + "\"]";
+        String result = "[\"" + String.join("\",\"", imageFileNames) + "\"]";
+        System.out.println("DEBUG - serializeImagePaths(): 序列化結果: " + result);
+        return result;
     }
     
     private List<String> parseImageUrls(String imagePaths) {
@@ -298,6 +304,12 @@ public class ListingService {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+
+    // 測試方法：獨立測試序列化功能
+    public String testSerialization(List<String> fileNames) {
+        System.out.println("DEBUG - testSerialization(): 測試輸入: " + fileNames);
+        return serializeImagePaths(fileNames);
     }
 
     public static class UnauthorizedException extends RuntimeException {}

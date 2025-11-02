@@ -862,7 +862,7 @@
                     
                     <div class="form-group">
                         <label for="newCardImages">卡片圖片 (最多5張)</label>
-                        <input type="file" id="newCardImages" accept="image/*" onchange="addImage(this)" style="margin-bottom: 8px;">
+                        <input type="file" id="newCardImages" accept="image/*" multiple onchange="addImage(this)" style="margin-bottom: 8px;">
                         <div id="imagePreviewContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
                         <div style="font-size: 12px; color: #666; margin-top: 4px;">
                             已選擇 <span id="imageCount">0</span>/5 張圖片
@@ -1078,69 +1078,124 @@
     let selectedImages = []; // 儲存選中的檔案
     
     function addImage(input) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        // 檢查總數限制
-        if (selectedImages.length >= 5) {
-            alert('最多只能上傳5張圖片');
-            input.value = '';
+        const files = Array.from(input.files || []);
+        if (files.length === 0) {
             return;
         }
-        
-        // 檢查檔案大小
-        if (file.size > 5 * 1024 * 1024) {
-            alert(`圖片 ${file.name} 大小超過 5MB 限制`);
-            input.value = '';
-            return;
+
+        let addedCount = 0;
+
+        for (const file of files) {
+            if (selectedImages.length >= 5) {
+                alert('最多只能上傳5張圖片');
+                break;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert(`圖片 ${file.name} 大小超過 5MB 限制`);
+                continue;
+            }
+
+            if (selectedImages.some(img => img.name === file.name && img.size === file.size)) {
+                alert(`圖片 ${file.name} 已經選擇過了`);
+                continue;
+            }
+
+            const imageIndex = selectedImages.length;
+            selectedImages.push(file);
+            addImagePreview(file, imageIndex);
+            addedCount++;
         }
-        
-        // 檢查是否重複選擇同一檔案
-        if (selectedImages.some(img => img.name === file.name && img.size === file.size)) {
-            alert('此圖片已經選擇過了');
-            input.value = '';
-            return;
-        }
-        
-        // 添加到選中清單
-        selectedImages.push(file);
-        
-        // 清空 input 以便下次選擇
+
         input.value = '';
+
+        updateImageCount();
+    }
+    
+    function addImagePreview(file, index) {
+        const container = document.getElementById('imagePreviewContainer');
         
-        // 更新預覽
-        updateImagePreviews();
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.createElement('div');
+            preview.style.cssText = 'position: relative; display: inline-block; margin: 4px;';
+            preview.setAttribute('data-index', index);
+            preview.innerHTML = `
+                <img src="${e.target.result}" 
+                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                <button type="button" onclick="removeImage(${index})" 
+                        style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;">×</button>
+            `;
+            container.appendChild(preview);
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function updateImageCount() {
+        const countDisplay = document.getElementById('imageCount');
+        countDisplay.textContent = selectedImages.length;
     }
     
     function updateImagePreviews() {
         const container = document.getElementById('imagePreviewContainer');
         const countDisplay = document.getElementById('imageCount');
         
+        // 清空容器
         container.innerHTML = '';
-        
-        selectedImages.forEach((file, index) => {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.createElement('div');
-                preview.style.cssText = 'position: relative; display: inline-block; margin: 4px;';
-                preview.innerHTML = `
-                    <img src="${e.target.result}" 
-                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
-                    <button type="button" onclick="removeImage(${index})" 
-                            style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;">×</button>
-                `;
-                container.appendChild(preview);
-            };
-            reader.readAsDataURL(file);
-        });
         
         // 更新計數顯示
         countDisplay.textContent = selectedImages.length;
+        
+        // 如果沒有圖片就直接返回
+        if (selectedImages.length === 0) {
+            return;
+        }
+        
+        // 使用 Promise.all 確保所有圖片同時處理
+        const promises = selectedImages.map((file, index) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.createElement('div');
+                    preview.style.cssText = 'position: relative; display: inline-block; margin: 4px;';
+                    preview.innerHTML = `
+                        <img src="${e.target.result}" 
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                        <button type="button" onclick="removeImage(${index})" 
+                                style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;">×</button>
+                    `;
+                    resolve(preview);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+        
+        // 等待所有圖片讀取完成後一次性添加到容器
+        Promise.all(promises).then(previews => {
+            previews.forEach(preview => {
+                container.appendChild(preview);
+            });
+        });
     }
     
     function removeImage(index) {
+        // 移除選中的圖片
         selectedImages.splice(index, 1);
-        updateImagePreviews();
+        
+        // 重新建立預覽（需要更新所有按鈕的索引）
+        updateImagePreviewsSimple();
+    }
+    
+    function updateImagePreviewsSimple() {
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = '';
+        
+        // 重新建立所有預覽
+        selectedImages.forEach((file, index) => {
+            addImagePreview(file, index);
+        });
+        
+        updateImageCount();
     }
     
     function closeCreateListingModal() {
@@ -1224,7 +1279,7 @@
             formData.append('file', selectedImages[i]);
             
             try {
-                const response = await fetch('/api/images/upload', {
+                const response = await fetch('/ui/api/images/upload', {
                     method: 'POST',
                     body: formData
                 });

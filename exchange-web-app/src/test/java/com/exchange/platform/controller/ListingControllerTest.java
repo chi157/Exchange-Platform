@@ -90,4 +90,48 @@ class ListingControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(100));
     }
+
+    @Test
+    @DisplayName("GET /api/listings/test-serialization -> 200 test serialization")
+    void testSerialization_ok() throws Exception {
+        Mockito.when(listingService.testSerialization(any()))
+                .thenReturn("[\"image1.jpg\",\"image2.png\"]");
+
+        mockMvc.perform(get("/api/listings/test-serialization")
+                        .param("fileNames", "image1.jpg", "image2.png"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Serialized: [\"image1.jpg\",\"image2.png\"]"));
+    }
+    
+    @Test
+    @DisplayName("POST /api/listings with multiple images -> 201 created")
+    void createWithMultipleImages_created() throws Exception {
+        ListingDTO expectedResponse = ListingDTO.builder()
+                .id(1L)
+                .title("Test Card")
+                .description("Test Description")
+                .ownerId(7L)
+                .imageUrls(List.of("/images/image1.jpg", "/images/image2.png"))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+                
+        Mockito.when(listingService.create(any(CreateListingRequest.class), any()))
+                .thenReturn(expectedResponse);
+
+        String requestBody = "{"
+                + "\"title\":\"Test Card\","
+                + "\"description\":\"Test Description\","
+                + "\"imageFileNames\":[\"image1.jpg\",\"image2.png\"]"
+                + "}";
+                
+        mockMvc.perform(post("/api/listings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.imageUrls").isArray())
+                .andExpect(jsonPath("$.imageUrls[0]").value("/images/image1.jpg"))
+                .andExpect(jsonPath("$.imageUrls[1]").value("/images/image2.png"));
+    }
 }
