@@ -806,84 +806,69 @@
             <button class="close-btn" onclick="closeCreateListingModal()">×</button>
         </div>
         <div>
-            <form id="createListingForm" enctype="multipart/form-data">
-                <!-- 卡片圖片上傳 -->
-                <div class="form-group">
-                    <label>卡片圖片 (最少1張，最多5張)</label>
-                    <input type="file" id="newListingImages" name="images" multiple accept="image/*" onchange="previewImages(this, 'newImagePreview')">
-                    <div id="newImagePreview" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
-                </div>
-                
+            <form id="createListingForm">
                 <div class="form-group">
                     <label for="newListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
-                    <input type="text" id="newListingTitle" name="title" required placeholder="例如：Jimin - Proof 小卡">
+                    <input type="text" id="newListingTitle" name="title" required placeholder="例如：二手書籍、電子產品等">
                 </div>
-                
-                <!-- 卡片基本資訊 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label for="newCardName">🎴 卡片名稱</label>
-                        <input type="text" id="newCardName" name="cardName" placeholder="例如：Jimin - Proof">
-                    </div>
-                    <div class="form-group">
-                        <label for="newGroupName">👥 所屬團體</label>
-                        <input type="text" id="newGroupName" name="groupName" placeholder="例如：BTS">
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label for="newArtistName">⭐ 藝人名稱</label>
-                        <input type="text" id="newArtistName" name="artistName" placeholder="例如：Jimin">
-                    </div>
-                    <div class="form-group">
-                        <label for="newCardSource">📀 卡片來源</label>
-                        <select id="newCardSource" name="cardSource">
-                            <option value="">請選擇</option>
-                            <option value="ALBUM">專輯</option>
-                            <option value="CONCERT">演唱會</option>
-                            <option value="FAN_MEETING">粉絲見面會</option>
-                            <option value="EVENT_CARD">活動卡</option>
-                            <option value="SPECIAL_CARD">特典卡</option>
-                            <option value="UNOFFICIAL">非官方卡</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label for="newConditionRating">💎 卡片幾成新</label>
-                        <select id="newConditionRating" name="conditionRating">
-                            <option value="">請選擇</option>
-                            <option value="10">10成新 (全新)</option>
-                            <option value="9">9成新 (近全新)</option>
-                            <option value="8">8成新 (良好)</option>
-                            <option value="7">7成新 (輕微磨損)</option>
-                            <option value="6">6成新 (中等磨損)</option>
-                            <option value="5">5成新 (明顯磨損)</option>
-                            <option value="4">4成新 (嚴重磨損)</option>
-                            <option value="3">3成新 (破損)</option>
-                            <option value="2">2成新 (嚴重破損)</option>
-                            <option value="1">1成新 (極度破損)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newHasProtection">🛡️ 是否有保護套/殼</label>
-                        <select id="newHasProtection" name="hasProtection">
-                            <option value="false">無</option>
-                            <option value="true">有</option>
-                        </select>
-                    </div>
-                </div>
-                
                 <div class="form-group">
                     <label for="newListingDescription">物品描述（選填）</label>
                     <textarea id="newListingDescription" name="description" placeholder="詳細描述您的物品狀況、購買時間等..."></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label for="newRemarks">📝 備註（選填）</label>
-                    <textarea id="newRemarks" name="remarks" placeholder="其他補充說明..."></textarea>
+                <!-- === 卡片屬性欄位 === -->
+                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                    <h4 style="margin: 0 0 12px 0; color: #495057;">📱 卡片資訊</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="newCardName">卡片名稱</label>
+                            <input type="text" id="newCardName" name="cardName" placeholder="例如：Jimin - Proof">
+                        </div>
+                        <div class="form-group">
+                            <label for="newGroupName">團體名稱</label>
+                            <input type="text" id="newGroupName" name="groupName" placeholder="例如：BTS">
+                        </div>
+                        <div class="form-group">
+                            <label for="newArtistName">藝人名稱</label>
+                            <input type="text" id="newArtistName" name="artistName" placeholder="例如：Jimin">
+                        </div>
+                        <div class="form-group">
+                            <label for="newCardSource">卡片來源</label>
+                            <select id="newCardSource" name="cardSource">
+                                <option value="">請選擇</option>
+                                <option value="ALBUM">專輯</option>
+                                <option value="CONCERT">演唱會</option>
+                                <option value="FAN_MEETING">粉絲見面會</option>
+                                <option value="EVENT_CARD">活動卡</option>
+                                <option value="SPECIAL_CARD">特典卡</option>
+                                <option value="UNOFFICIAL">非官方卡</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newConditionRating">品相等級 (1-10)</label>
+                            <input type="number" id="newConditionRating" name="conditionRating" min="1" max="10" placeholder="9">
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="newHasProtection" name="hasProtection" value="true">
+                            <label for="newHasProtection" style="margin: 0;">有保護措施</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newRemarks">備註</label>
+                        <textarea id="newRemarks" name="remarks" placeholder="收藏狀況、特殊說明等..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newCardImages">卡片圖片 (最多5張)</label>
+                        <input type="file" id="newCardImages" accept="image/*" multiple onchange="addImage(this)" style="margin-bottom: 8px;">
+                        <div style="font-size: 12px; color: #888; margin-top: 4px;">若要選擇一張以上，請一次選取全部</div>
+                        <div id="imagePreviewContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;"></div>
+                        <div style="font-size: 12px; color: #666; margin-top: 4px;">
+                            已選擇 <span id="imageCount">0</span>/5 張圖片
+                        </div>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn-submit-proposal">🚀 建立刊登</button>
@@ -1142,24 +1127,120 @@
     });
     
     // === 新增刊登相關函數 ===
-    function openCreateListingModal() {
-        document.getElementById('createListingModal').classList.add('show');
-        // 清空所有欄位
-        document.getElementById('newListingTitle').value = '';
-        document.getElementById('newListingDescription').value = '';
-        document.getElementById('newCardName').value = '';
-        document.getElementById('newGroupName').value = '';
-        document.getElementById('newArtistName').value = '';
-        document.getElementById('newCardSource').value = '';
-        document.getElementById('newConditionRating').value = '';
-        document.getElementById('newHasProtection').value = 'false';
-        document.getElementById('newRemarks').value = '';
-        document.getElementById('newListingImages').value = '';
-        document.getElementById('newImagePreview').innerHTML = '';
-    }
     
+    let selectedFiles = [];
+    const MAX_FILES = 5;
+
+    function openCreateListingModal() {
+        // 清空表單和預覽
+        document.getElementById('createListingForm').reset();
+        selectedFiles = [];
+        updateImagePreview();
+        
+        document.getElementById('createListingModal').classList.add('show');
+    }
+
     function closeCreateListingModal() {
         document.getElementById('createListingModal').classList.remove('show');
+    }
+
+    function addImage(input) {
+        if (input.files) {
+            let filesToAdd = Array.from(input.files);
+            
+            if (selectedFiles.length + filesToAdd.length > MAX_FILES) {
+                alert(`您最多只能上傳 ${MAX_FILES} 張圖片。`);
+                // 清空 file input 以便使用者可以重新選擇
+                input.value = "";
+                return;
+            }
+            
+            selectedFiles.push(...filesToAdd);
+            updateImagePreview();
+        }
+        // 清空 file input 以允許再次選擇相同檔案
+        input.value = "";
+    }
+
+    function updateImagePreview() {
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const imageCountSpan = document.getElementById('imageCount');
+        
+        previewContainer.innerHTML = '';
+        
+        selectedFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewWrapper = document.createElement('div');
+                previewWrapper.style.position = 'relative';
+                
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.width = '80px';
+                img.style.height = '80px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '4px';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.innerText = '×';
+                removeBtn.style.position = 'absolute';
+                removeBtn.style.top = '0';
+                removeBtn.style.right = '0';
+                removeBtn.style.background = 'rgba(0,0,0,0.6)';
+                removeBtn.style.color = 'white';
+                removeBtn.style.border = 'none';
+                removeBtn.style.borderRadius = '50%';
+                removeBtn.style.width = '20px';
+                removeBtn.style.height = '20px';
+                removeBtn.style.lineHeight = '20px';
+                removeBtn.style.textAlign = 'center';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.onclick = function() {
+                    removeImage(index);
+                };
+                
+                previewWrapper.appendChild(img);
+                previewWrapper.appendChild(removeBtn);
+                previewContainer.appendChild(previewWrapper);
+            }
+            reader.readAsDataURL(file);
+        });
+        
+        imageCountSpan.textContent = selectedFiles.length;
+    }
+
+    function removeImage(index) {
+        selectedFiles.splice(index, 1);
+        updateImagePreview();
+    }
+
+    async function uploadImages() {
+        if (selectedFiles.length === 0) {
+            return []; // 沒有圖片就返回空陣列
+        }
+
+        const formData = new FormData();
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+
+        try {
+            const response = await fetch('/ui/api/images/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error('圖片上傳失敗');
+            }
+
+            const result = await response.json();
+            return result.fileNames; // 返回上傳後的檔案名稱陣列
+        } catch (error) {
+            console.error('上傳圖片時發生錯誤:', error);
+            alert('圖片上傳失敗，請稍後再試。');
+            return null; // 返回 null 表示上傳失敗
+        }
     }
     
     // 點擊背景關閉
@@ -1168,88 +1249,61 @@
             closeCreateListingModal();
         }
     });
-    
-    // 提交新增刊登
-    document.getElementById('createListingForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+
+    document.getElementById('createListingForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
         
-        const title = document.getElementById('newListingTitle').value;
-        
-        if (!title || title.trim() === '') {
-            alert('❌ 請輸入物品標題');
+        if (selectedFiles.length === 0) {
+            alert('請至少上傳一張圖片。');
             return;
         }
-        
-        // 先上傳圖片
-        const images = document.getElementById('newListingImages').files;
-        let imageFileNames = [];
-        
-        if (images.length > 0) {
-            if (images.length > 5) {
-                alert('❌ 最多只能上傳5張圖片');
-                return;
-            }
-            
-            for (let i = 0; i < images.length; i++) {
-                const formData = new FormData();
-                formData.append('file', images[i]);
-                
-                const uploadResponse = await fetch('/ui/api/images/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (uploadResponse.ok) {
-                    const uploadResult = await uploadResponse.json();
-                    if (uploadResult.success) {
-                        imageFileNames.push(uploadResult.fileName);
-                    }
-                } else {
-                    alert('❌ 圖片上傳失敗');
-                    return;
-                }
-            }
+
+        // 步驟 1: 上傳圖片
+        const uploadedImageNames = await uploadImages();
+
+        if (uploadedImageNames === null) {
+            // uploadImages 內部已經 alert 錯誤，這裡不再重複
+            return;
         }
-        
-        // 收集表單資料
-        const formData = {
-            title: title.trim(),
-            description: document.getElementById('newListingDescription').value.trim() || null,
-            cardName: document.getElementById('newCardName').value.trim() || null,
-            groupName: document.getElementById('newGroupName').value.trim() || null,
-            artistName: document.getElementById('newArtistName').value.trim() || null,
-            cardSource: document.getElementById('newCardSource').value || null,
-            conditionRating: document.getElementById('newConditionRating').value ? parseInt(document.getElementById('newConditionRating').value) : null,
-            hasProtection: document.getElementById('newHasProtection').value === 'true',
-            remarks: document.getElementById('newRemarks').value.trim() || null,
-            imageFileNames: imageFileNames
+
+        // 步驟 2: 組合刊登資料並提交
+        const formData = new FormData(this);
+        const listingData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            imageFileNames: uploadedImageNames, // 使用上傳後的檔名
+            cardAttributes: {
+                cardName: formData.get('cardName'),
+                groupName: formData.get('groupName'),
+                artistName: formData.get('artistName'),
+                cardSource: formData.get('cardSource'),
+                conditionRating: formData.get('conditionRating') ? parseInt(formData.get('conditionRating'), 10) : null,
+                hasProtection: formData.get('hasProtection') === 'true',
+                remarks: formData.get('remarks')
+            }
         };
-        
+
         try {
             const response = await fetch('/api/listings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(listingData)
             });
-            
+
             if (response.ok) {
-                alert('✅ 刊登已建立成功！');
+                alert('🎉 物品刊登成功！');
                 closeCreateListingModal();
-                // 重新載入頁面以顯示新刊登
-                window.location.reload();
-            } else if (response.status === 401) {
-                alert('❌ 請先登入');
-                window.location.href = '/ui/auth/login';
-            } else if (response.status === 400) {
-                alert('❌ 資料格式錯誤，請檢查輸入');
+                location.reload(); // 重新載入頁面以顯示新刊登
             } else {
-                alert('❌ 建立刊登失敗，請稍後再試');
+                const errorData = await response.json();
+                console.error('刊登失敗:', errorData);
+                alert(`刊登失敗：${errorData.message || '請檢查所有必填欄位。'}`);
             }
         } catch (error) {
-            console.error('Error:', error);
-            alert('❌ 網路錯誤，請稍後再試');
+            console.error('提交刊登時發生錯誤:', error);
+            alert('提交刊登時發生網路錯誤，請稍後再試。');
         }
     });
 
@@ -1403,63 +1457,7 @@
         }
     });
     
-    // === 圖片預覽功能 ===
-    function previewImages(input, previewId) {
-        const previewDiv = document.getElementById(previewId);
-        previewDiv.innerHTML = '';
-        
-        if (input.files && input.files.length > 0) {
-            if (input.files.length > 5) {
-                alert('❌ 最多只能選擇5張圖片');
-                input.value = '';
-                return;
-            }
-            
-            Array.from(input.files).forEach((file, index) => {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imgDiv = document.createElement('div');
-                        imgDiv.style.cssText = 'position: relative; display: inline-block;';
-                        imgDiv.innerHTML = `
-                            <img src="${e.target.result}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 2px solid #e5e7eb;" alt="預覽圖 ${index + 1}">
-                            <button type="button" onclick="removePreviewImage(this, '${input.id}', ${index})" 
-                                    style="position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer;">×</button>
-                            <small style="display: block; text-align: center; margin-top: 4px; color: #666;">圖片 ${index + 1}</small>
-                        `;
-                        previewDiv.appendChild(imgDiv);
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    alert('❌ 請只選擇圖片檔案');
-                    input.value = '';
-                    previewDiv.innerHTML = '';
-                    return;
-                }
-            });
-        }
-    }
     
-    function removePreviewImage(button, inputId, imageIndex) {
-        // 移除預覽
-        button.parentElement.remove();
-        
-        // 重建檔案列表（移除指定索引的檔案）
-        const input = document.getElementById(inputId);
-        const dt = new DataTransfer();
-        
-        Array.from(input.files).forEach((file, index) => {
-            if (index !== imageIndex) {
-                dt.items.add(file);
-            }
-        });
-        
-        input.files = dt.files;
-        
-        // 重新產生預覽
-        const previewId = inputId === 'newListingImages' ? 'newImagePreview' : 'editImagePreview';
-        previewImages(input, previewId);
-    }
 </script>
 
 </body>
