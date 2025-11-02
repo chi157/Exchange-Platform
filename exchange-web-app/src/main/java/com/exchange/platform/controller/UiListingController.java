@@ -4,12 +4,22 @@ import com.exchange.platform.dto.ListingDTO;
 import com.exchange.platform.service.ListingService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/ui")
@@ -107,5 +117,93 @@ public class UiListingController {
         model.addAttribute("currentUserDisplayName", currentUserDisplayName);
         
         return "my-listings";
+    }
+    
+    // === 圖片上傳相關 API ===
+    
+    @PostMapping("/api/images/upload")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> uploadImage(
+            @RequestParam("file") MultipartFile file,
+            HttpSession session) {
+        
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 檢查檔案
+            if (file.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "請選擇圖片檔案");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 檢查檔案大小 (5MB)
+            if (file.getSize() > 5 * 1024 * 1024) {
+                response.put("success", false);
+                response.put("message", "圖片檔案大小不可超過 5MB");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 檢查檔案類型
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                response.put("success", false);
+                response.put("message", "請上傳圖片檔案");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 生成檔名
+            String originalFileName = file.getOriginalFilename();
+            String extension = "";
+            if (originalFileName != null && originalFileName.contains(".")) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension;
+            
+            // 建立上傳目錄
+            Path uploadDir = Paths.get("uploads/images");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+            
+            // 儲存檔案
+            Path filePath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath);
+            
+            response.put("success", true);
+            response.put("fileName", fileName);
+            response.put("url", "/images/" + fileName);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IOException e) {
+            response.put("success", false);
+            response.put("message", "檔案上傳失敗：" + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    // 提供圖片存取
+    @GetMapping("/images/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
+        try {
+            Path filePath = Paths.get("uploads/images").resolve(filename);
+            Resource resource = new UrlResource(filePath.toUri());
+            
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .header("Content-Type", Files.probeContentType(filePath))
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

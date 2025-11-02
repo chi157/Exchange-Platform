@@ -3,6 +3,7 @@ package com.exchange.platform.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -16,6 +17,13 @@ public class CorsConfig {
                         .allowedOrigins("*")
                         .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
                         .allowedHeaders("*");
+            }
+            
+            @Override
+            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+                // 配置圖片靜態資源映射
+                registry.addResourceHandler("/images/**")
+                        .addResourceLocations("file:uploads/images/");
             }
         };
     }

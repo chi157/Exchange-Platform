@@ -35,10 +35,22 @@ public class ListingService {
             throw new UnauthorizedException();
         }
 
+        // 處理圖片路徑
+        String imagePathsJson = serializeImagePaths(request.getImageFileNames());
+        
         Listing listing = Listing.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .ownerId(userId)
+                // 新增卡片屬性
+                .cardName(request.getCardName())
+                .groupName(request.getGroupName())
+                .artistName(request.getArtistName())
+                .cardSource(request.getCardSource())
+                .conditionRating(request.getConditionRating())
+                .hasProtection(request.getHasProtection())
+                .remarks(request.getRemarks())
+                .imagePaths(imagePathsJson)
                 .build();
 
         listing = listingRepository.save(listing);
@@ -81,24 +93,15 @@ public class ListingService {
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
         Specification<Listing> baseSpec = buildBaseSpec(q, null, excludeOwnerId);
-        List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
-        List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
+        
+        // 使用標準Spring Data分頁，依賴statusRank確保COMPLETED項目在後
+        Page<Listing> result = listingRepository.findAll(baseSpec, pageable);
 
-        // 合併兩個列表：未完成的在前，已完成的在後
-        List<Listing> allItems = new ArrayList<>(nonCompletedAll);
-        allItems.addAll(completedAll);
-
-        long totalElements = allItems.size();
-        int pageStart = pageIndex * pageSize;
-        int pageEnd = Math.min(pageStart + pageSize, (int) totalElements);
-
-        List<Listing> pageItems = (pageStart < pageEnd) ? allItems.subList(pageStart, pageEnd) : new ArrayList<>();
-
-        List<ListingDTO> content = pageItems.stream()
+        List<ListingDTO> content = result.getContent().stream()
                 .map(this::toDTO)
                 .toList();
 
-        return new org.springframework.data.domain.PageImpl<>(content, pageable, totalElements);
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, result.getTotalElements());
     }
     
     @Transactional(readOnly = true)
@@ -111,24 +114,15 @@ public class ListingService {
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
         Specification<Listing> baseSpec = buildBaseSpec(q, ownerId, null);
-        List<Listing> nonCompletedAll = listingRepository.findAll(baseSpec.and(statusNotCompleted()), sortSpec);
-        List<Listing> completedAll = listingRepository.findAll(baseSpec.and(statusCompleted()), sortSpec);
+        
+        // 使用標準Spring Data分頁，依賴statusRank確保COMPLETED項目在後
+        Page<Listing> result = listingRepository.findAll(baseSpec, pageable);
 
-        // 合併兩個列表：未完成的在前，已完成的在後
-        List<Listing> allItems = new ArrayList<>(nonCompletedAll);
-        allItems.addAll(completedAll);
-
-        long totalElements = allItems.size();
-        int pageStart = pageIndex * pageSize;
-        int pageEnd = Math.min(pageStart + pageSize, (int) totalElements);
-
-        List<Listing> pageItems = (pageStart < pageEnd) ? allItems.subList(pageStart, pageEnd) : new ArrayList<>();
-
-        List<ListingDTO> content = pageItems.stream()
+        List<ListingDTO> content = result.getContent().stream()
                 .map(l -> toDTO(l, ownerId))
                 .toList();
 
-        return new org.springframework.data.domain.PageImpl<>(content, pageable, totalElements);
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, result.getTotalElements());
     }
 
     private Sort parseSort(String sort) {
@@ -152,6 +146,7 @@ public class ListingService {
         }
 
         Sort userSort = Sort.by(new Sort.Order(dir, prop));
+        // 確保COMPLETED項目總是在最後 - 使用CASE表達式而非@Formula字段
         return Sort.by(Sort.Order.asc("statusRank")).and(userSort);
     }
 
@@ -180,13 +175,7 @@ public class ListingService {
         };
     }
 
-    private Specification<Listing> statusNotCompleted() {
-        return (root, query, cb) -> cb.notEqual(root.get("status"), Listing.Status.COMPLETED);
-    }
 
-    private Specification<Listing> statusCompleted() {
-        return (root, query, cb) -> cb.equal(root.get("status"), Listing.Status.COMPLETED);
-    }
 
     private ListingDTO toDTO(Listing l) {
         return toDTO(l, null);
@@ -207,6 +196,9 @@ public class ListingService {
         (legacyOwnerId != null && legacyOwnerId.equals(currentUserId))
     );
         
+        // 解析圖片路徑
+        List<String> imageUrls = parseImageUrls(l.getImagePaths());
+        
         return ListingDTO.builder()
                 .id(l.getId())
                 .title(l.getTitle())
@@ -217,6 +209,15 @@ public class ListingService {
         .isMine(isMine)
                 .createdAt(l.getCreatedAt())
                 .updatedAt(l.getUpdatedAt())
+                // 新增卡片屬性
+                .cardName(l.getCardName())
+                .groupName(l.getGroupName())
+                .artistName(l.getArtistName())
+                .cardSource(l.getCardSource())
+                .conditionRating(l.getConditionRating())
+                .hasProtection(l.getHasProtection())
+                .remarks(l.getRemarks())
+                .imageUrls(imageUrls)
                 .build();
     }
 
@@ -243,11 +244,60 @@ public class ListingService {
             throw new ConflictException();
         }
 
+        // 更新基本資訊
         listing.setTitle(request.getTitle());
         listing.setDescription(request.getDescription());
+        
+        // 更新卡片屬性
+        listing.setCardName(request.getCardName());
+        listing.setGroupName(request.getGroupName());
+        listing.setArtistName(request.getArtistName());
+        listing.setCardSource(request.getCardSource());
+        listing.setConditionRating(request.getConditionRating());
+        listing.setHasProtection(request.getHasProtection());
+        listing.setRemarks(request.getRemarks());
+        
+        // 更新圖片
+        if (request.getImageFileNames() != null) {
+            String imagePathsJson = serializeImagePaths(request.getImageFileNames());
+            listing.setImagePaths(imagePathsJson);
+        }
+        
         listing = listingRepository.save(listing);
         
         return toDTO(listing);
+    }
+
+    // === 圖片處理相關方法 ===
+    private String serializeImagePaths(List<String> imageFileNames) {
+        if (imageFileNames == null || imageFileNames.isEmpty()) {
+            return null;
+        }
+        // 簡單的JSON序列化，實際專案可使用Jackson
+        return "[\"" + String.join("\",\"", imageFileNames) + "\"]";
+    }
+    
+    private List<String> parseImageUrls(String imagePaths) {
+        if (imagePaths == null || imagePaths.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            // 簡單的JSON反序列化，移除方括號和引號
+            String cleaned = imagePaths.replaceAll("[\\[\\]\"]", "");
+            if (cleaned.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
+            
+            // 將檔案名稱轉換為完整的URL路徑
+            return List.of(cleaned.split(","))
+                    .stream()
+                    .map(String::trim)
+                    .filter(fileName -> !fileName.isEmpty())
+                    .map(fileName -> "/images/" + fileName)
+                    .toList();
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     public static class UnauthorizedException extends RuntimeException {}

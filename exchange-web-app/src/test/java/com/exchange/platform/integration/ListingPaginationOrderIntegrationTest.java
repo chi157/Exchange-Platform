@@ -77,6 +77,7 @@ class ListingPaginationOrderIntegrationTest {
                 .build());
 
         // page size 2 ensures multiple pages
+        // page size 2 ensures multiple pages
         var page1 = listingService.listPage(1, 2, marker, "createdAt,ASC", null);
         assertThat(page1.getContent()).hasSize(2);
         assertThat(page1.getContent()).allMatch(dto -> dto.getStatus() != Listing.Status.COMPLETED);
@@ -132,5 +133,49 @@ class ListingPaginationOrderIntegrationTest {
         assertThat(page2.getContent())
                 .extracting(ListingDTO::getStatus)
                 .containsOnly(Listing.Status.COMPLETED);
+    }
+    
+    @Test
+    @Transactional
+    @DisplayName("Listing with card properties are correctly stored and retrieved")
+    void card_properties_correctly_handled() {
+        String marker = "card-" + UUID.randomUUID();
+
+        User owner = userRepository.save(User.builder()
+                .email(marker + "@mail.test")
+                .passwordHash("hash")
+                .displayName("CardOwner")
+                .build());
+
+        // 創建帶有完整卡片屬性的刊登
+        listingRepository.save(Listing.builder()
+                .title(marker + "-jimin-proof")
+                .description("BTS Jimin Proof 小卡")
+                .ownerId(owner.getId())
+                .status(Listing.Status.ACTIVE)
+                .cardName("Jimin - Proof")
+                .groupName("BTS")
+                .artistName("Jimin")
+                .cardSource(Listing.CardSource.ALBUM)
+                .conditionRating(9)
+                .hasProtection(true)
+                .remarks("收藏品，狀況良好")
+                .imagePaths("[\"image1.jpg\",\"image2.jpg\"]")
+                .build());
+
+        // 透過服務取得刊登
+        var result = listingService.listPage(1, 10, marker, "createdAt,ASC", null);
+        
+        assertThat(result.getContent()).hasSize(1);
+        
+        var dto = result.getContent().get(0);
+        assertThat(dto.getCardName()).isEqualTo("Jimin - Proof");
+        assertThat(dto.getGroupName()).isEqualTo("BTS");
+        assertThat(dto.getArtistName()).isEqualTo("Jimin");
+        assertThat(dto.getCardSource()).isEqualTo(Listing.CardSource.ALBUM);
+        assertThat(dto.getConditionRating()).isEqualTo(9);
+        assertThat(dto.getHasProtection()).isTrue();
+        assertThat(dto.getRemarks()).isEqualTo("收藏品，狀況良好");
+        assertThat(dto.getImageUrls()).containsExactly("/images/image1.jpg", "/images/image2.jpg");
     }
 }
