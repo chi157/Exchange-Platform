@@ -115,13 +115,14 @@
         form.filters { 
             display: grid; 
             /* grid-template-columns: 2fr 1fr 80px 80px auto;  */
-            grid-template-columns:auto auto auto auto auto; 
+            grid-template-columns:auto auto auto; 
             gap: 12px; 
             align-items: end; 
         }
         input[type="text"], select, input[type="number"] { 
             padding: 10px 14px; 
             border-radius: 10px; 
+            width: 100%;
             border: 2px solid var(--surface-300); 
             background: white;
             color: var(--text-900);
@@ -138,6 +139,7 @@
         button.btn { 
             padding: 10px 24px; 
             border: 0; 
+            width: 100%;
             border-radius: 12px; 
             background: var(--brand-600); 
             color: white; 
@@ -484,7 +486,7 @@
 
     <div class="card" style="margin-top: 16px;">
         <form class="filters" method="get" th:action="@{/ui/listings}">
-            <div style="width: 70%;">
+            <div style="width: 80%;">
                 <label class="muted">關鍵字</label>
                 <input type="text" name="q" placeholder="輸入關鍵字" th:value="${q}">
             </div>
@@ -497,14 +499,6 @@
                     <option value="id,ASC">ID 由小到大</option>
                     <option value="id,DESC">ID 由大到小</option>
                 </select>
-            </div>
-            <div>
-                <label class="muted">頁碼</label>
-                <input type="number" min="1" name="page" th:value="${page}">
-            </div>
-            <div>
-                <label class="muted">每頁</label>
-                <input type="number" min="1" max="100" name="size" th:value="${size}">
             </div>
             <div>
                 <button class="btn" type="submit">查詢</button>
