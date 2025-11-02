@@ -19,6 +19,7 @@ import java.util.List;
 public class UiSwapController {
 
     private final SwapService swapService;
+    private final com.exchange.platform.repository.UserRepository userRepository;
 
     @GetMapping("/mine")
     public String mine(@RequestParam(required = false) Integer page,
@@ -40,6 +41,14 @@ public class UiSwapController {
         model.addAttribute("page", pageArg);
         model.addAttribute("size", sizeArg);
         model.addAttribute("sort", sortArg);
+        
+        // 加入當前使用者的顯示名稱
+        Long userId = (Long) session.getAttribute("userId");
+        String currentUserDisplayName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        
         return "swaps";
     }
 
@@ -54,8 +63,14 @@ public class UiSwapController {
         SwapDTO swap = swapService.getById(id, session);
         Long currentUserId = (Long) session.getAttribute("userId");
         
+        // 加入當前使用者的顯示名稱
+        String currentUserDisplayName = userRepository.findById(currentUserId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        
         model.addAttribute("swap", swap);
         model.addAttribute("currentUserId", currentUserId);
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
         return "swap-detail";
     }
 }

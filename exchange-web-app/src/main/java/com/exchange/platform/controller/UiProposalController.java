@@ -18,6 +18,7 @@ import java.util.List;
 public class UiProposalController {
 
     private final ProposalService proposalService;
+    private final com.exchange.platform.repository.UserRepository userRepository;
 
     // M2: 我提出的提案
     @GetMapping("/mine")
@@ -42,6 +43,14 @@ public class UiProposalController {
         model.addAttribute("size", sizeArg);
         model.addAttribute("sort", sortArg);
         model.addAttribute("viewType", "mine");
+        
+        // 加入當前使用者的顯示名稱
+        Long userId = (Long) session.getAttribute("userId");
+        String currentUserDisplayName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        
         return "proposals";
     }
 
@@ -68,6 +77,14 @@ public class UiProposalController {
         model.addAttribute("size", sizeArg);
         model.addAttribute("sort", sortArg);
         model.addAttribute("viewType", "received");
+        
+        // 加入當前使用者的顯示名稱
+        Long userId = (Long) session.getAttribute("userId");
+        String currentUserDisplayName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        
         return "proposals";
     }
 }

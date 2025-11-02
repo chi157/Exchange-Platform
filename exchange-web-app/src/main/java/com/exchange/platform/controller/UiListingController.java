@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class UiListingController {
 
     private final ListingService listingService;
+    private final com.exchange.platform.repository.UserRepository userRepository;
 
     // Home redirect to listings
     @GetMapping({"", "/"})
@@ -56,6 +57,14 @@ public class UiListingController {
         model.addAttribute("totalPages", pageResult.getTotalPages());
         model.addAttribute("totalElements", pageResult.getTotalElements());
         model.addAttribute("currentUserId", session.getAttribute("userId"));
+        
+        // 加入當前使用者的顯示名稱
+        Long userId = (Long) session.getAttribute("userId");
+        String currentUserDisplayName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("訪客");
+        model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        
         return "listings";
     }
 }
