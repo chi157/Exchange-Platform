@@ -56,7 +56,7 @@ public class ListingService {
         int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
         int pageSize = (size == null || size <= 0) ? 10 : Math.min(size, 100);
 
-        Sort sortSpec = parseSort(sort);
+    Sort sortSpec = parseSort(sort);
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
         Page<Listing> pg;
@@ -94,8 +94,18 @@ public class ListingService {
                 pg = listingRepository.findAll(pageable);
             }
         }
-        
-        return pg.map(this::toDTO);
+    // 轉為 DTO 並在頁面內將 COMPLETED 排在最後
+    List<ListingDTO> content = pg.getContent().stream()
+        .map(this::toDTO)
+        .sorted((a, b) -> {
+            int ra = (a.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
+            int rb = (b.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
+            if (ra != rb) return Integer.compare(ra, rb); // 非完成在前，完成在後
+            // 次排序依使用者選擇（與 parseSort 一致）
+            return secondaryCompare(a, b, sort);
+        })
+        .toList();
+    return new org.springframework.data.domain.PageImpl<>(content, pageable, pg.getTotalElements());
     }
     
     @Transactional(readOnly = true)
@@ -104,7 +114,7 @@ public class ListingService {
         int pageIndex = (page == null || page <= 1) ? 0 : page - 1;
         int pageSize = (size == null || size <= 0) ? 5 : Math.min(size, 100);
 
-        Sort sortSpec = parseSort(sort);
+    Sort sortSpec = parseSort(sort);
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sortSpec);
 
         Page<Listing> pg;
@@ -115,7 +125,17 @@ public class ListingService {
         } else {
             pg = listingRepository.findByOwnerId(ownerId, pageable);
         }
-        return pg.map(l -> toDTO(l, ownerId));
+    // 轉為 DTO 並在頁面內將 COMPLETED 排在最後
+    List<ListingDTO> content = pg.getContent().stream()
+        .map(l -> toDTO(l, ownerId))
+        .sorted((a, b) -> {
+            int ra = (a.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
+            int rb = (b.getStatus() == Listing.Status.COMPLETED) ? 1 : 0;
+            if (ra != rb) return Integer.compare(ra, rb);
+            return secondaryCompare(a, b, sort);
+        })
+        .toList();
+    return new org.springframework.data.domain.PageImpl<>(content, pageable, pg.getTotalElements());
     }
 
     private Sort parseSort(String sort) {
@@ -138,6 +158,25 @@ public class ListingService {
             prop = "createdAt";
         }
         return Sort.by(dir, prop);
+    }
+
+    // 頁面內次排序：依使用者要求的欄位排序
+    private int secondaryCompare(ListingDTO a, ListingDTO b, String sort) {
+        String prop = "createdAt";
+        boolean asc = false; // 預設 DESC
+        if (sort != null && !sort.isBlank()) {
+            String[] parts = sort.split(",");
+            if (parts.length >= 1 && !parts[0].isBlank()) prop = parts[0].trim();
+            if (parts.length >= 2) asc = "ASC".equalsIgnoreCase(parts[1].trim());
+        }
+        int cmp = 0;
+        switch (prop) {
+            case "id" -> cmp = Long.compare(a.getId(), b.getId());
+            case "updatedAt" -> cmp = a.getUpdatedAt().compareTo(b.getUpdatedAt());
+            case "createdAt" -> cmp = a.getCreatedAt().compareTo(b.getCreatedAt());
+            default -> cmp = a.getCreatedAt().compareTo(b.getCreatedAt());
+        }
+        return asc ? cmp : -cmp;
     }
 
     private ListingDTO toDTO(Listing l) {

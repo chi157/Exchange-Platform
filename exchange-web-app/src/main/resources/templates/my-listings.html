@@ -514,6 +514,29 @@
         .no-listings-message a:hover {
             text-decoration: underline;
         }
+        
+        /* 狀態標籤 */
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .status-available {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+        }
+        .status-locked {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        .status-completed {
+            background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+            color: white;
+        }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
     <meta name="color-scheme" content="light">
@@ -562,7 +585,7 @@
     </div>
 
     <div class="card" style="margin-top: 16px;">
-        <form class="filters" method="get" th:action="@{/ui/listings}">
+        <form class="filters" method="get" th:action="@{/ui/my-listings}">
             <div style="width: 80%;">
                 <label class="muted">關鍵字</label>
                 <input type="text" name="q" placeholder="輸入關鍵字" th:value="${q}">
@@ -585,7 +608,22 @@
 
     <div class="list" th:if="${items != null and !items.isEmpty()}">
         <div class="card" th:each="it : ${items}">
-            <div class="item-title" th:text="${it.title}">標題</div>
+            <div class="item-title">
+                <span th:text="${it.title}">標題</span>
+                <!-- 狀態標籤 -->
+            <span class="status-badge status-available" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}">
+                    ✓ 可交換
+                </span>
+                <span class="status-badge status-locked" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}">
+                    🔒 交換中
+                </span>
+                <span class="status-badge status-completed" 
+                th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}">
+                    ✓ 已完成
+                </span>
+            </div>
             <div class="item-desc" th:text="${it.description}">描述</div>
             <div class="muted" style="margin-top:8px;">
                 📌 ID: <span th:text="${it.id}">1</span> ・ 
@@ -593,20 +631,20 @@
                 📅 建立：<span th:text="${it.createdAt}">time</span>
             </div>
             <div style="margin-top: 16px;">
-                <!-- 只對自己的物品顯示編輯按鈕 -->
-                <button th:if="${it.ownerId == currentUserId}" 
+                <!-- 只對可交換狀態的物品顯示編輯按鈕 -->
+                <button th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).ACTIVE or it.status == T(com.exchange.platform.entity.Listing.Status).AVAILABLE}" 
                         class="btn-edit" 
                         th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}, data-listing-description=${it.description}"
                         onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
                     ✏️ 編輯
                 </button>
-                <!-- 只對不是自己的物品顯示提案按鈕 -->
-                <button th:if="${it.ownerId != currentUserId}" 
-                        class="btn-proposal" 
-                        th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
-                        onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">
-                    📝 提出提案
-                </button>
+                <!-- 交換中或已完成的物品顯示狀態說明 -->
+                <span th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).LOCKED}" style="color: #f59e0b; font-size: 14px; margin-left: 8px;">
+                    ⚠️ 此物品正在交換中，無法編輯
+                </span>
+                <span th:if="${it.status == T(com.exchange.platform.entity.Listing.Status).COMPLETED}" style="color: #64748b; font-size: 14px; margin-left: 8px;">
+                    ℹ️ 此物品交換已完成
+                </span>
             </div>
         </div>
     </div>
@@ -617,16 +655,16 @@
     <!-- 分頁導航 -->
     <div class="pager" th:if="${totalPages > 0}">
         <!-- 上一頁按鈕 -->
-        <a th:if="${page > 1}" 
-           class="link-btn" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
+          <a th:if="${page > 1}" 
+              class="link-btn" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
             ⬅️
         </a>
         
         <!-- 第一頁 -->
-        <a th:if="${page > 3}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=1)}">
+          <a th:if="${page > 3}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=1)}">
             1
         </a>
         
@@ -634,14 +672,14 @@
         <span th:if="${page > 4}" class="page-ellipsis">...</span>
         
         <!-- 當前頁前2頁 -->
-        <a th:if="${page > 2}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 2})}">
+          <a th:if="${page > 2}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page - 2})}">
             [[${page - 2}]]
         </a>
-        <a th:if="${page > 1}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
+          <a th:if="${page > 1}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page - 1})}">
             [[${page - 1}]]
         </a>
         
@@ -649,14 +687,14 @@
         <span class="page-num active">[[${page}]]</span>
         
         <!-- 當前頁後2頁 -->
-        <a th:if="${page < totalPages}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
+          <a th:if="${page < totalPages}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
             [[${page + 1}]]
         </a>
-        <a th:if="${page < totalPages - 1}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 2})}">
+          <a th:if="${page < totalPages - 1}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page + 2})}">
             [[${page + 2}]]
         </a>
         
@@ -664,16 +702,16 @@
         <span th:if="${page < totalPages - 3}" class="page-ellipsis">...</span>
         
         <!-- 最後一頁 -->
-        <a th:if="${page < totalPages - 2}" 
-           class="page-num" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${totalPages})}">
+          <a th:if="${page < totalPages - 2}" 
+              class="page-num" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${totalPages})}">
             [[${totalPages}]]
         </a>
         
         <!-- 下一頁按鈕 -->
-        <a th:if="${page < totalPages}" 
-           class="link-btn" 
-           th:href="@{/ui/listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
+          <a th:if="${page < totalPages}" 
+              class="link-btn" 
+              th:href="@{/ui/my-listings(q=${q}, sort=${sort}, size=${size}, page=${page + 1})}">
             ➡️
         </a>
     </div>
