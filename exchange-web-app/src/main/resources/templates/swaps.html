@@ -19,6 +19,13 @@
                     <button type="submit" class="link-btn">🚪 登出</button>
                 </form>
             </nav>
+            <div class="user-info">
+                <div class="user-info-icon">👤</div>
+                <div class="user-info-text">
+                    <span class="user-info-label">當前使用者</span>
+                    <span class="user-info-name" th:text="${currentUserDisplayName}">使用者名稱</span>
+                </div>
+            </div>
         </header>
 
         <h1>🔄 我的交換</h1>
@@ -134,7 +141,7 @@
             box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             gap: 40px;
         }
         .brand { 
@@ -145,6 +152,37 @@
         header nav { 
             display: flex; 
             gap: 12px; 
+        }
+        
+        /* 使用者資訊顯示 */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--brand-50) 0%, var(--brand-100) 100%);
+            border-radius: 12px;
+            border: 2px solid var(--brand-200);
+        }
+        .user-info-icon {
+            font-size: 20px;
+        }
+        .user-info-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .user-info-label {
+            font-size: 10px;
+            color: var(--text-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-info-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-700);
         }
         
         /* 明確的按鈕樣式 */
