@@ -17,7 +17,9 @@ public class SwapDTO {
     private Long listingId;
     private Long proposalId;
     private Long aUserId;
+    private String aUserDisplayName; // a user's display name
     private Long bUserId;
+    private String bUserDisplayName; // b user's display name
     private Swap.Status status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -29,15 +31,28 @@ public class SwapDTO {
     private List<ProposalDTO.ProposalItemDTO> proposerItems;
     private List<ProposalDTO.ProposalItemDTO> receiverItems;
     private Long proposerId;
+    private String proposerDisplayName; // proposer's display name
+    private Long receiverId;
+    private String receiverDisplayName; // receiver's display name
 
     @JsonProperty("aUserId")
     public Long getAUserId() {
         return aUserId;
     }
 
+    @JsonProperty("aUserDisplayName")
+    public String getAUserDisplayName() {
+        return aUserDisplayName;
+    }
+
     @JsonProperty("bUserId")
     public Long getBUserId() {
         return bUserId;
+    }
+
+    @JsonProperty("bUserDisplayName")
+    public String getBUserDisplayName() {
+        return bUserDisplayName;
     }
 
     @JsonProperty("aConfirmedAt")
@@ -63,5 +78,20 @@ public class SwapDTO {
     @JsonProperty("proposerId")
     public Long getProposerId() {
         return proposerId;
+    }
+
+    @JsonProperty("proposerDisplayName")
+    public String getProposerDisplayName() {
+        return proposerDisplayName;
+    }
+
+    @JsonProperty("receiverId")
+    public Long getReceiverId() {
+        return receiverId;
+    }
+
+    @JsonProperty("receiverDisplayName")
+    public String getReceiverDisplayName() {
+        return receiverDisplayName;
     }
 }

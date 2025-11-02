@@ -23,6 +23,7 @@ public class ListingService {
 
     private final ListingRepository listingRepository;
     private final com.exchange.platform.repository.ProposalRepository proposalRepository;
+    private final com.exchange.platform.repository.UserRepository userRepository;
     private static final String SESSION_USER_ID = "userId"; // 與 AuthService 相同 key
 
     public ListingDTO create(CreateListingRequest request, HttpSession session) {
@@ -112,11 +113,16 @@ public class ListingService {
     }
     
     private ListingDTO toDTO(Listing l, Long currentUserId) {
+        String ownerDisplayName = userRepository.findById(l.getOwnerId())
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
+        
         return ListingDTO.builder()
                 .id(l.getId())
                 .title(l.getTitle())
                 .description(l.getDescription())
                 .ownerId(l.getOwnerId())
+                .ownerDisplayName(ownerDisplayName)
                 .status(l.getStatus())
                 .isMine(currentUserId != null && l.getOwnerId().equals(currentUserId))
                 .createdAt(l.getCreatedAt())

@@ -2,7 +2,6 @@ package com.exchange.platform.service;
 
 import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.dto.SwapDTO;
-import com.exchange.platform.entity.Proposal;
 import com.exchange.platform.entity.ProposalItem;
 import com.exchange.platform.entity.Swap;
 import com.exchange.platform.repository.ProposalRepository;
@@ -27,6 +26,7 @@ public class SwapService {
 
     private final SwapRepository swapRepository;
     private final ProposalRepository proposalRepository;
+    private final com.exchange.platform.repository.UserRepository userRepository;
     private static final String SESSION_USER_ID = "userId";
 
     @Transactional(readOnly = true)
@@ -79,10 +79,12 @@ public class SwapService {
         final List<ProposalDTO.ProposalItemDTO>[] proposerItemsArray = new List[]{Collections.emptyList()};
         final List<ProposalDTO.ProposalItemDTO>[] receiverItemsArray = new List[]{Collections.emptyList()};
         final Long[] proposerIdArray = new Long[]{null};
+        final Long[] receiverIdArray = new Long[]{null};
         
         if (s.getProposalId() != null) {
             proposalRepository.findById(s.getProposalId()).ifPresent(proposal -> {
                 proposerIdArray[0] = proposal.getProposerId();
+                receiverIdArray[0] = proposal.getReceiverIdLegacy();
                 
                 proposerItemsArray[0] = proposal.getProposalItems().stream()
                         .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
@@ -106,12 +108,35 @@ public class SwapService {
             });
         }
         
+        // Get user display names
+        String aUserDisplayName = userRepository.findById(s.getAUserId())
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
+        
+        String bUserDisplayName = userRepository.findById(s.getBUserId())
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
+        
+        String proposerDisplayName = proposerIdArray[0] != null 
+                ? userRepository.findById(proposerIdArray[0])
+                    .map(user -> user.getDisplayName())
+                    .orElse("未知使用者")
+                : null;
+        
+        String receiverDisplayName = receiverIdArray[0] != null
+                ? userRepository.findById(receiverIdArray[0])
+                    .map(user -> user.getDisplayName())
+                    .orElse("未知使用者")
+                : null;
+        
         return SwapDTO.builder()
                 .id(s.getId())
                 .listingId(s.getListingId())
                 .proposalId(s.getProposalId())
                 .aUserId(s.getAUserId())
+                .aUserDisplayName(aUserDisplayName)
                 .bUserId(s.getBUserId())
+                .bUserDisplayName(bUserDisplayName)
                 .status(s.getStatus())
                 .createdAt(s.getCreatedAt())
                 .updatedAt(s.getUpdatedAt())
@@ -121,6 +146,9 @@ public class SwapService {
                 .proposerItems(proposerItemsArray[0])
                 .receiverItems(receiverItemsArray[0])
                 .proposerId(proposerIdArray[0])
+                .proposerDisplayName(proposerDisplayName)
+                .receiverId(receiverIdArray[0])
+                .receiverDisplayName(receiverDisplayName)
                 .build();
     }
 

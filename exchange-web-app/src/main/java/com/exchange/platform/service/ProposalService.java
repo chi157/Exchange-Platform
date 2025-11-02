@@ -28,6 +28,7 @@ public class ProposalService {
     private final ProposalRepository proposalRepository;
     private final ListingRepository listingRepository;
     private final com.exchange.platform.repository.SwapRepository swapRepository;
+    private final com.exchange.platform.repository.UserRepository userRepository;
     private static final String SESSION_USER_ID = "userId";
 
     public ProposalDTO create(CreateProposalRequest req, HttpSession session) {
@@ -198,10 +199,22 @@ public class ProposalService {
                         .build())
                 .collect(Collectors.toList());
         
+        // Get user display names
+        String proposerDisplayName = userRepository.findById(p.getProposerId())
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
+        
+        String receiverDisplayName = userRepository.findById(p.getReceiverIdLegacy())
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
+        
         return ProposalDTO.builder()
                 .id(p.getId())
                 .listingId(p.getListingId())
                 .proposerId(p.getProposerId())
+                .proposerDisplayName(proposerDisplayName)
+                .receiverId(p.getReceiverIdLegacy())
+                .receiverDisplayName(receiverDisplayName)
                 .message(p.getMessage())
                 .status(p.getStatus())
                 .createdAt(p.getCreatedAt())

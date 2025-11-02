@@ -13,6 +13,7 @@ public class ListingDTO {
     private String title;
     private String description;
     private Long ownerId;
+    private String ownerDisplayName; // owner's display name
     private Listing.Status status;
     private Boolean isMine;
     private LocalDateTime createdAt;

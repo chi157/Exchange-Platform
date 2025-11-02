@@ -86,7 +86,7 @@
                 
                 <div class="muted" style="margin-top:12px;">
                     📅 建立：<span th:text="${#temporals.format(swap.createdAt, 'yyyy-MM-dd HH:mm')}">time</span> ・
-                    👥 對方 ID: <span th:text="${swap.aUserId}">1</span>/<span th:text="${swap.bUserId}">2</span>
+                    👥 交換雙方: <span th:text="${swap.aUserDisplayName}">使用者A</span> ⇄ <span th:text="${swap.bUserDisplayName}">使用者B</span>
                 </div>
                 <div style="margin-top: 16px;">
                     <a th:href="@{/ui/swaps/{id}(id=${swap.id})}" class="btn-view">👁️ 查看詳情與物流</a>
