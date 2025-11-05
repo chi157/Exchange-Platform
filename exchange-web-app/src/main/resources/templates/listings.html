@@ -152,20 +152,41 @@
         
         .list { 
             display: grid; 
-            gap: 16px; 
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px; 
             margin-top: 20px; 
+        }
+        @media (max-width: 1200px) {
+            .list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .list {
+                grid-template-columns: 1fr;
+            }
         }
         .item-title { 
             font-weight: 700; 
             color: var(--text-900);
-            font-size: 18px;
+            font-size: 16px;
             margin-bottom: 8px;
+            line-height: 1.3;
+            min-height: 42px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .item-desc { 
             color: var(--text-600); 
             margin-top: 8px; 
-            white-space: pre-wrap;
-            line-height: 1.6;
+            font-size: 13px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .muted { 
             color: var(--text-500); 
@@ -518,11 +539,12 @@
         /* 狀態標籤 */
         .status-badge {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
-            margin-left: 8px;
+            margin-left: 0;
+            margin-top: 8px;
             vertical-align: middle;
         }
         .status-available {
@@ -536,6 +558,129 @@
         .status-completed {
             background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
             color: white;
+        }
+        
+        /* 圖片輪播區域 */
+        .image-carousel {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .carousel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        .carousel-image.active {
+            display: block;
+        }
+        .carousel-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--brand-700);
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .carousel-nav:hover {
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .carousel-nav.prev {
+            left: 10px;
+        }
+        .carousel-nav.next {
+            right: 10px;
+        }
+        .carousel-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .carousel-nav:disabled:hover {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--brand-700);
+            transform: translateY(-50%);
+        }
+        .carousel-indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+        }
+        .carousel-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .carousel-indicator.active {
+            background: white;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        /* 卡片資訊區域緊湊化 */
+        .card-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        .card-info-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .card-info-item strong {
+            font-size: 11px;
+            color: var(--text-700);
+        }
+        .card-info-item span {
+            color: var(--text-600);
+            font-size: 11px;
+        }
+        
+        /* 卡片底部資訊 */
+        .card-footer {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--surface-200);
+            font-size: 11px;
+            color: var(--text-500);
+        }
+        
+        /* 按鈕區域 */
+        .card-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        .btn-proposal, .btn-edit {
+            flex: 1;
+            margin-top: 0;
+            padding: 8px 12px;
+            font-size: 13px;
         }
     </style>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%236a00d6'/%3E%3Ctext x='50' y='58' font-size='42' text-anchor='middle' fill='white'%3EX%3C/text%3E%3C/svg%3E">
@@ -608,53 +753,68 @@
 
     <div class="list" th:if="${items != null and !items.isEmpty()}">
         <div class="card" th:each="it : ${items}" th:with="statusName=${it.status != null ? it.status.name() : ''}">
-            <div class="item-title">
-                <span>
+            <!-- 圖片輪播 -->
+            <div class="image-carousel" th:attr="data-listing-id=${it.id}">
+                <div th:if="${it.imageUrls != null and !it.imageUrls.isEmpty()}">
+                    <img th:each="imageUrl, iterStat : ${it.imageUrls}" 
+                         th:src="${imageUrl}" 
+                         th:class="${iterStat.index == 0 ? 'carousel-image active' : 'carousel-image'}"
+                         alt="卡片圖片">
+                    <button class="carousel-nav prev" th:if="${#lists.size(it.imageUrls) > 1}" 
+                            th:onclick="'navigateCarousel(' + ${it.id} + ', -1)'">‹</button>
+                    <button class="carousel-nav next" th:if="${#lists.size(it.imageUrls) > 1}"
+                            th:onclick="'navigateCarousel(' + ${it.id} + ', 1)'">›</button>
+                    <div class="carousel-indicators" th:if="${#lists.size(it.imageUrls) > 1}">
+                        <span th:each="imageUrl, iterStat : ${it.imageUrls}" 
+                              th:class="${iterStat.index == 0 ? 'carousel-indicator active' : 'carousel-indicator'}"
+                              th:onclick="'goToSlide(' + ${it.id} + ', ' + ${iterStat.index} + ')'"></span>
+                    </div>
+                </div>
+                <div th:if="${it.imageUrls == null or it.imageUrls.isEmpty()}" 
+                     style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-400); font-size: 48px;">
+                    📷
+                </div>
+            </div>
+            
+            <!-- 標題與狀態 -->
+            <div>
+                <div class="item-title">
                     <span th:text="${it.cardName}">卡片名稱</span>
                     <span th:if="${it.artistName != null}" th:text="' - ' + ${it.artistName}"></span>
-                </span>
-                <!-- 狀態標籤 -->
-                <span class="status-badge status-available" 
-                    th:if="${statusName == 'AVAILABLE'}">
-                    ✓ 可交換
-                </span>
-                <span class="status-badge status-locked" 
-                    th:if="${statusName == 'LOCKED'}">
-                    🔒 已鎖定
-                </span>
-                <span class="status-badge status-locked" 
-                    th:if="${statusName == 'PENDING'}">
-                    � 交換中
-                </span>
-                <span class="status-badge status-completed" 
-                    th:if="${statusName == 'COMPLETED'}">
-                    ✓ 已完成
-                </span>
-            </div>
-            
-            <!-- 卡片圖片 -->
-            <div th:if="${it.imageUrls != null and !it.imageUrls.isEmpty()}" style="margin: 12px 0;">
-                <div style="display: flex; gap: 8px; overflow-x: auto;">
-                    <img th:each="imageUrl : ${it.imageUrls}" 
-                         th:src="${imageUrl}" 
-                         style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;"
-                         alt="卡片圖片">
+                </div>
+                <div>
+                    <span class="status-badge status-available" 
+                        th:if="${statusName == 'AVAILABLE'}">
+                        ✓ 可交換
+                    </span>
+                    <span class="status-badge status-locked" 
+                        th:if="${statusName == 'LOCKED'}">
+                        🔒 已鎖定
+                    </span>
+                    <span class="status-badge status-locked" 
+                        th:if="${statusName == 'PENDING'}">
+                        ⏳ 交換中
+                    </span>
+                    <span class="status-badge status-completed" 
+                        th:if="${statusName == 'COMPLETED'}">
+                        ✓ 已完成
+                    </span>
                 </div>
             </div>
             
-            <!-- 卡片基本資訊 -->
-            <div style="margin: 12px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
-                <div th:if="${it.groupName != null and !it.groupName.isEmpty()}">
-                    <strong>👥 所屬團體：</strong><span th:text="${it.groupName}">-</span>
+            <!-- 卡片資訊 -->
+            <div class="card-info-grid">
+                <div class="card-info-item" th:if="${it.groupName != null and !it.groupName.isEmpty()}">
+                    <strong>👥</strong><span th:text="${it.groupName}">-</span>
                 </div>
-                <div th:if="${it.cardSource != null}">
-                    <strong>📀 卡片來源：</strong><span th:text="${it.cardSourceDisplay}">-</span>
+                <div class="card-info-item" th:if="${it.cardSource != null}">
+                    <strong>📀</strong><span th:text="${it.cardSourceDisplay}">-</span>
                 </div>
-                <div th:if="${it.conditionRating != null}">
-                    <strong>💎 品相等級：</strong><span th:text="${it.conditionRating + '/10'}">-</span>
+                <div class="card-info-item" th:if="${it.conditionRating != null}">
+                    <strong>💎</strong><span th:text="${it.conditionRating + '/10'}">-</span>
                 </div>
-                <div th:if="${it.hasProtection != null}">
-                    <strong>🛡️ 保護措施：</strong><span th:text="${it.hasProtection ? '有' : '無'}">-</span>
+                <div class="card-info-item" th:if="${it.hasProtection != null}">
+                    <strong>🛡️</strong><span th:text="${it.hasProtection ? '有保護措施' : '無保護措施'}">-</span>
                 </div>
             </div>
             
@@ -662,25 +822,24 @@
             <div th:if="${it.description != null and !it.description.isEmpty()}" class="item-desc" th:text="${it.description}">描述</div>
             
             <!-- 備註 -->
-            <div th:if="${it.remarks != null and !it.remarks.isEmpty()}" style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 6px; font-size: 13px;">
-                <strong>📝 備註：</strong><span th:text="${it.remarks}">-</span>
+            <div th:if="${it.remarks != null and !it.remarks.isEmpty()}" style="margin-top: 8px; padding: 6px 8px; background: #f9fafb; border-radius: 6px; font-size: 11px;">
+                <strong>📝</strong> <span th:text="${it.remarks}">-</span>
             </div>
             
-            <div class="muted" style="margin-top:8px;">
-                📌 ID: <span th:text="${it.id}">1</span> ・ 
-                👤 擁有者: <span th:text="${it.ownerDisplayName}">使用者名稱</span> ・ 
-                📅 上架時間：<span th:text="${it.createdAt}">time</span>
+            <!-- 底部資訊 -->
+            <div class="card-footer">
+                <div>👤 <span th:text="${it.ownerDisplayName}">使用者</span></div>
+                <div>📅 <span th:text="${it.createdAt}">time</span></div>
             </div>
-            <div style="margin-top: 16px;">
-                <!-- 只對自己的物品顯示編輯按鈕 -->
+            
+            <!-- 按鈕 -->
+            <div class="card-actions">
                 <button th:if="${it.userId == currentUserId}" 
                         class="btn-edit" 
-                        th:attr="data-listing-id=${it.id}"
                         onclick="alert('編輯功能開發中')">
                     ✏️ 編輯
                 </button>
-        <!-- 只對不是自己且狀態為可交換的物品顯示提案按鈕 -->
-    <button th:if="${it.userId != currentUserId and statusName == 'AVAILABLE'}" 
+                <button th:if="${it.userId != currentUserId and statusName == 'AVAILABLE'}" 
                         class="btn-proposal" 
                         th:attr="data-listing-id=${it.id}, data-listing-display=${it.cardName + ' - ' + it.artistName}"
                         onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-display'))">
@@ -825,6 +984,48 @@
 
 <script>
     let currentListingId = null;
+    
+    // === 圖片輪播功能 ===
+    function navigateCarousel(listingId, direction) {
+        const carousel = document.querySelector(`.image-carousel[data-listing-id="${listingId}"]`);
+        const images = carousel.querySelectorAll('.carousel-image');
+        const indicators = carousel.querySelectorAll('.carousel-indicator');
+        
+        let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+        let newIndex = currentIndex + direction;
+        
+        // 循環邏輯
+        if (newIndex < 0) newIndex = images.length - 1;
+        if (newIndex >= images.length) newIndex = 0;
+        
+        // 更新圖片
+        images[currentIndex].classList.remove('active');
+        images[newIndex].classList.add('active');
+        
+        // 更新指示器
+        if (indicators.length > 0) {
+            indicators[currentIndex].classList.remove('active');
+            indicators[newIndex].classList.add('active');
+        }
+    }
+    
+    function goToSlide(listingId, index) {
+        const carousel = document.querySelector(`.image-carousel[data-listing-id="${listingId}"]`);
+        const images = carousel.querySelectorAll('.carousel-image');
+        const indicators = carousel.querySelectorAll('.carousel-indicator');
+        
+        const currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+        
+        // 更新圖片
+        images[currentIndex].classList.remove('active');
+        images[index].classList.add('active');
+        
+        // 更新指示器
+        if (indicators.length > 0) {
+            indicators[currentIndex].classList.remove('active');
+            indicators[index].classList.add('active');
+        }
+    }
     
     // === 提案相關函數 ===
     async function openProposalModal(listingId, listingDisplay) {

@@ -1,12 +1,55 @@
-:root{
-  --brand-50:#f6f0ff; --brand-100:#ede1ff; --brand-200:#d9c3ff; --brand-300:#c4a4ff; --brand-400:#af86ff; --brand-500:#9a67ff; --brand-600:#8649ff; --brand-700:#6a00d6; --brand-800:#4d00a0; --brand-900:#33006b;
-  --surface-0:#ffffff; --surface-50:#fafafa; --surface-100:#f4f4f5; --surface-200:#e5e7eb; --surface-300:#d1d5db; --surface-400:#9ca3af; --surface-500:#6b7280; --surface-600:#4b5563; --surface-700:#374151; --surface-800:#1f2937; --surface-900:#111827;
-  --text-900:#111827; --text-700:#374151; --text-600:#4b5563; --text-500:#6b7280;
+:root {
+  --brand-50: #f6f0ff;
+  --brand-100: #ede1ff;
+  --brand-200: #d9c3ff;
+  --brand-300: #c4a4ff;
+  --brand-400: #af86ff;
+  --brand-500: #9a67ff;
+  --brand-600: #8649ff;
+  --brand-700: #6a00d6;
+  --brand-800: #4d00a0;
+  --brand-900: #33006b;
+  --surface-0: #ffffff;
+  --surface-50: #fafafa;
+  --surface-100: #f4f4f5;
+  --surface-200: #e5e7eb;
+  --surface-300: #d1d5db;
+  --surface-400: #9ca3af;
+  --surface-500: #6b7280;
+  --surface-600: #4b5563;
+  --surface-700: #374151;
+  --surface-800: #1f2937;
+  --surface-900: #111827;
+  --text-900: #111827;
+  --text-700: #374151;
+  --text-600: #4b5563;
+  --text-500: #6b7280;
   --elev-1: 0 1px 2px rgba(17, 24, 39, 0.08), 0 1px 1px rgba(17, 24, 39, 0.06);
 }
 
-html, body{ background: var(--surface-50); color: var(--text-900); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+html,
+body {
+  background: var(--surface-50);
+  color: var(--text-900);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
 
-a{ color: var(--brand-700); }
+.brand {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand-700);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand::before {
+  content: "🔄";
+  font-size: 28px;
+}
+
+a {
+  color: var(--brand-700);
+}
 
 /* Simple utility classes can be added later as needed */
