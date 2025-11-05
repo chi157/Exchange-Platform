@@ -52,9 +52,9 @@ public class UiListingController {
             return "redirect:/ui/auth/login";
         }
 
-        // 預設值（與後端 API 對齊：page 1 起算、size 預設 5）
+        // 預設值（與後端 API 對齊：page 1 起算、size 預設 6）
         Integer pageArg = (page == null || page <= 0) ? 1 : page;
-        Integer sizeArg = (size == null || size <= 0) ? 5 : Math.min(size, 100);
+        Integer sizeArg = (size == null || size <= 0) ? 6 : Math.min(size, 100);
         String sortArg = (sort == null || sort.isBlank()) ? "createdAt,DESC" : sort;
 
         Long userId = (Long) session.getAttribute("userId");
@@ -92,9 +92,9 @@ public class UiListingController {
             return "redirect:/ui/auth/login";
         }
 
-        // 預設值（與後端 API 對齊：page 1 起算、size 預設 5）
+        // 預設值（與後端 API 對齊：page 1 起算、size 預設 6）
         Integer pageArg = (page == null || page <= 0) ? 1 : page;
-        Integer sizeArg = (size == null || size <= 0) ? 5 : Math.min(size, 100);
+        Integer sizeArg = (size == null || size <= 0) ? 6 : Math.min(size, 100);
         String sortArg = (sort == null || sort.isBlank()) ? "createdAt,DESC" : sort;
 
         Long userId = (Long) session.getAttribute("userId");
