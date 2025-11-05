@@ -90,26 +90,34 @@ public class SwapService {
         if (s.getProposalId() != null) {
             proposalRepository.findById(s.getProposalId()).ifPresent(proposal -> {
                 proposerIdArray[0] = proposal.getProposerId();
-                receiverIdArray[0] = proposal.getReceiverIdLegacy();
+                receiverIdArray[0] = proposal.getReceiverId();
                 
                 proposerItemsArray[0] = proposal.getProposalItems().stream()
                         .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
-                        .map(item -> ProposalDTO.ProposalItemDTO.builder()
-                                .itemId(item.getId())
-                                .listingId(item.getListing().getId())
-                                .listingTitle(item.getListing().getTitle())
-                                .side("OFFERED")
-                                .build())
+                        .map(item -> {
+                            Listing listing = item.getListing();
+                            String display = listing.getCardName() + " - " + listing.getArtistName();
+                            return ProposalDTO.ProposalItemDTO.builder()
+                                    .itemId(item.getId())
+                                    .listingId(listing.getId())
+                                    .listingDisplay(display)
+                                    .side("OFFERED")
+                                    .build();
+                        })
                         .collect(Collectors.toList());
                 
                 receiverItemsArray[0] = proposal.getProposalItems().stream()
                         .filter(item -> item.getSide() == ProposalItem.Side.REQUESTED)
-                        .map(item -> ProposalDTO.ProposalItemDTO.builder()
-                                .itemId(item.getId())
-                                .listingId(item.getListing().getId())
-                                .listingTitle(item.getListing().getTitle())
-                                .side("REQUESTED")
-                                .build())
+                        .map(item -> {
+                            Listing listing = item.getListing();
+                            String display = listing.getCardName() + " - " + listing.getArtistName();
+                            return ProposalDTO.ProposalItemDTO.builder()
+                                    .itemId(item.getId())
+                                    .listingId(listing.getId())
+                                    .listingDisplay(display)
+                                    .side("REQUESTED")
+                                    .build();
+                        })
                         .collect(Collectors.toList());
             });
         }

@@ -41,22 +41,20 @@ public class ListingService {
         System.out.println("DEBUG - create(): 序列化後的JSON: " + imagePathsJson);
         
         Listing listing = Listing.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .ownerId(userId)
-                // 新增卡片屬性
                 .cardName(request.getCardName())
                 .groupName(request.getGroupName())
                 .artistName(request.getArtistName())
+                .description(request.getDescription())
                 .cardSource(request.getCardSource())
                 .conditionRating(request.getConditionRating())
                 .hasProtection(request.getHasProtection())
                 .remarks(request.getRemarks())
                 .imagePaths(imagePathsJson)
+                .userId(userId)
                 .build();
 
         listing = listingRepository.save(listing);
-        return toDTO(listing);
+        return toDTO(listing, userId);
     }
 
     @Transactional(readOnly = true)
@@ -78,7 +76,9 @@ public class ListingService {
 
         Page<Listing> pg;
         if (q != null && !q.isBlank()) {
-            pg = listingRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(q, q, pageable);
+            // 搜尋卡片名稱、藝人名稱、團體名稱或描述
+            pg = listingRepository.findByCardNameContainingIgnoreCaseOrArtistNameContainingIgnoreCaseOrGroupNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
+                q, q, q, q, pageable);
         } else {
             pg = listingRepository.findAll(pageable);
         }
@@ -147,31 +147,25 @@ public class ListingService {
             prop = "createdAt";
         }
 
-        Sort userSort = Sort.by(new Sort.Order(dir, prop));
-        // 確保COMPLETED項目總是在最後 - 使用CASE表達式而非@Formula字段
-        return Sort.by(Sort.Order.asc("statusRank")).and(userSort);
+        return Sort.by(new Sort.Order(dir, prop));
     }
 
     private Specification<Listing> buildBaseSpec(String q, Long ownerId, Long excludeOwnerId) {
         return (root, query, cb) -> {
             List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
             if (ownerId != null) {
-                predicates.add(cb.or(
-                        cb.equal(root.get("ownerId"), ownerId),
-                        cb.equal(root.get("ownerIdLegacy"), ownerId)
-                ));
+                predicates.add(cb.equal(root.get("userId"), ownerId));
             }
             if (excludeOwnerId != null) {
-                predicates.add(cb.and(
-                        cb.notEqual(root.get("ownerId"), excludeOwnerId),
-                        cb.notEqual(root.get("ownerIdLegacy"), excludeOwnerId)
-                ));
+                predicates.add(cb.notEqual(root.get("userId"), excludeOwnerId));
             }
             if (q != null && !q.isBlank()) {
                 String like = "%" + q.toLowerCase() + "%";
-                jakarta.persistence.criteria.Predicate titleLike = cb.like(cb.lower(root.get("title")), like);
+                jakarta.persistence.criteria.Predicate cardNameLike = cb.like(cb.lower(root.get("cardName")), like);
+                jakarta.persistence.criteria.Predicate artistNameLike = cb.like(cb.lower(root.get("artistName")), like);
+                jakarta.persistence.criteria.Predicate groupNameLike = cb.like(cb.lower(root.get("groupName")), like);
                 jakarta.persistence.criteria.Predicate descLike = cb.like(cb.lower(root.get("description")), like);
-                predicates.add(cb.or(titleLike, descLike));
+                predicates.add(cb.or(cardNameLike, artistNameLike, groupNameLike, descLike));
             }
             return predicates.isEmpty() ? cb.conjunction() : cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
@@ -184,42 +178,37 @@ public class ListingService {
     }
     
     private ListingDTO toDTO(Listing l, Long currentUserId) {
-    Long resolvedOwnerId = l.getOwnerId() != null ? l.getOwnerId() : l.getOwnerIdLegacy();
-    Long legacyOwnerId = l.getOwnerIdLegacy();
+        Long userId = l.getUserId();
+        
+        String ownerDisplayName = userId == null ? "未知使用者" :
+            userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("未知使用者");
 
-    Long lookupOwnerId = resolvedOwnerId != null ? resolvedOwnerId : legacyOwnerId;
-    String ownerDisplayName = lookupOwnerId == null ? "未知使用者" :
-        userRepository.findById(lookupOwnerId)
-            .map(user -> user.getDisplayName())
-            .orElse("未知使用者");
-
-    boolean isMine = currentUserId != null && (
-        (resolvedOwnerId != null && resolvedOwnerId.equals(currentUserId)) ||
-        (legacyOwnerId != null && legacyOwnerId.equals(currentUserId))
-    );
+        boolean isMine = currentUserId != null && userId != null && userId.equals(currentUserId);
         
         // 解析圖片路徑
         List<String> imageUrls = parseImageUrls(l.getImagePaths());
         
         return ListingDTO.builder()
                 .id(l.getId())
-                .title(l.getTitle())
-                .description(l.getDescription())
-        .ownerId(lookupOwnerId)
-                .ownerDisplayName(ownerDisplayName)
-                .status(l.getStatus())
-        .isMine(isMine)
-                .createdAt(l.getCreatedAt())
-                .updatedAt(l.getUpdatedAt())
-                // 新增卡片屬性
                 .cardName(l.getCardName())
                 .groupName(l.getGroupName())
                 .artistName(l.getArtistName())
+                .description(l.getDescription())
                 .cardSource(l.getCardSource())
+                .cardSourceDisplay(l.getCardSource() != null ? l.getCardSource().getDisplayName() : null)
                 .conditionRating(l.getConditionRating())
                 .hasProtection(l.getHasProtection())
                 .remarks(l.getRemarks())
                 .imageUrls(imageUrls)
+                .userId(userId)
+                .ownerDisplayName(ownerDisplayName)
+                .isMine(isMine)
+                .createdAt(l.getCreatedAt())
+                .updatedAt(l.getUpdatedAt())
+                .status(l.getStatus())
+                .statusDisplay(l.getStatus() != null ? l.getStatus().getDisplayName() : null)
                 .build();
     }
 
@@ -232,7 +221,7 @@ public class ListingService {
         Listing listing = listingRepository.findById(id).orElseThrow(NotFoundException::new);
         
         // 檢查是否為自己的物品
-        if (!listing.getOwnerId().equals(userId)) {
+        if (!listing.getUserId().equals(userId)) {
             throw new ForbiddenException();
         }
 
@@ -246,28 +235,25 @@ public class ListingService {
             throw new ConflictException();
         }
 
-        // 更新基本資訊
-        listing.setTitle(request.getTitle());
-        listing.setDescription(request.getDescription());
-        
-        // 更新卡片屬性
+        // 更新卡片資訊
         listing.setCardName(request.getCardName());
         listing.setGroupName(request.getGroupName());
         listing.setArtistName(request.getArtistName());
+        listing.setDescription(request.getDescription());
         listing.setCardSource(request.getCardSource());
         listing.setConditionRating(request.getConditionRating());
         listing.setHasProtection(request.getHasProtection());
         listing.setRemarks(request.getRemarks());
         
         // 更新圖片
-        if (request.getImageFileNames() != null) {
+        if (request.getImageFileNames() != null && !request.getImageFileNames().isEmpty()) {
             String imagePathsJson = serializeImagePaths(request.getImageFileNames());
             listing.setImagePaths(imagePathsJson);
         }
         
         listing = listingRepository.save(listing);
         
-        return toDTO(listing);
+        return toDTO(listing, userId);
     }
 
     // === 圖片處理相關方法 ===

@@ -609,18 +609,25 @@
     <div class="list" th:if="${items != null and !items.isEmpty()}">
         <div class="card" th:each="it : ${items}" th:with="statusName=${it.status != null ? it.status.name() : ''}">
             <div class="item-title">
-                <span th:text="${it.title}">標題</span>
+                <span>
+                    <span th:text="${it.cardName}">卡片名稱</span>
+                    <span th:if="${it.artistName != null}" th:text="' - ' + ${it.artistName}"></span>
+                </span>
                 <!-- 狀態標籤 -->
-            <span class="status-badge status-available" 
-                th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}">
+                <span class="status-badge status-available" 
+                    th:if="${statusName == 'AVAILABLE'}">
                     ✓ 可交換
                 </span>
                 <span class="status-badge status-locked" 
-                th:if="${statusName == 'LOCKED'}">
-                    🔒 交換中
+                    th:if="${statusName == 'LOCKED'}">
+                    🔒 已鎖定
+                </span>
+                <span class="status-badge status-locked" 
+                    th:if="${statusName == 'PENDING'}">
+                    � 交換中
                 </span>
                 <span class="status-badge status-completed" 
-                th:if="${statusName == 'COMPLETED'}">
+                    th:if="${statusName == 'COMPLETED'}">
                     ✓ 已完成
                 </span>
             </div>
@@ -637,17 +644,11 @@
             
             <!-- 卡片基本資訊 -->
             <div style="margin: 12px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
-                <div th:if="${it.cardName != null and !it.cardName.isEmpty()}">
-                    <strong>🎴 卡片名稱：</strong><span th:text="${it.cardName}">-</span>
-                </div>
                 <div th:if="${it.groupName != null and !it.groupName.isEmpty()}">
                     <strong>👥 所屬團體：</strong><span th:text="${it.groupName}">-</span>
                 </div>
-                <div th:if="${it.artistName != null and !it.artistName.isEmpty()}">
-                    <strong>⭐ 藝人名稱：</strong><span th:text="${it.artistName}">-</span>
-                </div>
                 <div th:if="${it.cardSource != null}">
-                    <strong>📀 卡片來源：</strong><span th:text="${it.cardSource.displayName}">-</span>
+                    <strong>📀 卡片來源：</strong><span th:text="${it.cardSourceDisplay}">-</span>
                 </div>
                 <div th:if="${it.conditionRating != null}">
                     <strong>💎 品項狀況：</strong><span th:text="${it.conditionRating + '成新'}">-</span>
@@ -672,7 +673,7 @@
             </div>
             <div style="margin-top: 16px;">
                 <!-- 只對可交換狀態的物品顯示編輯按鈕 -->
-                <button th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}" 
+                <button th:if="${statusName == 'AVAILABLE'}" 
                         class="btn-edit" 
                         th:attr="data-listing-id=${it.id}"
                         onclick="openEditListingModal(this.getAttribute('data-listing-id'))">
@@ -816,16 +817,11 @@
                     <div id="editImagePreview" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="editListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
-                    <input type="text" id="editListingTitle" name="title" required placeholder="例如：Jimin - Proof 小卡">
-                </div>
-                
                 <!-- 卡片基本資訊 -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="form-group">
-                        <label for="editCardName">🎴 卡片名稱</label>
-                        <input type="text" id="editCardName" name="cardName" placeholder="例如：Jimin - Proof">
+                        <label for="editCardName">🎴 卡片名稱 <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="editCardName" name="cardName" required placeholder="例如：Jimin - Proof">
                     </div>
                     <div class="form-group">
                         <label for="editGroupName">👥 所屬團體</label>
@@ -923,7 +919,7 @@
             const myAvailableListings = listings.filter(l => 
                 l.isMine && 
                 l.id != excludeListingId && 
-                (l.status === 'AVAILABLE' || l.status === 'ACTIVE')
+                l.status === 'AVAILABLE'
             );
             
             if (myAvailableListings.length === 0) {
@@ -949,8 +945,8 @@
                            name="proposerListingIds"
                            onclick="event.stopPropagation(); toggleListingSelection(${listing.id}, event)">
                     <label class="listing-checkbox-label" for="listing-${listing.id}">
-                        <div class="listing-checkbox-title">${listing.title}</div>
-                        <div class="listing-checkbox-status">狀態: ${listing.status}</div>
+                        <div class="listing-checkbox-title">${listing.cardName} - ${listing.artistName}</div>
+                        <div class="listing-checkbox-status">狀態: ${listing.statusDisplay}</div>
                     </label>
                 </div>
             `).join('');
@@ -1048,6 +1044,8 @@
     });
 
     // === 編輯刊登相關函數 ===
+    let currentListingData = null; // 儲存當前正在編輯的刊登資料
+    
     async function openEditListingModal(listingId) {
         try {
             // 透過API獲取完整的刊登資料
@@ -1058,10 +1056,10 @@
             }
             
             const listing = await response.json();
+            currentListingData = listing; // 儲存完整資料
             
             // 填入表單資料
             document.getElementById('editListingId').value = listingId;
-            document.getElementById('editListingTitle').value = listing.title || '';
             document.getElementById('editListingDescription').value = listing.description || '';
             document.getElementById('editCardName').value = listing.cardName || '';
             document.getElementById('editGroupName').value = listing.groupName || '';
@@ -1109,10 +1107,11 @@
         e.preventDefault();
         
         const listingId = document.getElementById('editListingId').value;
-        const title = document.getElementById('editListingTitle').value;
+        const cardName = document.getElementById('editCardName').value.trim();
+        const artistName = document.getElementById('editArtistName').value.trim();
         
-        if (!title || title.trim() === '') {
-            alert('❌ 請輸入物品標題');
+        if (!cardName || !artistName) {
+            alert('❌ 請輸入卡片名稱和藝人名稱');
             return;
         }
         
@@ -1149,20 +1148,29 @@
         
         // 收集表單資料
         const formData = {
-            title: title.trim(),
             description: document.getElementById('editListingDescription').value.trim() || null,
-            cardName: document.getElementById('editCardName').value.trim() || null,
+            cardName: cardName,
             groupName: document.getElementById('editGroupName').value.trim() || null,
-            artistName: document.getElementById('editArtistName').value.trim() || null,
+            artistName: artistName,
             cardSource: document.getElementById('editCardSource').value || null,
             conditionRating: document.getElementById('editConditionRating').value ? parseInt(document.getElementById('editConditionRating').value) : null,
             hasProtection: document.getElementById('editHasProtection').value === 'true',
             remarks: document.getElementById('editRemarks').value.trim() || null
         };
         
-        // 只有上傳新圖片時才包含圖片檔名
+        // 處理圖片：如果有上傳新圖片，使用新圖片；否則保留現有圖片
         if (imageFileNames.length > 0) {
+            // 使用者上傳了新圖片
             formData.imageFileNames = imageFileNames;
+        } else if (currentListingData && currentListingData.imageUrls && currentListingData.imageUrls.length > 0) {
+            // 沒有上傳新圖片，從 imageUrls 提取檔名
+            formData.imageFileNames = currentListingData.imageUrls.map(url => {
+                // 從 /images/filename.jpg 提取 filename.jpg
+                return url.substring(url.lastIndexOf('/') + 1);
+            });
+        } else {
+            alert('❌ 至少需要一張圖片');
+            return;
         }
         
         try {

@@ -40,7 +40,7 @@ class ListingControllerTest {
     @DisplayName("POST /api/listings -> 201 when created")
     void create_created() throws Exception {
         Mockito.when(listingService.create(any(CreateListingRequest.class), any()))
-                .thenReturn(ListingDTO.builder().id(1L).title("T").description("D").ownerId(7L)
+                .thenReturn(ListingDTO.builder().id(1L).cardName("T").description("D").userId(7L)
                         .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build());
 
         String body = "{\"title\":\"T\",\"description\":\"D\"}";
@@ -55,7 +55,7 @@ class ListingControllerTest {
     @DisplayName("GET /api/listings/{id} -> 200")
     void getById_ok() throws Exception {
         Mockito.when(listingService.getById(eq(1L)))
-                .thenReturn(ListingDTO.builder().id(1L).title("T").ownerId(7L)
+                .thenReturn(ListingDTO.builder().id(1L).cardName("T").userId(7L)
                         .createdAt(LocalDateTime.now()).updatedAt(LocalDateTime.now()).build());
 
         mockMvc.perform(get("/api/listings/1"))
@@ -68,8 +68,8 @@ class ListingControllerTest {
     void list_ok() throws Exception {
         Mockito.when(listingService.list(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(
-                        ListingDTO.builder().id(1L).title("A").ownerId(1L).build(),
-                        ListingDTO.builder().id(2L).title("B").ownerId(2L).build()
+                        ListingDTO.builder().id(1L).cardName("A").userId(1L).build(),
+                        ListingDTO.builder().id(2L).cardName("B").userId(2L).build()
                 ));
 
         mockMvc.perform(get("/api/listings"))
@@ -108,9 +108,9 @@ class ListingControllerTest {
     void createWithMultipleImages_created() throws Exception {
         ListingDTO expectedResponse = ListingDTO.builder()
                 .id(1L)
-                .title("Test Card")
+                .cardName("Test Card")
                 .description("Test Description")
-                .ownerId(7L)
+                .userId(7L)
                 .imageUrls(List.of("/images/image1.jpg", "/images/image2.png"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

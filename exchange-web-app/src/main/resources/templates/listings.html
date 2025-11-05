@@ -609,18 +609,25 @@
     <div class="list" th:if="${items != null and !items.isEmpty()}">
         <div class="card" th:each="it : ${items}" th:with="statusName=${it.status != null ? it.status.name() : ''}">
             <div class="item-title">
-                <span th:text="${it.title}">標題</span>
+                <span>
+                    <span th:text="${it.cardName}">卡片名稱</span>
+                    <span th:if="${it.artistName != null}" th:text="' - ' + ${it.artistName}"></span>
+                </span>
                 <!-- 狀態標籤 -->
-            <span class="status-badge status-available" 
-                th:if="${statusName == 'ACTIVE' or statusName == 'AVAILABLE'}">
+                <span class="status-badge status-available" 
+                    th:if="${statusName == 'AVAILABLE'}">
                     ✓ 可交換
                 </span>
                 <span class="status-badge status-locked" 
-                th:if="${statusName == 'LOCKED'}">
-                    🔒 交換中
+                    th:if="${statusName == 'LOCKED'}">
+                    🔒 已鎖定
+                </span>
+                <span class="status-badge status-locked" 
+                    th:if="${statusName == 'PENDING'}">
+                    � 交換中
                 </span>
                 <span class="status-badge status-completed" 
-                th:if="${statusName == 'COMPLETED'}">
+                    th:if="${statusName == 'COMPLETED'}">
                     ✓ 已完成
                 </span>
             </div>
@@ -637,28 +644,22 @@
             
             <!-- 卡片基本資訊 -->
             <div style="margin: 12px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;">
-                <div th:if="${it.cardName != null and !it.cardName.isEmpty()}">
-                    <strong>🎴 卡片名稱：</strong><span th:text="${it.cardName}">-</span>
-                </div>
                 <div th:if="${it.groupName != null and !it.groupName.isEmpty()}">
                     <strong>👥 所屬團體：</strong><span th:text="${it.groupName}">-</span>
                 </div>
-                <div th:if="${it.artistName != null and !it.artistName.isEmpty()}">
-                    <strong>⭐ 藝人名稱：</strong><span th:text="${it.artistName}">-</span>
-                </div>
                 <div th:if="${it.cardSource != null}">
-                    <strong>📀 卡片來源：</strong><span th:text="${it.cardSource.displayName}">-</span>
+                    <strong>📀 卡片來源：</strong><span th:text="${it.cardSourceDisplay}">-</span>
                 </div>
                 <div th:if="${it.conditionRating != null}">
-                    <strong>💎 品項狀況：</strong><span th:text="${it.conditionRating + '成新'}">-</span>
+                    <strong>💎 品相等級：</strong><span th:text="${it.conditionRating + '/10'}">-</span>
                 </div>
                 <div th:if="${it.hasProtection != null}">
-                    <strong>🛡️ 保護套殼：</strong><span th:text="${it.hasProtection ? '有' : '無'}">-</span>
+                    <strong>🛡️ 保護措施：</strong><span th:text="${it.hasProtection ? '有' : '無'}">-</span>
                 </div>
             </div>
             
-            <!-- 原描述 -->
-            <div class="item-desc" th:text="${it.description}">描述</div>
+            <!-- 描述 -->
+            <div th:if="${it.description != null and !it.description.isEmpty()}" class="item-desc" th:text="${it.description}">描述</div>
             
             <!-- 備註 -->
             <div th:if="${it.remarks != null and !it.remarks.isEmpty()}" style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 6px; font-size: 13px;">
@@ -667,22 +668,22 @@
             
             <div class="muted" style="margin-top:8px;">
                 📌 ID: <span th:text="${it.id}">1</span> ・ 
-                👤 賣家: <span th:text="${it.ownerDisplayName}">使用者名稱</span> ・ 
-                📅 建立：<span th:text="${it.createdAt}">time</span>
+                👤 擁有者: <span th:text="${it.ownerDisplayName}">使用者名稱</span> ・ 
+                📅 上架時間：<span th:text="${it.createdAt}">time</span>
             </div>
             <div style="margin-top: 16px;">
                 <!-- 只對自己的物品顯示編輯按鈕 -->
-                <button th:if="${it.ownerId == currentUserId}" 
+                <button th:if="${it.userId == currentUserId}" 
                         class="btn-edit" 
-                        th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}, data-listing-description=${it.description}"
-                        onclick="openEditListingModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'), this.getAttribute('data-listing-description'))">
+                        th:attr="data-listing-id=${it.id}"
+                        onclick="alert('編輯功能開發中')">
                     ✏️ 編輯
                 </button>
         <!-- 只對不是自己且狀態為可交換的物品顯示提案按鈕 -->
-    <button th:if="${it.ownerId != currentUserId and (statusName == 'ACTIVE' or statusName == 'AVAILABLE')}" 
+    <button th:if="${it.userId != currentUserId and statusName == 'AVAILABLE'}" 
                         class="btn-proposal" 
-                        th:attr="data-listing-id=${it.id}, data-listing-title=${it.title}"
-                        onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-title'))">
+                        th:attr="data-listing-id=${it.id}, data-listing-display=${it.cardName + ' - ' + it.artistName}"
+                        onclick="openProposalModal(this.getAttribute('data-listing-id'), this.getAttribute('data-listing-display'))">
                     📝 提出提案
                 </button>
             </div>
@@ -826,10 +827,10 @@
     let currentListingId = null;
     
     // === 提案相關函數 ===
-    async function openProposalModal(listingId, listingTitle) {
+    async function openProposalModal(listingId, listingDisplay) {
         currentListingId = listingId;
         document.getElementById('listingId').value = listingId;
-        document.getElementById('modalListingTitle').textContent = listingTitle;
+        document.getElementById('modalListingTitle').textContent = listingDisplay;
         document.getElementById('message').value = '';
         document.getElementById('proposalModal').classList.add('show');
         
@@ -851,7 +852,7 @@
             const myAvailableListings = listings.filter(l => 
                 l.isMine && 
                 l.id != excludeListingId && 
-                (l.status === 'AVAILABLE' || l.status === 'ACTIVE')
+                l.status === 'AVAILABLE'
             );
             
             if (myAvailableListings.length === 0) {
@@ -877,8 +878,8 @@
                            name="proposerListingIds"
                            onclick="event.stopPropagation(); toggleListingSelection(${listing.id}, event)">
                     <label class="listing-checkbox-label" for="listing-${listing.id}">
-                        <div class="listing-checkbox-title">${listing.title}</div>
-                        <div class="listing-checkbox-status">狀態: ${listing.status}</div>
+                        <div class="listing-checkbox-title">${listing.cardName} - ${listing.artistName}</div>
+                        <div class="listing-checkbox-status">狀態: ${listing.statusDisplay}</div>
                     </label>
                 </div>
             `).join('');

@@ -40,7 +40,7 @@ public class ProposalService {
                 .orElseThrow(NotFoundException::new);
 
         // 檢查是否為自己的物品
-        if (receiverListing.getOwnerId().equals(userId)) {
+        if (receiverListing.getUserId().equals(userId)) {
             throw new ForbiddenException();
         }
 
@@ -51,13 +51,12 @@ public class ProposalService {
                     .orElseThrow(() -> new NotFoundException());
             
             // Verify proposer owns these listings
-            if (!listing.getOwnerId().equals(userId)) {
+            if (!listing.getUserId().equals(userId)) {
                 throw new ForbiddenException();
             }
             
             // Verify listings are available
-            if (listing.getStatus() != Listing.Status.AVAILABLE 
-                && listing.getStatus() != Listing.Status.ACTIVE) {
+            if (listing.getStatus() != Listing.Status.AVAILABLE) {
                 throw new ConflictException();
             }
             
@@ -81,8 +80,8 @@ public class ProposalService {
                 .proposalItems(new ArrayList<>())
                 .build();
         
-        // Set legacy receiver_id as listing owner for compatibility with existing DB
-        p.setReceiverIdLegacy(receiverListing.getOwnerId());
+        // Set receiver as listing owner
+        p.setReceiverId(receiverListing.getUserId());
         
         // Save proposal first to get ID
         p = proposalRepository.save(p);
@@ -117,11 +116,10 @@ public class ProposalService {
 
         Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
         Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
-        if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+        if (!listing.getUserId().equals(userId)) throw new ForbiddenException();
         
         // Prevent duplicate accepts on locked/completed listings
         if (listing.getStatus() != null
-            && listing.getStatus() != com.exchange.platform.entity.Listing.Status.ACTIVE
             && listing.getStatus() != com.exchange.platform.entity.Listing.Status.AVAILABLE) {
             throw new ConflictException();
         }
@@ -130,8 +128,7 @@ public class ProposalService {
         for (ProposalItem item : p.getProposalItems()) {
             if (item.getSide() == ProposalItem.Side.OFFERED) {
                 Listing proposerListing = item.getListing();
-                if (proposerListing.getStatus() != Listing.Status.AVAILABLE 
-                    && proposerListing.getStatus() != Listing.Status.ACTIVE) {
+                if (proposerListing.getStatus() != Listing.Status.AVAILABLE) {
                     throw new ConflictException();
                 }
             }
@@ -144,7 +141,7 @@ public class ProposalService {
         com.exchange.platform.entity.Swap swap = com.exchange.platform.entity.Swap.builder()
                 .listingId(listing.getId())
                 .proposalId(p.getId())
-                .aUserId(listing.getOwnerId())
+                .aUserId(listing.getUserId())
                 .bUserId(p.getProposerId())
                 .status(com.exchange.platform.entity.Swap.Status.IN_PROGRESS)
                 .build();
@@ -171,7 +168,7 @@ public class ProposalService {
 
         Proposal p = proposalRepository.findById(proposalId).orElseThrow(NotFoundException::new);
         Listing listing = listingRepository.findById(p.getListingId()).orElseThrow(NotFoundException::new);
-        if (!listing.getOwnerId().equals(userId)) throw new ForbiddenException();
+        if (!listing.getUserId().equals(userId)) throw new ForbiddenException();
 
         p.setStatus(Proposal.Status.REJECTED);
         return toDTO(proposalRepository.save(p));
@@ -181,22 +178,30 @@ public class ProposalService {
         // Separate items by side: OFFERED = proposer's items, REQUESTED = receiver's items
         List<ProposalDTO.ProposalItemDTO> proposerItems = p.getProposalItems().stream()
                 .filter(item -> item.getSide() == ProposalItem.Side.OFFERED)
-                .map(item -> ProposalDTO.ProposalItemDTO.builder()
-                        .itemId(item.getId())
-                        .listingId(item.getListing().getId())
-                        .listingTitle(item.getListing().getTitle())
-                        .side("OFFERED")
-                        .build())
+                .map(item -> {
+                    Listing listing = item.getListing();
+                    String display = listing.getCardName() + " - " + listing.getArtistName();
+                    return ProposalDTO.ProposalItemDTO.builder()
+                            .itemId(item.getId())
+                            .listingId(listing.getId())
+                            .listingDisplay(display)
+                            .side("OFFERED")
+                            .build();
+                })
                 .collect(Collectors.toList());
         
         List<ProposalDTO.ProposalItemDTO> receiverItems = p.getProposalItems().stream()
                 .filter(item -> item.getSide() == ProposalItem.Side.REQUESTED)
-                .map(item -> ProposalDTO.ProposalItemDTO.builder()
-                        .itemId(item.getId())
-                        .listingId(item.getListing().getId())
-                        .listingTitle(item.getListing().getTitle())
-                        .side("REQUESTED")
-                        .build())
+                .map(item -> {
+                    Listing listing = item.getListing();
+                    String display = listing.getCardName() + " - " + listing.getArtistName();
+                    return ProposalDTO.ProposalItemDTO.builder()
+                            .itemId(item.getId())
+                            .listingId(listing.getId())
+                            .listingDisplay(display)
+                            .side("REQUESTED")
+                            .build();
+                })
                 .collect(Collectors.toList());
         
         // Get user display names
@@ -204,7 +209,7 @@ public class ProposalService {
                 .map(user -> user.getDisplayName())
                 .orElse("未知使用者");
         
-        String receiverDisplayName = userRepository.findById(p.getReceiverIdLegacy())
+        String receiverDisplayName = userRepository.findById(p.getReceiverId())
                 .map(user -> user.getDisplayName())
                 .orElse("未知使用者");
         
@@ -213,7 +218,7 @@ public class ProposalService {
                 .listingId(p.getListingId())
                 .proposerId(p.getProposerId())
                 .proposerDisplayName(proposerDisplayName)
-                .receiverId(p.getReceiverIdLegacy())
+                .receiverId(p.getReceiverId())
                 .receiverDisplayName(receiverDisplayName)
                 .message(p.getMessage())
                 .status(p.getStatus())
@@ -238,7 +243,7 @@ public class ProposalService {
         Long userId = (Long) session.getAttribute(SESSION_USER_ID);
         if (userId == null) throw new UnauthorizedException();
         Pageable pageable = PageRequest.of(toPageIndex(page), toPageSize(size), parseSort(sort));
-        Page<Proposal> pg = proposalRepository.findByReceiverIdLegacyWithItems(userId, pageable);
+        Page<Proposal> pg = proposalRepository.findByReceiverIdWithItems(userId, pageable);
         return pg.stream().map(this::toDTO).toList();
     }
 

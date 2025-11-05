@@ -8,8 +8,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "listings", indexes = {
-        @Index(name = "idx_listings_owner", columnList = "owner_id"),
-        @Index(name = "idx_listings_created", columnList = "created_at")
+        @Index(name = "idx_listings_user", columnList = "user_id"),
+        @Index(name = "idx_listings_created", columnList = "created_at"),
+        @Index(name = "idx_listings_status", columnList = "status")
 })
 @Getter
 @Setter
@@ -22,99 +23,102 @@ public class Listing {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
-    private String title;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    // === 新增卡片屬性欄位 ===
-    @Column(name = "card_name", length = 200)
+    // 1. 卡片名稱 (必填)
+    @Column(name = "card_name", nullable = false, length = 200)
     private String cardName;
 
+    // 2. 團體名稱 (選填)
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    @Column(name = "artist_name", length = 100)
+    // 3. 藝人名稱 (必填)
+    @Column(name = "artist_name", nullable = false, length = 100)
     private String artistName;
 
+    // 4. 描述 (選填)
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    // 5. 卡片來源 (必填)
     @Enumerated(EnumType.STRING)
-    @Column(name = "card_source", length = 20)
+    @Column(name = "card_source", nullable = false, length = 20)
     private CardSource cardSource;
 
-    @Column(name = "condition_rating")
-    private Integer conditionRating; // 1-10成新
+    // 6. 品相等級 (必填, 1-10)
+    @Column(name = "condition_rating", nullable = false)
+    private Integer conditionRating;
 
-    @Column(name = "has_protection")
+    // 7. 是否有保護措施 (必填)
+    @Column(name = "has_protection", nullable = false)
     @Builder.Default
     private Boolean hasProtection = false;
 
+    // 8. 備註 (選填)
     @Column(name = "remarks", columnDefinition = "TEXT")
     private String remarks;
 
-    @Column(name = "image_paths", columnDefinition = "TEXT")
-    private String imagePaths; // JSON array of image file paths
+    // 9. 圖片 (必填, JSON array of image file paths)
+    @Column(name = "image_paths", nullable = false, columnDefinition = "TEXT")
+    private String imagePaths;
 
-    // 與現有資料表相容：DB 同時存在 user_id 與 owner_id 皆為 NOT NULL
-    // 我們以 ownerId 對應 user_id，並新增 legacy 欄位對應 owner_id，以避免插入失敗
+    // 擁有者ID
     @Column(name = "user_id", nullable = false)
-    private Long ownerId;
+    private Long userId;
 
-    @Column(name = "owner_id", nullable = false)
-    private Long ownerIdLegacy;
-
+    // 10. 上架時間 (系統自動帶入)
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    // 更新時間
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // 11. 卡片狀態 (必填)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 16)
     @Builder.Default
-    private Status status = Status.ACTIVE;
-
-    @Builder.Default
-    @Column(name = "status_rank")
-    private Integer statusRank = 0;
+    private Status status = Status.AVAILABLE;
 
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();
         this.createdAt = now;
         this.updatedAt = now;
-        if (this.ownerIdLegacy == null) {
-            this.ownerIdLegacy = this.ownerId;
+        if (this.status == null) {
+            this.status = Status.AVAILABLE;
         }
-        if (this.status == null) this.status = Status.ACTIVE;
-        updateStatusRank();
+        if (this.hasProtection == null) {
+            this.hasProtection = false;
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
-        updateStatusRank();
-    }
-    
-    @PostLoad
-    public void postLoad() {
-        // 處理舊數據中可能為 null 的 statusRank
-        if (this.statusRank == null) {
-            updateStatusRank();
-        }
-    }
-    
-    private void updateStatusRank() {
-        this.statusRank = (this.status == Status.COMPLETED) ? 1 : 0;
     }
 
-    // 包含 AVAILABLE 作為舊資料相容值，行為視同 ACTIVE
-    public enum Status { ACTIVE, LOCKED, COMPLETED, AVAILABLE }
+    // 卡片狀態枚舉
+    public enum Status {
+        AVAILABLE("可交換"),
+        LOCKED("已鎖定"),
+        PENDING("交換中"),
+        COMPLETED("已完成");
+
+        private final String displayName;
+
+        Status(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
 
     // 卡片來源枚舉
     public enum CardSource {
         ALBUM("專輯"),
-        CONCERT("演唱會"), 
+        CONCERT("演唱會"),
         FAN_MEETING("粉絲見面會"),
         EVENT_CARD("活動卡"),
         SPECIAL_CARD("特典卡"),

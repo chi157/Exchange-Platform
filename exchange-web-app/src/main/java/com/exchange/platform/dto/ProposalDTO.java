@@ -30,7 +30,7 @@ public class ProposalDTO {
     public static class ProposalItemDTO {
         private Long itemId;
         private Long listingId;
-        private String listingTitle;
+        private String listingDisplay; // Card display: "cardName - artistName"
         private String side; // PROPOSER or RECEIVER
     }
 }

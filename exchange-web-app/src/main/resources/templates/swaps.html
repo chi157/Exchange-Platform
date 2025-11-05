@@ -41,9 +41,9 @@
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span>🔄</span>
                         <span th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty() and swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
-                            <span th:text="${swap.proposerItems.size() == 1 ? swap.proposerItems[0].listingTitle : swap.proposerItems.size() + ' 項物品'}">物品</span>
+                            <span th:text="${swap.proposerItems.size() == 1 ? swap.proposerItems[0].listingDisplay : swap.proposerItems.size() + ' 項物品'}">物品</span>
                             <span style="color: var(--text-500); font-weight: 400; margin: 0 8px;">⇄</span>
-                            <span th:text="${swap.receiverItems.size() == 1 ? swap.receiverItems[0].listingTitle : swap.receiverItems.size() + ' 項物品'}">物品</span>
+                            <span th:text="${swap.receiverItems.size() == 1 ? swap.receiverItems[0].listingDisplay : swap.receiverItems.size() + ' 項物品'}">物品</span>
                         </span>
                         <span th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty() or swap.receiverItems == null or swap.receiverItems.isEmpty()}">
                             交換 #<span th:text="${swap.id}">1</span>
@@ -63,7 +63,7 @@
                         <div th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty()}">
                             <div th:each="item, iterStat : ${swap.proposerItems}" 
                                  style="padding: 6px 10px; margin: 3px 0; background: white; border-radius: 6px; border-left: 3px solid var(--brand-500); font-size: 14px;">
-                                <span th:text="${item.listingTitle}">物品標題</span>
+                                <span th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</span>
                             </div>
                         </div>
                         <div th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty()}" 
@@ -85,7 +85,7 @@
                         <div th:if="${swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
                             <div th:each="item : ${swap.receiverItems}" 
                                  style="padding: 6px 10px; margin: 3px 0; background: white; border-radius: 6px; border-left: 3px solid var(--success-500); font-size: 14px;">
-                                <span th:text="${item.listingTitle}">物品標題</span>
+                                <span th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</span>
                             </div>
                         </div>
                         <div th:if="${swap.receiverItems == null or swap.receiverItems.isEmpty()}" 

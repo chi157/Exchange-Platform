@@ -32,9 +32,9 @@ public class Proposal {
     @Column(name = "proposee_listing_id", nullable = false)
     private Long proposeeListingIdLegacy;
 
-    // Legacy DB compatibility: some schemas require receiver_id (the listing owner user id)
+    // The user ID of the listing owner (receiver of the proposal)
     @Column(name = "receiver_id", nullable = false)
-    private Long receiverIdLegacy;
+    private Long receiverId;
 
     @Column(name = "proposer_id", nullable = false)
     private Long proposerId;

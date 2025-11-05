@@ -62,7 +62,7 @@
                         <div th:if="${it.proposerItems != null and !it.proposerItems.isEmpty()}">
                             <div th:each="item : ${it.proposerItems}" 
                                  style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--brand-500);">
-                                <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingTitle}">物品標題</div>
+                                <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
                                 <div style="font-size: 12px; color: var(--text-600);">
                                     ID: <span th:text="${item.listingId}">1</span>
                                 </div>
@@ -87,7 +87,7 @@
                         <div th:if="${it.receiverItems != null and !it.receiverItems.isEmpty()}">
                             <div th:each="item : ${it.receiverItems}" 
                                  style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--success-500);">
-                                <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingTitle}">物品標題</div>
+                                <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
                                 <div style="font-size: 12px; color: var(--text-600);">
                                     ID: <span th:text="${item.listingId}">1</span>
                                 </div>

@@ -44,35 +44,35 @@ class ListingPaginationOrderIntegrationTest {
 
         // create three active/locked listings
         listingRepository.save(Listing.builder()
-                .title(marker + "-a1")
+                .cardName(marker + "-a1").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("active")
-                .ownerId(owner.getId())
-                .status(Listing.Status.ACTIVE)
+                .userId(owner.getId())
+                .status(Listing.Status.AVAILABLE)
                 .build());
         listingRepository.save(Listing.builder()
-                .title(marker + "-a2")
+                .cardName(marker + "-a2").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("locked")
-                .ownerId(owner.getId())
+                .userId(owner.getId())
                 .status(Listing.Status.LOCKED)
                 .build());
         listingRepository.save(Listing.builder()
-                .title(marker + "-a3")
+                .cardName(marker + "-a3").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("active")
-                .ownerId(owner.getId())
-                .status(Listing.Status.ACTIVE)
+                .userId(owner.getId())
+                .status(Listing.Status.AVAILABLE)
                 .build());
 
         // create two completed listings
         listingRepository.save(Listing.builder()
-                .title(marker + "-c1")
+                .cardName(marker + "-c1").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("completed")
-                .ownerId(owner.getId())
+                .userId(owner.getId())
                 .status(Listing.Status.COMPLETED)
                 .build());
         listingRepository.save(Listing.builder()
-                .title(marker + "-c2")
+                .cardName(marker + "-c2").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("completed")
-                .ownerId(owner.getId())
+                .userId(owner.getId())
                 .status(Listing.Status.COMPLETED)
                 .build());
 
@@ -104,21 +104,21 @@ class ListingPaginationOrderIntegrationTest {
                 .build());
 
         listingRepository.save(Listing.builder()
-                .title(marker + "-mine-a1")
+                .cardName(marker + "-mine-a1").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("active")
-                .ownerId(owner.getId())
-                .status(Listing.Status.ACTIVE)
+                .userId(owner.getId())
+                .status(Listing.Status.AVAILABLE)
                 .build());
         listingRepository.save(Listing.builder()
-                .title(marker + "-mine-a2")
+                .cardName(marker + "-mine-a2").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("locked")
-                .ownerId(owner.getId())
+                .userId(owner.getId())
                 .status(Listing.Status.LOCKED)
                 .build());
         listingRepository.save(Listing.builder()
-                .title(marker + "-mine-c1")
+                .cardName(marker + "-mine-c1").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("completed")
-                .ownerId(owner.getId())
+                .userId(owner.getId())
                 .status(Listing.Status.COMPLETED)
                 .build());
 
@@ -147,23 +147,23 @@ class ListingPaginationOrderIntegrationTest {
                 .displayName("CardOwner")
                 .build());
 
-        // 創建帶有完整卡片屬性的刊登
+        // ?�建帶�?完整?��?屬性�??�登
         listingRepository.save(Listing.builder()
-                .title(marker + "-jimin-proof")
+                .cardName(marker + "-jimin-proof").artistName("Artist").groupName("Group").cardSource(Listing.CardSource.OFFICIAL).conditionRating(9).hasProtection(true)
                 .description("BTS Jimin Proof 小卡")
-                .ownerId(owner.getId())
-                .status(Listing.Status.ACTIVE)
+                .userId(owner.getId())
+                .status(Listing.Status.AVAILABLE)
                 .cardName("Jimin - Proof")
                 .groupName("BTS")
                 .artistName("Jimin")
                 .cardSource(Listing.CardSource.ALBUM)
                 .conditionRating(9)
                 .hasProtection(true)
-                .remarks("收藏品，狀況良好")
+                .remarks("?��??��??�況良�?)
                 .imagePaths("[\"image1.jpg\",\"image2.jpg\"]")
                 .build());
 
-        // 透過服務取得刊登
+        // ?��??��??��??�登
         var result = listingService.listPage(1, 10, marker, "createdAt,ASC", null);
         
         assertThat(result.getContent()).hasSize(1);
@@ -175,7 +175,7 @@ class ListingPaginationOrderIntegrationTest {
         assertThat(dto.getCardSource()).isEqualTo(Listing.CardSource.ALBUM);
         assertThat(dto.getConditionRating()).isEqualTo(9);
         assertThat(dto.getHasProtection()).isTrue();
-        assertThat(dto.getRemarks()).isEqualTo("收藏品，狀況良好");
+        assertThat(dto.getRemarks()).isEqualTo("?��??��??�況良�?);
         assertThat(dto.getImageUrls()).containsExactly("/images/image1.jpg", "/images/image2.jpg");
     }
 }

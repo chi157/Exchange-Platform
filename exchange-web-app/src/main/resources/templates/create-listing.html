@@ -246,37 +246,28 @@
         </div>
     </header>
 
-    <h1>➕ 新增刊登物品</h1>
+    <h1>➕ 新增刊登卡片</h1>
 
     <div class="card">
         <form id="createListingForm">
-            <div class="form-group">
-                <label for="newListingTitle">物品標題 <span style="color: #dc3545;">*</span></label>
-                <input type="text" id="newListingTitle" name="title" required placeholder="例如：二手書籍、電子產品等">
-            </div>
-            <div class="form-group">
-                <label for="newListingDescription">物品描述（選填）</label>
-                <textarea id="newListingDescription" name="description" placeholder="詳細描述您的物品狀況、購買時間等..."></textarea>
-            </div>
-            
             <div class="form-section">
-                <h4>📱 卡片資訊</h4>
+                <h4>📱 卡片基本資訊</h4>
                 <div class="grid-2-col">
                     <div class="form-group">
-                        <label for="newCardName">卡片名稱</label>
-                        <input type="text" id="newCardName" name="cardName" placeholder="例如：Jimin - Proof">
+                        <label for="newCardName">卡片名稱 <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="newCardName" name="cardName" required placeholder="例如：Jimin - Proof">
                     </div>
                     <div class="form-group">
-                        <label for="newGroupName">團體名稱</label>
+                        <label for="newGroupName">團體名稱（選填）</label>
                         <input type="text" id="newGroupName" name="groupName" placeholder="例如：BTS">
                     </div>
                     <div class="form-group">
-                        <label for="newArtistName">藝人名稱</label>
-                        <input type="text" id="newArtistName" name="artistName" placeholder="例如：Jimin">
+                        <label for="newArtistName">藝人名稱 <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="newArtistName" name="artistName" required placeholder="例如：Jimin">
                     </div>
                     <div class="form-group">
-                        <label for="newCardSource">卡片來源</label>
-                        <select id="newCardSource" name="cardSource">
+                        <label for="newCardSource">卡片來源 <span style="color: #dc3545;">*</span></label>
+                        <select id="newCardSource" name="cardSource" required>
                             <option value="">請選擇</option>
                             <option value="ALBUM">專輯</option>
                             <option value="CONCERT">演唱會</option>
@@ -287,11 +278,11 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="newConditionRating">品相等級 (1-10)</label>
-                        <input type="number" id="newConditionRating" name="conditionRating" min="1" max="10" placeholder="9">
+                        <label for="newConditionRating">品相等級 (1-10) <span style="color: #dc3545;">*</span></label>
+                        <input type="number" id="newConditionRating" name="conditionRating" required min="1" max="10" placeholder="9">
                     </div>
                     <div class="form-group">
-                        <label>保護措施</label>
+                        <label>保護措施 <span style="color: #dc3545;">*</span></label>
                         <div class="radio-group-container">
                             <div class="radio-group" id="hasProtectionGroup">
                                 <label class="radio-label selected">
@@ -306,16 +297,24 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="form-section">
+                <h4>📝 補充說明</h4>
                 <div class="form-group">
-                    <label for="newRemarks">備註</label>
+                    <label for="newListingDescription">描述（選填）</label>
+                    <textarea id="newListingDescription" name="description" placeholder="詳細描述您的卡片狀況、特色等..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="newRemarks">備註（選填）</label>
                     <textarea id="newRemarks" name="remarks" placeholder="收藏狀況、特殊說明等..."></textarea>
                 </div>
             </div>
 
             <div class="form-section">
-                <h4>🖼️ 上傳圖片</h4>
+                <h4>🖼️ 上傳圖片 <span style="color: #dc3545;">*</span></h4>
                 <div class="form-group">
-                    <label for="newCardImages">卡片圖片 (最多5張)</label>
+                    <label for="newCardImages">卡片圖片（最多5張，至少1張）</label>
                     <input type="file" id="newCardImages" accept="image/*" multiple onchange="addImage(this)" style="margin-bottom: 8px;">
                     <div style="font-size: 12px; color: #888; margin-top: 4px;">若要選擇一張以上，請一次選取全部。</div>
                     <div id="imagePreviewContainer" style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;"></div>
@@ -325,7 +324,7 @@
                 </div>
             </div>
             
-                        <button type="submit" class="btn-submit">🚀 建立刊登</button>
+            <button type="submit" class="btn-submit">🚀 建立刊登</button>
         </form>
     </div>
 </div>
@@ -476,18 +475,15 @@
 
         const formData = new FormData(this);
         const listingData = {
-            title: formData.get('title'),
+            cardName: formData.get('cardName'),
+            groupName: formData.get('groupName'),
+            artistName: formData.get('artistName'),
             description: formData.get('description'),
-            imageFileNames: uploadedImageNames,
-            cardAttributes: {
-                cardName: formData.get('cardName'),
-                groupName: formData.get('groupName'),
-                artistName: formData.get('artistName'),
-                cardSource: formData.get('cardSource'),
-                conditionRating: formData.get('conditionRating') ? parseInt(formData.get('conditionRating'), 10) : null,
-                hasProtection: formData.get('hasProtection') === 'true',
-                remarks: formData.get('remarks')
-            }
+            cardSource: formData.get('cardSource'),
+            conditionRating: formData.get('conditionRating') ? parseInt(formData.get('conditionRating'), 10) : null,
+            hasProtection: formData.get('hasProtection') === 'true',
+            remarks: formData.get('remarks'),
+            imageFileNames: uploadedImageNames
         };
 
         try {
@@ -500,7 +496,7 @@
             });
 
             if (response.ok) {
-                alert('🎉 物品刊登成功！');
+                alert('🎉 卡片刊登成功！');
                 window.location.href = '/ui/my-listings';
             } else {
                 const errorData = await response.json();
