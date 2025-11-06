@@ -128,8 +128,8 @@
                 </div>
                 <div id="trackingFields">
                     <div class="form-group">
-                        <label for="trackingNumber">追蹤號碼：</label>
-                        <input type="text" id="trackingNumber" placeholder="輸入追蹤號碼">
+                        <label for="trackingNumber">交貨便服務代碼：</label>
+                        <input type="text" id="trackingNumber" placeholder="輸入交貨便服務代碼">
                     </div>
                 </div>
                 <button class="btn-submit" onclick="submitShipment()">儲存物流資訊</button>
@@ -138,7 +138,7 @@
                 <h3>已儲存的物流資訊：</h3>
                 <p><strong>配送方式：</strong> <span id="savedDeliveryMethod"></span></p>
                 <p id="savedTrackingInfo" style="display:none;">
-                    <strong>追蹤號碼：</strong> <span id="savedTrackingNumber"></span>
+                    <strong>交貨便服務代碼：</strong> <span id="savedTrackingNumber"></span>
                 </p>
                 <div style="margin-top: 16px;">
                     <button class="btn-edit" onclick="editShipment()">編輯物流資訊</button>
@@ -710,11 +710,11 @@
             let html = `<p><strong>配送方式：</strong> ${methodText}</p>`;
             
             if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
-                html += `<p><strong>追蹤號碼：</strong> ${shipment.trackingNumber}</p>`;
+                html += `<p><strong>交貨便服務代碼：</strong> ${shipment.trackingNumber}</p>`;
                 
                 // 顯示查看貨物狀態按鈕
                 document.getElementById('trackingButtonContainer').style.display = 'block';
-                // 儲存追蹤號碼供後續查詢使用
+                // 儲存交貨便服務代碼供後續查詢使用
                 window.currentTrackingNumber = shipment.trackingNumber;
             } else {
                 document.getElementById('trackingButtonContainer').style.display = 'none';
@@ -778,7 +778,7 @@
                 
                 // 顯示查看我的貨物狀態按鈕
                 document.getElementById('myTrackingButton').style.display = 'inline-block';
-                // 儲存我的追蹤號碼
+                // 儲存我的交貨便服務代碼
                 window.myTrackingNumber = shipment.trackingNumber;
             } else {
                 document.getElementById('savedTrackingInfo').style.display = 'none';
@@ -822,7 +822,7 @@
             const trackingNumber = document.getElementById('trackingNumber').value;
 
             if (deliveryMethod === 'shipnow' && (!trackingNumber || trackingNumber.trim() === '')) {
-                alert('交貨便模式下，追蹤號碼為必填！');
+                alert('交貨便模式下，交貨便服務代碼為必填！');
                 return;
             }
 
@@ -908,7 +908,7 @@
 
         async function openTrackingModalWithNumber(trackingNumber) {
             if (!trackingNumber) {
-                alert('找不到追蹤號碼');
+                alert('找不到交貨便服務代碼');
                 return;
             }
             
@@ -971,11 +971,11 @@
                 return;
             }
             
-            // 根據來源選擇追蹤號碼
+            // 根據來源選擇交貨便服務代碼
             const trackingNumber = currentTrackingSource === 'my' ? window.myTrackingNumber : window.currentTrackingNumber;
             
             if (!trackingNumber) {
-                alert('找不到追蹤號碼');
+                alert('找不到交貨便服務代碼');
                 return;
             }
             
