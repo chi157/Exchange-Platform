@@ -54,7 +54,7 @@
                 <div class="exchange-visual">
                     <!-- 左側：我的物品 (提案者在 mine，接收者在 received) -->
                     <div class="exchange-side">
-                        <div class="side-label" th:text="${viewType == 'mine' ? '我的物品' : '對方的物品'}">我的物品</div>
+                        <div class="side-label" th:text="${viewType == 'mine' ? '我的物品' : it.proposerDisplayName + ' 的物品'}">我的物品</div>
                         <div class="items-display">
                             <!-- 如果是 mine 顯示 proposerItems，如果是 received 顯示 receiverItems -->
                             <div th:with="myItems=${viewType == 'mine' ? it.proposerItems : it.receiverItems}">
@@ -97,7 +97,7 @@
                     
                     <!-- 右側：對方的物品 -->
                     <div class="exchange-side">
-                        <div class="side-label" th:text="${viewType == 'mine' ? '對方的物品' : '我的物品'}">對方的物品</div>
+                        <div class="side-label" th:text="${viewType == 'mine' ? it.receiverDisplayName + ' 的物品' : '我的物品'}">對方的物品</div>
                         <div class="items-display">
                             <!-- 如果是 mine 顯示 receiverItems，如果是 received 顯示 proposerItems -->
                             <div th:with="theirItems=${viewType == 'mine' ? it.receiverItems : it.proposerItems}">
