@@ -35,21 +35,21 @@
         <h1>🔄 我的交換</h1>
 
         <div class="list" th:if="${items != null and !items.isEmpty()}">
-            <div class="card" th:each="swap : ${items}">
+            <div class="card" th:each="swap : ${items}" 
+                 th:with="statusName=${swap.status != null ? swap.status.name() : ''}, 
+                          otherUserName=${swap.proposerId == currentUserId ? swap.receiverDisplayName : swap.proposerDisplayName}">
                 <!-- 更有意義的標題 -->
                 <div class="item-title">
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <span>🔄</span>
-                        <span th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty() and swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
-                            <span th:text="${swap.proposerItems.size() == 1 ? swap.proposerItems[0].listingDisplay : swap.proposerItems.size() + ' 項物品'}">物品</span>
-                            <span style="color: var(--text-500); font-weight: 400; margin: 0 8px;">⇄</span>
-                            <span th:text="${swap.receiverItems.size() == 1 ? swap.receiverItems[0].listingDisplay : swap.receiverItems.size() + ' 項物品'}">物品</span>
+                        <span>
+                            與 <strong th:text="${otherUserName}">對方</strong> 的交換
                         </span>
-                        <span th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty() or swap.receiverItems == null or swap.receiverItems.isEmpty()}">
-                            交換 #<span th:text="${swap.id}">1</span>
+                        <span th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty() and swap.receiverItems != null and !swap.receiverItems.isEmpty()}" style="color: var(--text-600); font-weight: 400; font-size: 15px;">
+                            (<span th:text="${swap.proposerItems.size()}">1</span> 項 ⇄ <span th:text="${swap.receiverItems.size()}">1</span> 項)
                         </span>
                         <span class="badge" th:text="${swap.status}" 
-                              th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
+                              th:classappend="${statusName == 'IN_PROGRESS' ? 'badge-progress' : (statusName == 'COMPLETED' ? 'badge-success' : (statusName == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
                     </div>
                 </div>
                 

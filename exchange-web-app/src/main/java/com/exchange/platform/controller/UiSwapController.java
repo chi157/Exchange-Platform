@@ -42,11 +42,12 @@ public class UiSwapController {
         model.addAttribute("size", sizeArg);
         model.addAttribute("sort", sortArg);
         
-        // 加入當前使用者的顯示名稱
+        // 加入當前使用者的顯示名稱和ID
         Long userId = (Long) session.getAttribute("userId");
         String currentUserDisplayName = userRepository.findById(userId)
                 .map(user -> user.getDisplayName())
                 .orElse("訪客");
+        model.addAttribute("currentUserId", userId);
         model.addAttribute("currentUserDisplayName", currentUserDisplayName);
         
         return "swaps";
