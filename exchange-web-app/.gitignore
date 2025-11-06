@@ -7,3 +7,5 @@
 /.classpath
 uploads/
 *.log
+GOOGLE_OAUTH_SETUP.md
+/src/main/resources/application.yml

@@ -23,11 +23,18 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 255)
+    @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
     @Column(name = "display_name", nullable = false, length = 100)
     private String displayName;
+
+    // OAuth2 相關欄位
+    @Column(name = "oauth2_provider", length = 50)
+    private String oauth2Provider; // google, facebook, etc.
+
+    @Column(name = "oauth2_id", length = 255)
+    private String oauth2Id; // OAuth2 提供者的用戶 ID
 
     @Column(name = "verified", nullable = false)
     @Builder.Default
