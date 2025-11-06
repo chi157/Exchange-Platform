@@ -639,6 +639,7 @@
         const currentUserId = /*[[${currentUserId}]]*/ 1;
         const aUserId = /*[[${swap.aUserId}]]*/ 1;
         const bUserId = /*[[${swap.bUserId}]]*/ 1;
+        const swapStatus = /*[[${swap.status.name()}]]*/ 'IN_PROGRESS';
 
         // Load existing shipments on page load
         window.addEventListener('DOMContentLoaded', () => {
@@ -653,12 +654,21 @@
                     const shipment = await response.json();
                     displayShipmentInfo(shipment);
                 } else if (response.status === 404) {
-                    // No shipment yet, show form
-                    document.getElementById('shipmentForm').style.display = 'block';
+                    // No shipment yet, check if swap is completed
+                    if (swapStatus === 'COMPLETED') {
+                        document.getElementById('shipmentForm').style.display = 'none';
+                        document.getElementById('myShipmentInfo').innerHTML = '<p class="muted">交換已完成，未設定物流資訊</p>';
+                        document.getElementById('myShipmentInfo').style.display = 'block';
+                    } else {
+                        // Show form only if swap is not completed
+                        document.getElementById('shipmentForm').style.display = 'block';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading shipment:', error);
-                document.getElementById('shipmentForm').style.display = 'block';
+                if (swapStatus !== 'COMPLETED') {
+                    document.getElementById('shipmentForm').style.display = 'block';
+                }
             }
         }
 
@@ -735,9 +745,23 @@
                 document.getElementById('savedTrackingInfo').style.display = 'none';
                 document.getElementById('myTrackingButton').style.display = 'none';
             }
+            
+            // 如果交換已完成，隱藏編輯按鈕
+            const editButton = document.querySelector('.btn-edit');
+            if (swapStatus === 'COMPLETED') {
+                editButton.style.display = 'none';
+            } else {
+                editButton.style.display = 'inline-block';
+            }
         }
 
         function editShipment() {
+            // 檢查交換狀態，如果已完成則不允許編輯
+            if (swapStatus === 'COMPLETED') {
+                alert('交換已完成，無法編輯物流資訊');
+                return;
+            }
+            
             document.getElementById('myShipmentInfo').style.display = 'none';
             document.getElementById('shipmentForm').style.display = 'block';
         }
@@ -749,6 +773,12 @@
         }
 
         async function submitShipment() {
+            // 檢查交換狀態
+            if (swapStatus === 'COMPLETED') {
+                alert('交換已完成，無法編輯物流資訊');
+                return;
+            }
+            
             const deliveryMethod = document.getElementById('deliveryMethod').value;
             const trackingNumber = document.getElementById('trackingNumber').value;
             const trackingUrl = document.getElementById('trackingUrl').value;
