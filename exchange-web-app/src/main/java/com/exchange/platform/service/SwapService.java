@@ -97,10 +97,12 @@ public class SwapService {
                         .map(item -> {
                             Listing listing = item.getListing();
                             String display = listing.getCardName() + " - " + listing.getArtistName();
+                            String imageUrl = getFirstImageUrl(listing.getImagePaths());
                             return ProposalDTO.ProposalItemDTO.builder()
                                     .itemId(item.getId())
                                     .listingId(listing.getId())
                                     .listingDisplay(display)
+                                    .imageUrl(imageUrl)
                                     .side("OFFERED")
                                     .build();
                         })
@@ -111,10 +113,12 @@ public class SwapService {
                         .map(item -> {
                             Listing listing = item.getListing();
                             String display = listing.getCardName() + " - " + listing.getArtistName();
+                            String imageUrl = getFirstImageUrl(listing.getImagePaths());
                             return ProposalDTO.ProposalItemDTO.builder()
                                     .itemId(item.getId())
                                     .listingId(listing.getId())
                                     .listingDisplay(display)
+                                    .imageUrl(imageUrl)
                                     .side("REQUESTED")
                                     .build();
                         })
@@ -211,6 +215,32 @@ public class SwapService {
         }
         if (!prop.equals("createdAt") && !prop.equals("updatedAt") && !prop.equals("id")) prop = "createdAt";
         return Sort.by(dir, prop);
+    }
+
+    /**
+     * 從 imagePaths JSON 字串解析出第一張圖片的 URL
+     */
+    private String getFirstImageUrl(String imagePaths) {
+        if (imagePaths == null || imagePaths.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            // 簡單的JSON反序列化，移除方括號和引號
+            String cleaned = imagePaths.replaceAll("[\\[\\]\"]", "");
+            if (cleaned.trim().isEmpty()) {
+                return null;
+            }
+            
+            // 取得第一個檔案名稱
+            String[] fileNames = cleaned.split(",");
+            if (fileNames.length > 0) {
+                String fileName = fileNames[0].trim();
+                return "/images/" + fileName;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static class UnauthorizedException extends RuntimeException {}
