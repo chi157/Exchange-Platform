@@ -641,11 +641,16 @@
         const aUserId = /*[[${swap.aUserId}]]*/ 1;
         const bUserId = /*[[${swap.bUserId}]]*/ 1;
         const swapStatus = /*[[${swap.status.name()}]]*/ 'IN_PROGRESS';
+        
+        // 判斷當前用戶是否已確認收貨
+        const currentUserConfirmed = (currentUserId === aUserId && /*[[${swap.aConfirmedAt}]]*/ null !== null) ||
+                                     (currentUserId === bUserId && /*[[${swap.bConfirmedAt}]]*/ null !== null);
 
         // Load existing shipments on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadMyShipment();
             loadOtherShipment();
+            updateConfirmButtonVisibility();
         });
 
         async function loadMyShipment() {
@@ -750,6 +755,21 @@
                 confirmButton.style.cursor = 'not-allowed';
                 confirmHint.style.display = 'none';
                 waitingHint.style.display = 'block';
+            }
+        }
+        
+        function updateConfirmButtonVisibility() {
+            const confirmButton = document.getElementById('confirmButton');
+            const confirmHint = document.getElementById('confirmHint');
+            const waitingHint = document.getElementById('waitingHint');
+            
+            if (!confirmButton) return; // 如果按鈕不存在則不執行
+            
+            // 如果當前用戶已經確認收貨，隱藏按鈕和提示
+            if (currentUserConfirmed) {
+                confirmButton.style.display = 'none';
+                if (confirmHint) confirmHint.style.display = 'none';
+                if (waitingHint) waitingHint.style.display = 'none';
             }
         }
 
