@@ -177,8 +177,9 @@
             </div>
 
             <div th:if="${swap.status.name() == 'IN_PROGRESS'}" style="margin-top: 20px;">
-                <button class="btn-confirm" onclick="confirmReceived()"> 確認收貨</button>
-                <p class="hint">確認收貨後，若雙方皆確認則交換將自動完成</p>
+                <button id="confirmButton" class="btn-confirm" onclick="confirmReceived()"> 確認收貨</button>
+                <p class="hint" id="confirmHint">確認收貨後，若雙方皆確認則交換將自動完成</p>
+                <p class="hint" id="waitingHint" style="display: none; color: #856404; background: #fef3cd; border: 2px solid #f0d98f;">⏳ 請等待對方設定物流資訊後再確認收貨</p>
             </div>
         </div>
 
@@ -685,16 +686,23 @@
                     const otherShipment = shipments.find(s => s.senderId === otherUserId);
                     if (otherShipment) {
                         displayOtherShipmentInfo(otherShipment);
+                        otherPartyHasShipment = true;
                     } else {
                         document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">對方尚未設定物流資訊</p>';
+                        otherPartyHasShipment = false;
                     }
                 } else if (response.status === 404) {
                     document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">對方尚未設定物流資訊</p>';
+                    otherPartyHasShipment = false;
                 }
             } catch (error) {
                 console.error('Error loading other shipment:', error);
                 document.getElementById('otherShipmentInfo').innerHTML = '<p class="muted">載入失敗</p>';
+                otherPartyHasShipment = false;
             }
+            
+            // 更新確認收貨按鈕狀態
+            updateConfirmButtonState();
         }
 
         function displayOtherShipmentInfo(shipment) {
@@ -716,6 +724,33 @@
             }
             
             document.getElementById('otherShipmentInfo').innerHTML = html;
+            
+            // 更新確認收貨按鈕狀態
+            updateConfirmButtonState();
+        }
+        
+        function updateConfirmButtonState() {
+            const confirmButton = document.getElementById('confirmButton');
+            const confirmHint = document.getElementById('confirmHint');
+            const waitingHint = document.getElementById('waitingHint');
+            
+            if (!confirmButton) return; // 如果按鈕不存在（例如交換已完成）則不執行
+            
+            if (otherPartyHasShipment) {
+                // 對方已設定物流資訊，啟用按鈕
+                confirmButton.disabled = false;
+                confirmButton.style.opacity = '1';
+                confirmButton.style.cursor = 'pointer';
+                confirmHint.style.display = 'block';
+                waitingHint.style.display = 'none';
+            } else {
+                // 對方尚未設定物流資訊，禁用按鈕
+                confirmButton.disabled = true;
+                confirmButton.style.opacity = '0.5';
+                confirmButton.style.cursor = 'not-allowed';
+                confirmHint.style.display = 'none';
+                waitingHint.style.display = 'block';
+            }
         }
 
         function displayShipmentInfo(shipment) {
@@ -822,6 +857,12 @@
         }
 
         async function confirmReceived() {
+            // 檢查對方是否已設定物流資訊
+            if (!otherPartyHasShipment) {
+                alert('對方尚未設定物流資訊，無法確認收貨');
+                return;
+            }
+            
             if (!confirm('確定要確認收貨嗎？此操作無法撤回。')) return;
             
             try {
@@ -850,6 +891,7 @@
         // ============ 物流追蹤相關函數 ============
         let trackingSessionId = null;
         let currentTrackingSource = null; // 'my' or 'other'
+        let otherPartyHasShipment = false; // 追蹤對方是否已設定物流資訊
 
         async function openMyTrackingModal() {
             currentTrackingSource = 'my';
