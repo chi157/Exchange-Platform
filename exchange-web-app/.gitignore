@@ -8,4 +8,4 @@
 uploads/
 *.log
 GOOGLE_OAUTH_SETUP.md
-/src/main/resources/application.yml
+exchange-web-app/src/main/resources/application.yml
