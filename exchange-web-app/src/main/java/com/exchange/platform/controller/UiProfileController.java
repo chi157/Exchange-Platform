@@ -36,6 +36,12 @@ public class UiProfileController {
                 .map(u -> u.getDisplayName())
                 .orElse("Unknown");
         model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        
+        // 判斷是否為 OAuth2 用戶（沒有密碼的用戶）
+        boolean isOAuth2User = userRepository.findById(userId)
+                .map(u -> u.getOauth2Provider() != null)
+                .orElse(false);
+        model.addAttribute("isOAuth2User", isOAuth2User);
 
         return "profile";
     }

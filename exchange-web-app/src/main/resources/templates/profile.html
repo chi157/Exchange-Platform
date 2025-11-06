@@ -63,20 +63,32 @@
                     <span class="form-hint">此名稱將顯示給其他使用者</span>
                 </div>
 
-                <div class="form-divider">
-                    <span class="form-divider-text"> 修改密碼（選填）</span>
+                <!-- 只有非 OAuth2 用戶才顯示密碼修改區塊 -->
+                <div th:if="${!isOAuth2User}">
+                    <div class="form-divider">
+                        <span class="form-divider-text"> 修改密碼（選填）</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="currentPassword"> 當前密碼</label>
+                        <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="若要修改密碼請輸入當前密碼">
+                        <span class="form-hint">若不修改密碼，此欄位可留空</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="newPassword"> 新密碼</label>
+                        <input type="password" id="newPassword" name="newPassword" class="form-input" placeholder="輸入新密碼">
+                        <span class="form-hint">留空表示不修改密碼</span>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="currentPassword"> 當前密碼</label>
-                    <input type="password" id="currentPassword" name="currentPassword" class="form-input" placeholder="若要修改密碼請輸入當前密碼">
-                    <span class="form-hint">若不修改密碼，此欄位可留空</span>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="newPassword"> 新密碼</label>
-                    <input type="password" id="newPassword" name="newPassword" class="form-input" placeholder="輸入新密碼">
-                    <span class="form-hint">留空表示不修改密碼</span>
+                <!-- OAuth2 用戶顯示提示訊息 -->
+                <div th:if="${isOAuth2User}" class="oauth-notice">
+                    <span class="oauth-notice-icon">🔐</span>
+                    <div>
+                        <strong>使用 Google 帳號登入</strong>
+                        <p>您使用 Google 帳號登入，無需設定密碼。密碼由 Google 管理。</p>
+                    </div>
                 </div>
 
                 <div class="btn-group">
@@ -394,6 +406,37 @@
         
         .message-icon {
             font-size: 20px;
+        }
+        
+        /* OAuth Notice */
+        .oauth-notice {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        
+        .oauth-notice-icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        
+        .oauth-notice strong {
+            display: block;
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        
+        .oauth-notice p {
+            color: #1e40af;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.5;
         }
     </style>
 </body>
