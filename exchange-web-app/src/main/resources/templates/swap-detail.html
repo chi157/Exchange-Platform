@@ -131,10 +131,6 @@
                         <label for="trackingNumber">追蹤號碼：</label>
                         <input type="text" id="trackingNumber" placeholder="輸入追蹤號碼">
                     </div>
-                    <div class="form-group">
-                        <label for="trackingUrl">追蹤網址：</label>
-                        <input type="text" id="trackingUrl" placeholder="輸入追蹤網址">
-                    </div>
                 </div>
                 <button class="btn-submit" onclick="submitShipment()">儲存物流資訊</button>
             </div>
@@ -142,8 +138,7 @@
                 <h3>已儲存的物流資訊：</h3>
                 <p><strong>配送方式：</strong> <span id="savedDeliveryMethod"></span></p>
                 <p id="savedTrackingInfo" style="display:none;">
-                    <strong>追蹤號碼：</strong> <span id="savedTrackingNumber"></span><br>
-                    <strong>追蹤網址：</strong> <a id="savedTrackingUrl" href="#" target="_blank"></a>
+                    <strong>追蹤號碼：</strong> <span id="savedTrackingNumber"></span>
                 </p>
                 <div style="margin-top: 16px;">
                     <button class="btn-edit" onclick="editShipment()">編輯物流資訊</button>
@@ -716,9 +711,6 @@
             
             if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
                 html += `<p><strong>追蹤號碼：</strong> ${shipment.trackingNumber}</p>`;
-                if (shipment.trackingUrl) {
-                    html += `<p><strong>追蹤網址：</strong> <a href="${shipment.trackingUrl}" target="_blank">${shipment.trackingUrl}</a></p>`;
-                }
                 
                 // 顯示查看貨物狀態按鈕
                 document.getElementById('trackingButtonContainer').style.display = 'block';
@@ -783,14 +775,6 @@
             if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
                 document.getElementById('savedTrackingInfo').style.display = 'block';
                 document.getElementById('savedTrackingNumber').textContent = shipment.trackingNumber || '無';
-                if (shipment.trackingUrl) {
-                    const urlElement = document.getElementById('savedTrackingUrl');
-                    urlElement.href = shipment.trackingUrl;
-                    urlElement.textContent = shipment.trackingUrl;
-                    urlElement.style.display = 'inline';
-                } else {
-                    document.getElementById('savedTrackingUrl').style.display = 'none';
-                }
                 
                 // 顯示查看我的貨物狀態按鈕
                 document.getElementById('myTrackingButton').style.display = 'inline-block';
@@ -836,7 +820,6 @@
             
             const deliveryMethod = document.getElementById('deliveryMethod').value;
             const trackingNumber = document.getElementById('trackingNumber').value;
-            const trackingUrl = document.getElementById('trackingUrl').value;
 
             if (deliveryMethod === 'shipnow' && (!trackingNumber || trackingNumber.trim() === '')) {
                 alert('交貨便模式下，追蹤號碼為必填！');
@@ -846,7 +829,7 @@
             const payload = {
                 deliveryMethod: deliveryMethod,
                 trackingNumber: deliveryMethod === 'shipnow' ? trackingNumber : null,
-                trackingUrl: deliveryMethod === 'shipnow' ? trackingUrl : null
+                trackingUrl: null
             };
 
             try {
