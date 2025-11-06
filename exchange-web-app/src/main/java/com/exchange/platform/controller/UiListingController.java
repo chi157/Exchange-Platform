@@ -160,10 +160,10 @@ public class UiListingController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // 檢查檔案大小 (5MB)
-            if (file.getSize() > 5 * 1024 * 1024) {
+            // 檢查檔案大小 (50MB)
+            if (file.getSize() > 50 * 1024 * 1024) {
                 response.put("success", false);
-                response.put("message", "圖片檔案大小不可超過 5MB");
+                response.put("message", "圖片檔案大小不可超過 50MB");
                 return ResponseEntity.badRequest().body(response);
             }
             
