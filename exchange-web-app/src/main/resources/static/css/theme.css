@@ -32,6 +32,59 @@ body {
   background: var(--surface-50);
   color: var(--text-900);
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 17px; /* 基礎字體從 16px 提升到 17px */
+}
+
+/* 保持導覽列按鈕和大標題不變 */
+header nav .link-btn,
+h1 {
+  font-size: initial;
+}
+
+/* 調整小字體元素 - 讓內聯樣式的小字體也變大 */
+[style*="font-size: 10px"], [style*="font-size:10px"] {
+  font-size: 13px !important;
+}
+[style*="font-size: 11px"], [style*="font-size:11px"] {
+  font-size: 14px !important;
+}
+[style*="font-size: 12px"], [style*="font-size:12px"] {
+  font-size: 15px !important;
+}
+[style*="font-size: 13px"], [style*="font-size:13px"] {
+  font-size: 16px !important;
+}
+
+/* 卡片內容字體放大 */
+.card {
+  font-size: 20px !important;
+}
+.card p, .card span, .card div, .card label, .card a {
+  font-size: 20px !important;
+}
+.card .badge {
+  font-size: 20px !important;
+}
+
+/* 列表項目字體放大 */
+ul, ol, li {
+  font-size: 20px !important;
+}
+
+/* 表單元素字體放大 */
+input, textarea, select, button {
+  font-size: 20px !important;
+}
+label {
+  font-size: 20px !important;
+}
+.form-group label, .form-group input, .form-group textarea, .form-group select {
+  font-size: 20px !important;
+}
+
+/* 提示文字也放大一點 */
+.hint, .muted, small {
+  font-size: 20px !important;
 }
 
 .brand {
