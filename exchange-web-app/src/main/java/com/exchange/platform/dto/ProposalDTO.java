@@ -32,6 +32,7 @@ public class ProposalDTO {
         private Long listingId;
         private String listingDisplay; // Card display: "cardName - artistName"
         private String imageUrl; // First image URL of the listing
+        private List<String> imageUrls; // All image URLs of the listing
         private String side; // PROPOSER or RECEIVER
     }
 }

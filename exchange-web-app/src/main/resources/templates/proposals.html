@@ -60,11 +60,29 @@
                             <div th:with="myItems=${viewType == 'mine' ? it.proposerItems : it.receiverItems}">
                                 <div th:if="${myItems != null and !myItems.isEmpty()}">
                                     <div th:each="item, iterStat : ${myItems}" th:if="${iterStat.index < 2}" class="item-card">
-                                        <div th:if="${item.imageUrl != null && !#strings.isEmpty(item.imageUrl)}">
-                                            <img th:src="${item.imageUrl}" th:alt="${item.listingDisplay}" class="item-image">
-                                        </div>
-                                        <div th:if="${item.imageUrl == null || #strings.isEmpty(item.imageUrl)}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
-                                            📷
+                                        <!-- 圖片輪播區域 -->
+                                        <div class="item-image-carousel" th:attr="data-carousel-id='my-' + ${it.id} + '-' + ${iterStat.index}">
+                                            <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}">
+                                                <img th:each="imageUrl, imgStat : ${item.imageUrls}" 
+                                                     th:src="${imageUrl}" 
+                                                     th:alt="${item.listingDisplay}" 
+                                                     th:class="${imgStat.index == 0 ? 'item-image active' : 'item-image'}"
+                                                     style="display: none;">
+                                                <button class="carousel-nav-mini prev" 
+                                                        th:if="${#lists.size(item.imageUrls) > 1}" 
+                                                        th:onclick="'navigateItemCarousel(\'my-' + ${it.id} + '-' + ${iterStat.index} + '\', -1)'">‹</button>
+                                                <button class="carousel-nav-mini next" 
+                                                        th:if="${#lists.size(item.imageUrls) > 1}"
+                                                        th:onclick="'navigateItemCarousel(\'my-' + ${it.id} + '-' + ${iterStat.index} + '\', 1)'">›</button>
+                                                <div class="carousel-indicators-mini" th:if="${#lists.size(item.imageUrls) > 1}">
+                                                    <span th:each="imageUrl, imgStat : ${item.imageUrls}" 
+                                                          th:class="${imgStat.index == 0 ? 'indicator-mini active' : 'indicator-mini'}"
+                                                          th:onclick="'goToItemSlide(\'my-' + ${it.id} + '-' + ${iterStat.index} + '\', ' + ${imgStat.index} + ')'"></span>
+                                                </div>
+                                            </div>
+                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
+                                                📷
+                                            </div>
                                         </div>
                                         <div class="item-name" th:text="${item.listingDisplay}">卡片名稱</div>
                                     </div>
@@ -85,11 +103,29 @@
                             <div th:with="theirItems=${viewType == 'mine' ? it.receiverItems : it.proposerItems}">
                                 <div th:if="${theirItems != null and !theirItems.isEmpty()}">
                                     <div th:each="item, iterStat : ${theirItems}" th:if="${iterStat.index < 2}" class="item-card">
-                                        <div th:if="${item.imageUrl != null && !#strings.isEmpty(item.imageUrl)}">
-                                            <img th:src="${item.imageUrl}" th:alt="${item.listingDisplay}" class="item-image">
-                                        </div>
-                                        <div th:if="${item.imageUrl == null || #strings.isEmpty(item.imageUrl)}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
-                                            📷
+                                        <!-- 圖片輪播區域 -->
+                                        <div class="item-image-carousel" th:attr="data-carousel-id='their-' + ${it.id} + '-' + ${iterStat.index}">
+                                            <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}">
+                                                <img th:each="imageUrl, imgStat : ${item.imageUrls}" 
+                                                     th:src="${imageUrl}" 
+                                                     th:alt="${item.listingDisplay}" 
+                                                     th:class="${imgStat.index == 0 ? 'item-image active' : 'item-image'}"
+                                                     style="display: none;">
+                                                <button class="carousel-nav-mini prev" 
+                                                        th:if="${#lists.size(item.imageUrls) > 1}" 
+                                                        th:onclick="'navigateItemCarousel(\'their-' + ${it.id} + '-' + ${iterStat.index} + '\', -1)'">‹</button>
+                                                <button class="carousel-nav-mini next" 
+                                                        th:if="${#lists.size(item.imageUrls) > 1}"
+                                                        th:onclick="'navigateItemCarousel(\'their-' + ${it.id} + '-' + ${iterStat.index} + '\', 1)'">›</button>
+                                                <div class="carousel-indicators-mini" th:if="${#lists.size(item.imageUrls) > 1}">
+                                                    <span th:each="imageUrl, imgStat : ${item.imageUrls}" 
+                                                          th:class="${imgStat.index == 0 ? 'indicator-mini active' : 'indicator-mini'}"
+                                                          th:onclick="'goToItemSlide(\'their-' + ${it.id} + '-' + ${iterStat.index} + '\', ' + ${imgStat.index} + ')'"></span>
+                                                </div>
+                                            </div>
+                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
+                                                📷
+                                            </div>
                                         </div>
                                         <div class="item-name" th:text="${item.listingDisplay}">卡片名稱</div>
                                     </div>
@@ -365,6 +401,14 @@
             gap: 6px;
         }
         
+        .item-image-carousel {
+            position: relative;
+            width: 120px;
+            height: 160px;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        
         .item-image {
             width: 120px;
             height: 160px;
@@ -372,6 +416,72 @@
             border-radius: 12px;
             border: 2px solid var(--surface-300);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .item-image.active {
+            opacity: 1;
+            display: block !important;
+        }
+        
+        .carousel-nav-mini {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        
+        .carousel-nav-mini:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        .carousel-nav-mini.prev {
+            left: 5px;
+        }
+        
+        .carousel-nav-mini.next {
+            right: 5px;
+        }
+        
+        .carousel-indicators-mini {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+        
+        .indicator-mini {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .indicator-mini.active {
+            background: white;
+            width: 8px;
+            height: 8px;
         }
         
         .item-name {
@@ -583,6 +693,38 @@
     </style>
 
     <script>
+        // 圖片輪播功能
+        function navigateItemCarousel(carouselId, direction) {
+            const carousel = document.querySelector(`[data-carousel-id="${carouselId}"]`);
+            if (!carousel) return;
+            
+            const images = carousel.querySelectorAll('.item-image');
+            const indicators = carousel.querySelectorAll('.indicator-mini');
+            
+            let currentIndex = Array.from(images).findIndex(img => img.classList.contains('active'));
+            images[currentIndex].classList.remove('active');
+            if (indicators[currentIndex]) indicators[currentIndex].classList.remove('active');
+            
+            currentIndex = (currentIndex + direction + images.length) % images.length;
+            
+            images[currentIndex].classList.add('active');
+            if (indicators[currentIndex]) indicators[currentIndex].classList.add('active');
+        }
+        
+        function goToItemSlide(carouselId, index) {
+            const carousel = document.querySelector(`[data-carousel-id="${carouselId}"]`);
+            if (!carousel) return;
+            
+            const images = carousel.querySelectorAll('.item-image');
+            const indicators = carousel.querySelectorAll('.indicator-mini');
+            
+            images.forEach(img => img.classList.remove('active'));
+            indicators.forEach(ind => ind.classList.remove('active'));
+            
+            images[index].classList.add('active');
+            if (indicators[index]) indicators[index].classList.add('active');
+        }
+        
         async function acceptProposal(proposalId) {
             if (!confirm('確定要接受此提案嗎？接受後將建立交換交易。')) return;
             

@@ -182,11 +182,13 @@ public class ProposalService {
                     Listing listing = item.getListing();
                     String display = listing.getCardName() + " - " + listing.getArtistName();
                     String imageUrl = getFirstImageUrl(listing.getImagePaths());
+                    List<String> imageUrls = parseImageUrls(listing.getImagePaths());
                     return ProposalDTO.ProposalItemDTO.builder()
                             .itemId(item.getId())
                             .listingId(listing.getId())
                             .listingDisplay(display)
                             .imageUrl(imageUrl)
+                            .imageUrls(imageUrls)
                             .side("OFFERED")
                             .build();
                 })
@@ -198,11 +200,13 @@ public class ProposalService {
                     Listing listing = item.getListing();
                     String display = listing.getCardName() + " - " + listing.getArtistName();
                     String imageUrl = getFirstImageUrl(listing.getImagePaths());
+                    List<String> imageUrls = parseImageUrls(listing.getImagePaths());
                     return ProposalDTO.ProposalItemDTO.builder()
                             .itemId(item.getId())
                             .listingId(listing.getId())
                             .listingDisplay(display)
                             .imageUrl(imageUrl)
+                            .imageUrls(imageUrls)
                             .side("REQUESTED")
                             .build();
                 })
@@ -305,6 +309,32 @@ public class ProposalService {
             return null;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * 從 imagePaths JSON 字串解析出所有圖片的 URL
+     */
+    private List<String> parseImageUrls(String imagePaths) {
+        if (imagePaths == null || imagePaths.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            // 簡單的JSON反序列化，移除方括號和引號
+            String cleaned = imagePaths.replaceAll("[\\[\\]\"]", "");
+            if (cleaned.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
+            
+            // 將檔案名稱轉換為完整的URL路徑
+            return List.of(cleaned.split(","))
+                    .stream()
+                    .map(String::trim)
+                    .filter(fileName -> !fileName.isEmpty())
+                    .map(fileName -> "/images/" + fileName)
+                    .toList();
+        } catch (Exception e) {
+            return new ArrayList<>();
         }
     }
 
