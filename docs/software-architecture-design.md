@@ -48,7 +48,7 @@ flowchart LR
 - Swap（交換記錄）
 	- 提案雙方同意後建立；狀態機管理（INIT → IN_TRANSIT → AWAITING_CONFIRMATION → COMPLETED/…）
 - Shipment（出貨與手動追蹤）
-	- delivery_method ∈ {賣貨便, face_to_face}；賣貨便需 tracking_number
+	- delivery_method ∈ {交貨便, face_to_face}；交貨便需 tracking_number
 	- shipment.events 與 last_status 由寄件人手動更新；UI 顯示查詢連結 tracking_url
 - Review（評價與信譽）
 	- 交易完成後雙方可評分與評論
@@ -71,7 +71,7 @@ flowchart LR
 - SwapsController
 	- 端點：GET /swaps/{id}（詳情頁含雙方 Shipment 卡片）
 - ShipmentsController
-	- Input: delivery_method, tracking_number（賣貨便必填）, shipment event
+	- Input: delivery_method, tracking_number（交貨便必填）, shipment event
 	- 端點：POST /swaps/{id}/shipment（建立/更新）; POST /shipments/{id}/events; PATCH /shipments/{id}
 - ReviewsController / DisputesController / AdminController
 	- 依 UC-08/09/10 與 UC-12
@@ -102,7 +102,7 @@ sequenceDiagram
 	SVC-->>API: ViewModel
 	API-->>UI: Swap 明細（含兩筆 Shipment 卡片）
 
-	A->>UI: 選擇賣貨便並輸入 tracking_number
+	A->>UI: 選擇交貨便並輸入 tracking_number
 	UI->>API: POST /swaps/{id}/shipment
 	API->>SVC: validate + save
 	SVC->>DB: INSERT/UPDATE shipment, events

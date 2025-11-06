@@ -1,4 +1,4 @@
-## 系統狀態指標總表
+﻿## 系統狀態指標總表
 
 目標：集中說明系統中與出貨/交換相關的所有狀態、事件名稱、可接受值、欄位規則與簡短更新權限說明，供開發與文件一致參考使用。
 
@@ -8,15 +8,15 @@
 - Event / shipment.events：一筆 shipment 的歷史事件紀錄
 
 二、交付方式（delivery_method）
-- 賣貨便 ("maimai_logistics" / 標記為 `賣貨便`)：平台指定物流；若選擇此方式，寄件人必須提供 `tracking_number`。
+- 交貨便 ("maimai_logistics" / 標記為 `交貨便`)：平台指定物流；若選擇此方式，寄件人必須提供 `tracking_number`。
 - 面交 ("face_to_face")：雙方面交，不需要運單號（tracking_number 可為 null）。
 
 三、Shipment 欄位（關鍵欄）
 - id
 - swap_id
 - owner_id (寄件人)
-- delivery_method {賣貨便 | face_to_face}
-- tracking_number (required 當 delivery_method == 賣貨便)
+- delivery_method {交貨便 | face_to_face}
+- tracking_number (required 當 delivery_method == 交貨便)
 - tracking_url (可選，由系統組成或由寄件人/平台提供)
 - last_status (enum)
 - events [] (歷史事件陣列)
@@ -61,7 +61,7 @@
   - face_to_face 流程：CREATED -> (face_to_face 標記) -> AWAITING_CONFIRMATION -> DELIVERED/COMPLETED
 
 八、驗證規則（API 層）
-- 當 `delivery_method == 賣貨便`：PATCH/POST 建立或更新 shipment 必須包含 `tracking_number`（非空）。
+- 當 `delivery_method == 交貨便`：PATCH/POST 建立或更新 shipment 必須包含 `tracking_number`（非空）。
 - `tracking_url` 若由系統產生，格式應為有效 URL；可透過 `tracking_number` 與平台運送查詢 URL 模板組成。
 - 當新增 event 時，系統應檢查 actor 是否為 owner 或 admin，並記錄 timestamp 與來源 IP（如需）。
 
@@ -76,7 +76,7 @@
 十一、範例 API 片段（簡短）
 - 建立/更新 Shipment（POST / PATCH）：
   {
-    "delivery_method": "賣貨便",
+    "delivery_method": "交貨便",
     "tracking_number": "AB123456789",
     "tracking_url": "https://tracking.example.com/AB123456789"
   }

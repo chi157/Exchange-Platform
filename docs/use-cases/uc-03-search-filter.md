@@ -1,4 +1,4 @@
-## UC-03 / 搜尋與篩選
+﻿## UC-03 / 搜尋與篩選
 Title: Search and Filter Listings
 
 優先級: Must
@@ -14,7 +14,7 @@ Title: Search and Filter Listings
 主要流程:
 1. 使用者輸入關鍵字與/或選擇篩選條件：
    - 小卡欄位：團體 (idol_group)、成員 (member_name)、專輯/時期 (album/era)、版本 (version)、卡號 (card_code)、是否官方 (is_official)。
-   - 其他：品況、地區、物流（僅顯示「賣貨便 / 面交」）。
+   - 其他：品況、地區、物流（僅顯示「交貨便 / 面交」）。
 2. 系統根據條件在 listings 資料表查詢並回傳分頁結果、排序與聚合資訊（總數、分頁）。
 3. 使用者可點進任一 listing 查看詳情。
 

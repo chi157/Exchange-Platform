@@ -205,24 +205,4 @@ public class UiListingController {
             return ResponseEntity.status(500).body(response);
         }
     }
-    
-    // 提供圖片存取
-    @GetMapping("/images/{filename:.+}")
-    @ResponseBody
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
-        try {
-            Path filePath = Paths.get("uploads/images").resolve(filename);
-            Resource resource = new UrlResource(filePath.toUri());
-            
-            if (resource.exists() && resource.isReadable()) {
-                return ResponseEntity.ok()
-                        .header("Content-Type", Files.probeContentType(filePath))
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (IOException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
 }

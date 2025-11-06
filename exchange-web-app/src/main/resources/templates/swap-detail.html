@@ -122,7 +122,7 @@
                 <div class="form-group">
                     <label for="deliveryMethod">配送方式：</label>
                     <select id="deliveryMethod" onchange="toggleTrackingFields()">
-                        <option value="shipnow">賣貨便（ShipNow）</option>
+                        <option value="shipnow">交貨便（ShipNow）</option>
                         <option value="face_to_face">面交</option>
                     </select>
                 </div>
@@ -155,6 +155,9 @@
             <div id="otherShipmentInfo">
                 <p class="muted">載入中...</p>
             </div>
+            <div id="trackingButtonContainer" style="display: none; margin-top: 16px;">
+                <button class="btn-tracking" onclick="openTrackingModal()">🔍 查看貨物狀態</button>
+            </div>
         </div>
 
         <div class="card">
@@ -178,6 +181,51 @@
 
         <div style="margin-top: 30px; text-align: center;">
             <a th:href="@{/ui/swaps/mine}" class="btn-back">⬅️ 返回交換列表</a>
+        </div>
+
+        <!-- 物流追蹤彈窗 -->
+        <div id="trackingModal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeTrackingModal()">&times;</span>
+                <h2>🔍 查詢物流狀態</h2>
+                
+                <!-- 步驟一：顯示驗證碼 -->
+                <div id="captchaStep" style="display: none;">
+                    <p>請輸入下方驗證碼：</p>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <img id="captchaImage" src="" alt="驗證碼" style="max-width: 100%; border: 2px solid var(--surface-300); border-radius: 8px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="captchaInput">驗證碼：</label>
+                        <input type="text" id="captchaInput" placeholder="請輸入驗證碼" maxlength="10">
+                    </div>
+                    <button class="btn-submit" onclick="submitTracking()">查詢</button>
+                    <button class="btn-cancel" onclick="closeTrackingModal()">取消</button>
+                </div>
+                
+                <!-- 載入中 -->
+                <div id="loadingStep" style="display: none; text-align: center; padding: 20px;">
+                    <p>正在載入驗證碼...</p>
+                </div>
+                
+                <!-- 查詢中 -->
+                <div id="queryingStep" style="display: none; text-align: center; padding: 20px;">
+                    <p>正在查詢物流資訊...</p>
+                </div>
+                
+                <!-- 步驟二：顯示結果 -->
+                <div id="resultStep" style="display: none;">
+                    <div id="trackingResult"></div>
+                    <button class="btn-submit" onclick="closeTrackingModal()">關閉</button>
+                </div>
+                
+                <!-- 錯誤訊息 -->
+                <div id="errorStep" style="display: none;">
+                    <p style="color: #dc3545; font-weight: bold;" id="errorMessage"></p>
+                    <button class="btn-submit" onclick="retryTracking()">重新查詢</button>
+                    <button class="btn-cancel" onclick="closeTrackingModal()">關閉</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -492,6 +540,95 @@
             padding: 10px;
             border-radius: 8px;
         }
+        
+        /* 物流追蹤按鈕 */
+        .btn-tracking {
+            padding: 12px 24px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+        }
+        .btn-tracking:hover {
+            background: #138496;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(23, 162, 184, 0.4);
+        }
+        
+        .btn-cancel {
+            padding: 12px 24px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+        .btn-cancel:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        /* 彈窗樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 600px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-close:hover,
+        .modal-close:focus {
+            color: #000;
+        }
     </style>
 
     <script th:inline="javascript">
@@ -548,7 +685,7 @@
         }
 
         function displayOtherShipmentInfo(shipment) {
-            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '賣貨便（ShipNow）' : '面交';
+            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '交貨便（ShipNow）' : '面交';
             let html = `<p><strong>配送方式：</strong> ${methodText}</p>`;
             
             if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
@@ -556,6 +693,13 @@
                 if (shipment.trackingUrl) {
                     html += `<p><strong>追蹤網址：</strong> <a href="${shipment.trackingUrl}" target="_blank">${shipment.trackingUrl}</a></p>`;
                 }
+                
+                // 顯示查看貨物狀態按鈕
+                document.getElementById('trackingButtonContainer').style.display = 'block';
+                // 儲存追蹤號碼供後續查詢使用
+                window.currentTrackingNumber = shipment.trackingNumber;
+            } else {
+                document.getElementById('trackingButtonContainer').style.display = 'none';
             }
             
             document.getElementById('otherShipmentInfo').innerHTML = html;
@@ -565,7 +709,7 @@
             document.getElementById('shipmentForm').style.display = 'none';
             document.getElementById('myShipmentInfo').style.display = 'block';
             
-            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '賣貨便（ShipNow）' : '面交';
+            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '交貨便（ShipNow）' : '面交';
             document.getElementById('savedDeliveryMethod').textContent = methodText;
             
             if (shipment.deliveryMethod === 'SHIPNOW' && shipment.trackingNumber) {
@@ -601,7 +745,7 @@
             const trackingUrl = document.getElementById('trackingUrl').value;
 
             if (deliveryMethod === 'shipnow' && (!trackingNumber || trackingNumber.trim() === '')) {
-                alert('賣貨便模式下，追蹤號碼為必填！');
+                alert('交貨便模式下，追蹤號碼為必填！');
                 return;
             }
 
@@ -662,6 +806,134 @@
                 console.error('Error:', error);
                 alert('網路錯誤，請稍後再試');
             }
+        }
+
+        // ============ 物流追蹤相關函數 ============
+        let trackingSessionId = null;
+
+        async function openTrackingModal() {
+            const modal = document.getElementById('trackingModal');
+            modal.style.display = 'block';
+            
+            // 重置所有步驟
+            hideAllSteps();
+            document.getElementById('loadingStep').style.display = 'block';
+            
+            try {
+                // 取得驗證碼
+                const response = await fetch('/api/tracking/get-captcha', {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('無法取得驗證碼');
+                }
+                
+                const data = await response.json();
+                trackingSessionId = data.sessionId;
+                
+                // 載入驗證碼圖片
+                const captchaImage = document.getElementById('captchaImage');
+                captchaImage.src = `/api/tracking/captcha-image?sessionId=${trackingSessionId}&t=${Date.now()}`;
+                
+                // 顯示驗證碼步驟
+                hideAllSteps();
+                document.getElementById('captchaStep').style.display = 'block';
+                document.getElementById('captchaInput').value = '';
+                document.getElementById('captchaInput').focus();
+            } catch (error) {
+                console.error('Error:', error);
+                hideAllSteps();
+                document.getElementById('errorStep').style.display = 'block';
+                document.getElementById('errorMessage').textContent = '無法載入驗證碼，請稍後再試';
+            }
+        }
+
+        function closeTrackingModal() {
+            document.getElementById('trackingModal').style.display = 'none';
+            hideAllSteps();
+            trackingSessionId = null;
+        }
+
+        function hideAllSteps() {
+            document.getElementById('loadingStep').style.display = 'none';
+            document.getElementById('captchaStep').style.display = 'none';
+            document.getElementById('queryingStep').style.display = 'none';
+            document.getElementById('resultStep').style.display = 'none';
+            document.getElementById('errorStep').style.display = 'none';
+        }
+
+        async function submitTracking() {
+            const code = document.getElementById('captchaInput').value.trim();
+            
+            if (!code) {
+                alert('請輸入驗證碼');
+                return;
+            }
+            
+            if (!window.currentTrackingNumber) {
+                alert('找不到追蹤號碼');
+                return;
+            }
+            
+            hideAllSteps();
+            document.getElementById('queryingStep').style.display = 'block';
+            
+            try {
+                const response = await fetch(`/api/tracking/query?sessionId=${trackingSessionId}&code=${encodeURIComponent(code)}&trackingNumber=${encodeURIComponent(window.currentTrackingNumber)}`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '查詢失敗');
+                }
+                
+                const result = await response.json();
+                displayTrackingResult(result);
+            } catch (error) {
+                console.error('Error:', error);
+                hideAllSteps();
+                document.getElementById('errorStep').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message || '查詢失敗，請檢查驗證碼是否正確';
+            }
+        }
+
+        function displayTrackingResult(result) {
+            hideAllSteps();
+            document.getElementById('resultStep').style.display = 'block';
+            
+            let html = '<div style="background: var(--surface-50); padding: 20px; border-radius: 12px;">';
+            
+            if (result.storeName) {
+                html += `<div class="info-row"><span class="label">取貨門市：</span><span>${result.storeName}</span></div>`;
+            }
+            if (result.storeAddress) {
+                html += `<div class="info-row"><span class="label">門市地址：</span><span>${result.storeAddress}</span></div>`;
+            }
+            if (result.pickupDeadline) {
+                html += `<div class="info-row"><span class="label">取貨截止日：</span><span>${result.pickupDeadline}</span></div>`;
+            }
+            if (result.paymentType) {
+                html += `<div class="info-row"><span class="label">付款資訊：</span><span>${result.paymentType}</span></div>`;
+            }
+            
+            if (result.statusList && result.statusList.length > 0) {
+                html += '<div style="margin-top: 20px;"><h3>📦 貨態資訊</h3><ul style="list-style: none; padding: 0;">';
+                result.statusList.forEach(status => {
+                    html += `<li style="padding: 8px; margin: 4px 0; background: white; border-left: 4px solid var(--brand-600); border-radius: 4px;">${status}</li>`;
+                });
+                html += '</ul></div>';
+            }
+            
+            html += '</div>';
+            
+            document.getElementById('trackingResult').innerHTML = html;
+        }
+
+        function retryTracking() {
+            closeTrackingModal();
+            setTimeout(() => openTrackingModal(), 100);
         }
 
         // Initialize on load

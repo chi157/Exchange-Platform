@@ -24,8 +24,8 @@
 	- Swap 結構：雙方 userId、對應的 listing/proposal 關聯、狀態（PENDING/IN_PROGRESS/COMPLETED/CANCELED）。
 - M4 手動物流（Shipment）與事件（UC-07）
 	- 每個 Swap 允許雙向各一筆 Shipment（A→B, B→A），唯一約束 (swap_id, sender_id)。
-	- delivery_method 僅 shipnow（賣貨便）或 face_to_face（面交）。
-	- 賣貨便可帶 tracking_number / tracking_url；事件 events[]（狀態、備註、時間）手動新增，且僅 sender 本人可新增。
+	- delivery_method 僅 shipnow（交貨便）或 face_to_face（面交）。
+	- 交貨便可帶 tracking_number / tracking_url；事件 events[]（狀態、備註、時間）手動新增，且僅 sender 本人可新增。
 - M5 收貨確認（UC-08）
 	- 雙方分別確認收貨；雙方皆確認或逾時自動完成 → Swap 標記 COMPLETED。
 - M6 評價（UC-09）
@@ -51,7 +51,7 @@
 - 新增 swaps
 	- id, a_user_id, b_user_id, proposal_id?, listing_id, status, created_at, updated_at, completed_at
 - 新增 shipments
-	- id, swap_id, sender_id, delivery_method {shipnow|face_to_face}（實作映射為 賣貨便|面交）
+	- id, swap_id, sender_id, delivery_method {shipnow|face_to_face}（實作映射為 交貨便|面交）
 	- tracking_number?, tracking_url?, last_status, shipped_at, updated_at
 	- shipment_events（可獨立表，或以 JSON 儲存；初期可 TEXT JSON）
 - 新增 messages

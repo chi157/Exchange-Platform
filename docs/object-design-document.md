@@ -259,8 +259,8 @@ classDiagram
 - `id`: 主鍵
 - `swapId`: 外鍵 → Swap
 - `senderId`: 外鍵 → User
-- `deliveryMethod`: 配送方式（賣貨便, face_to_face）
-- `trackingNumber`: 物流編號（賣貨便必填）
+- `deliveryMethod`: 配送方式（交貨便, face_to_face）
+- `trackingNumber`: 物流編號（交貨便必填）
 - `trackingUrl`: 查詢連結
 - `lastStatus`: 最新狀態
 - `shippedAt`, `updatedAt`: 時間戳記
@@ -269,7 +269,7 @@ classDiagram
 - `addEvent(status, actorId, metadata)`: 新增物流事件
 - `updateStatus(status)`: 更新最新狀態
 - `validateDeliveryMethod()`: 驗證配送方式
-- `generateTrackingUrl()`: 產生查詢連結（賣貨便）
+- `generateTrackingUrl()`: 產生查詢連結（交貨便）
 
 ---
 
@@ -731,7 +731,7 @@ public class Shipment extends BaseEntity {
   private User sender;
 
   @Column(name = "delivery_method", length = 20)
-  private String deliveryMethod; // 賣貨便, face_to_face
+  private String deliveryMethod; // 交貨便, face_to_face
 
   @Column(name = "tracking_number", length = 100)
   private String trackingNumber;
@@ -1083,10 +1083,10 @@ public class ShipmentService {
       throw new InvalidStateTransitionException(shipment.getLastStatus(), status);
     }
 
-    if ("賣貨便".equals(shipment.getDeliveryMethod()) && shipment.getTrackingNumber() == null) {
+    if ("交貨便".equals(shipment.getDeliveryMethod()) && shipment.getTrackingNumber() == null) {
       throw new BusinessRuleViolationException(
         "TRACKING_NUMBER_REQUIRED",
-        "Tracking number must be provided for 賣貨便 delivery"
+        "Tracking number must be provided for 交貨便 delivery"
       );
     }
 
