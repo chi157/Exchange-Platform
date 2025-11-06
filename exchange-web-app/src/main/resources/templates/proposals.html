@@ -44,8 +44,9 @@
         <div class="list" th:if="${items != null and !items.isEmpty()}">
             <div class="card" th:each="it : ${items}">
                 <div class="item-title">
-                    提案 #<span th:text="${it.id}">1</span>
-                    <span class="badge" th:text="${it.status}" 
+                    交換提案
+                    <span class="badge" 
+                          th:text="${it.status.name() == 'PENDING' ? '等待回覆' : (it.status.name() == 'ACCEPTED' ? '已接受' : '已拒絕')}"
                           th:classappend="${it.status.name() == 'PENDING' ? 'badge-pending' : (it.status.name() == 'ACCEPTED' ? 'badge-success' : 'badge-danger')}">狀態</span>
                 </div>
                 
@@ -54,8 +55,9 @@
                     <!-- 提案者提供的物品 -->
                     <div style="margin-bottom: 16px;">
                         <div style="font-weight: 700; color: var(--brand-700); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                            <span>🎁 提案者提供</span>
-                            <span style="font-size: 12px; color: var(--text-600); font-weight: 400;">
+                            <span th:if="${viewType == 'mine'}">🎁 我提供的物品</span>
+                            <span th:if="${viewType == 'received'}">🎁 對方提供的物品</span>
+                            <span th:if="${viewType == 'received'}" style="font-size: 14px; color: var(--text-600); font-weight: 400;">
                                 (提案者: <span th:text="${it.proposerDisplayName}">使用者名稱</span>)
                             </span>
                         </div>
@@ -63,9 +65,6 @@
                             <div th:each="item : ${it.proposerItems}" 
                                  style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--brand-500);">
                                 <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                                <div style="font-size: 12px; color: var(--text-600);">
-                                    ID: <span th:text="${item.listingId}">1</span>
-                                </div>
                             </div>
                         </div>
                         <div th:if="${it.proposerItems == null or it.proposerItems.isEmpty()}" 
@@ -81,16 +80,17 @@
                     
                     <!-- 接收者的物品 -->
                     <div>
-                        <div style="font-weight: 700; color: var(--success-700); margin-bottom: 8px;">
-                            💎 想要的物品
+                        <div style="font-weight: 700; color: var(--success-700); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            <span th:if="${viewType == 'mine'}">💎 想要對方的物品</span>
+                            <span th:if="${viewType == 'received'}">💎 對方想要我的物品</span>
+                            <span th:if="${viewType == 'mine'}" style="font-size: 14px; color: var(--text-600); font-weight: 400;">
+                                (對方: <span th:text="${it.receiverDisplayName}">使用者名稱</span>)
+                            </span>
                         </div>
                         <div th:if="${it.receiverItems != null and !it.receiverItems.isEmpty()}">
                             <div th:each="item : ${it.receiverItems}" 
                                  style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--success-500);">
                                 <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                                <div style="font-size: 12px; color: var(--text-600);">
-                                    ID: <span th:text="${item.listingId}">1</span>
-                                </div>
                             </div>
                         </div>
                         <div th:if="${it.receiverItems == null or it.receiverItems.isEmpty()}" 
