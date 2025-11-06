@@ -22,18 +22,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // 開發階段暫時禁用 CSRF
             .authorizeHttpRequests(auth -> auth
-                // 公開路徑
-                .requestMatchers(
-                    "/ui/auth/**",
-                    "/api/auth/**",
-                    "/css/**",
-                    "/js/**",
-                    "/images/**",
-                    "/oauth2/**",
-                    "/login/oauth2/**"
-                ).permitAll()
-                // 其他請求需要認證
-                .anyRequest().authenticated()
+                // 公開所有路徑（因為使用自己的 session 驗證）
+                .anyRequest().permitAll()
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/ui/auth/login")
