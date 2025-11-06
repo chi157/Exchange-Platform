@@ -166,12 +166,12 @@
         <div class="card">
             <h2>✅ 收貨確認狀態</h2>
             <div class="info-row">
-                <span class="label">使用者 A 確認：</span>
+                <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span> 確認：</span>
                 <span th:if="${swap.aConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.aConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
                 <span th:if="${swap.aConfirmedAt == null}" class="not-confirmed">尚未確認</span>
             </div>
             <div class="info-row">
-                <span class="label">使用者 B 確認：</span>
+                <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span> 確認：</span>
                 <span th:if="${swap.bConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.bConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
                 <span th:if="${swap.bConfirmedAt == null}" class="not-confirmed">尚未確認</span>
             </div>
