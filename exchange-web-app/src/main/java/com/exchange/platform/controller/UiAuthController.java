@@ -13,8 +13,8 @@ public class UiAuthController {
 
     private final com.exchange.platform.repository.UserRepository userRepository;
 
-    // 首頁/教學/Q&A 頁面
-    @GetMapping("/ui/home")
+    // 首頁/教學/Q&A 頁面（未登入也可訪問）
+    @GetMapping({"/ui/home", "/ui"})
     public String homePage(HttpSession session, Model model) {
         // 如果已登入，加入使用者資訊
         Long userId = (Long) session.getAttribute("userId");
@@ -23,16 +23,16 @@ public class UiAuthController {
                     .map(user -> user.getDisplayName())
                     .orElse(null);
             model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+            model.addAttribute("isLoggedIn", true);
+        } else {
+            model.addAttribute("isLoggedIn", false);
         }
         return "home";
     }
 
-    // 根路徑重定向
+    // 根路徑重定向到首頁
     @GetMapping("/")
     public String root(HttpSession session) {
-        if (session.getAttribute("userId") == null) {
-            return "redirect:/ui/auth/login";
-        }
         return "redirect:/ui/home";
     }
 
@@ -57,6 +57,6 @@ public class UiAuthController {
     @PostMapping("/ui/auth/logout")
     public String logout(HttpSession session) {
         session.invalidate();
-        return "redirect:/ui/auth/login";
+        return "redirect:/ui/home";
     }
 }

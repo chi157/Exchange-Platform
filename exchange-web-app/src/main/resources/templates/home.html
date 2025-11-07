@@ -10,7 +10,9 @@
     <div class="container">
         <header>
             <a href="/ui/home" class="brand" style="text-decoration: none;">Exchange Platform</a>
-            <nav>
+            
+            <!-- 已登入：顯示完整導覽列 -->
+            <nav th:if="${isLoggedIn}">
                 <a class="link-btn" href="/ui/my-listings">📦 我的刊登</a>
                 <a class="link-btn" href="/ui/listings">📋 刊登列表</a>
                 <a class="link-btn" href="/ui/proposals/mine">💼 提案管理</a>
@@ -18,7 +20,12 @@
                 <a class="link-btn" href="/ui/chat">💬 聊天室</a>
                 <a class="link-btn" href="/ui/profile">👤 個人資料</a>
             </nav>
-            <div class="user-btn-container" th:if="${currentUserDisplayName != null}">
+            
+            <!-- 未登入：不顯示導覽列 -->
+            <div th:if="${!isLoggedIn}" style="flex: 1;"></div>
+            
+            <!-- 已登入：顯示使用者按鈕 -->
+            <div class="user-btn-container" th:if="${isLoggedIn}">
                 <form action="/ui/auth/logout" method="post" style="margin: 0;">
                     <button type="submit" class="user-btn">
                         <div class="user-btn-icon">👤</div>
@@ -29,6 +36,12 @@
                         <div class="user-btn-logout">🚪 登出</div>
                     </button>
                 </form>
+            </div>
+            
+            <!-- 未登入：顯示登入/註冊按鈕 -->
+            <div th:if="${!isLoggedIn}" style="display: flex; gap: 12px;">
+                <a href="/ui/auth/login" class="link-btn">🔑 登入</a>
+                <a href="/ui/auth/register" class="link-btn" style="background: var(--brand-600); color: white;">📝 註冊</a>
             </div>
         </header>
 
