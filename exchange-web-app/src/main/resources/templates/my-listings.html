@@ -829,7 +829,7 @@
             <!-- 底部資訊 -->
             <div class="card-footer">
                 <div>👤 <span th:text="${it.ownerDisplayName}">使用者</span></div>
-                <div>📅 <span th:text="${it.createdAt}">time</span></div>
+                <div>📅 <span th:text="${#temporals.format(it.createdAt, 'yyyy年MM月dd日 HH:mm')}">time</span></div>
             </div>
             
             <!-- 按鈕 -->
