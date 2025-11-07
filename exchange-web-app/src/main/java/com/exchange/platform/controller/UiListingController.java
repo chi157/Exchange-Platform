@@ -5,9 +5,19 @@ import com.exchange.platform.service.ListingService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/ui")
@@ -128,6 +138,73 @@ public class UiListingController {
     
     // 保留其他物品相關頁面和 API
     
-    // === 圖片檔案服務 ===
-    // 注意：圖片上傳 API 已移至 ImageUploadController
+    // === 圖片上傳 API (for listings) ===
+    // 注意：此端點路徑為 /ui/api/images/upload，供刊登物品頁面使用
+    // 全局的 /api/images/upload 在 ImageUploadController 中，供聊天室使用
+    
+    @PostMapping("/api/images/upload")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> uploadImage(
+            @RequestParam("file") MultipartFile file,
+            HttpSession session) {
+        
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 檢查檔案
+            if (file.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "請選擇圖片檔案");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 檢查檔案大小 (50MB)
+            if (file.getSize() > 50 * 1024 * 1024) {
+                response.put("success", false);
+                response.put("message", "圖片檔案大小不可超過 50MB");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 檢查檔案類型
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                response.put("success", false);
+                response.put("message", "請上傳圖片檔案");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 生成檔名
+            String originalFileName = file.getOriginalFilename();
+            String extension = "";
+            if (originalFileName != null && originalFileName.contains(".")) {
+                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            }
+            String fileName = UUID.randomUUID().toString() + extension;
+            
+            // 建立上傳目錄
+            Path uploadDir = Paths.get("uploads/images");
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+            
+            // 儲存檔案
+            Path filePath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath);
+            
+            response.put("success", true);
+            response.put("fileName", fileName);
+            response.put("url", "/images/" + fileName);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (IOException e) {
+            response.put("success", false);
+            response.put("message", "檔案上傳失敗：" + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }

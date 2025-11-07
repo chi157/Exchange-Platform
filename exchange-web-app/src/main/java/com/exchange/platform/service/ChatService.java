@@ -7,6 +7,7 @@ import com.exchange.platform.repository.ChatRoomRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,9 @@ public class ChatService {
     
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+    
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     
     /**
      * 創建聊天室（當 Proposal 創建時自動調用）
@@ -51,7 +55,7 @@ public class ChatService {
         logger.info("Created chat room for proposal: {}, room ID: {}", proposalId, saved.getId());
         
         // 創建系統歡迎消息
-        createSystemMessage(saved.getId(), "聊天室已建立，雙方可以開始討論卡片交換細節。");
+        createSystemMessage(saved.getId(), "💬 提案聊天室已建立！請雙方討論交換細節，接受提案後即可開始交換流程。");
         
         return saved;
     }
@@ -192,6 +196,17 @@ public class ChatService {
         
         // 更新聊天室的最後消息時間
         updateChatRoomLastMessageTime(chatRoomId);
+        
+        // 通過 WebSocket 廣播系統消息
+        try {
+            messagingTemplate.convertAndSend(
+                "/topic/chat/" + chatRoomId, 
+                saved
+            );
+            logger.info("Broadcasted system message to chat room: {}", chatRoomId);
+        } catch (Exception e) {
+            logger.error("Failed to broadcast system message via WebSocket", e);
+        }
         
         logger.info("Created system message in chat room: {}", chatRoomId);
         return saved;
