@@ -101,6 +101,20 @@ public class ChatService {
     }
     
     /**
+     * 發送面交相關的系統消息（透過 swapId 找到對應的聊天室）
+     */
+    @Transactional
+    public void sendMeetupSystemMessage(Long swapId, String message) {
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
+        if (chatRoom.isPresent()) {
+            createSystemMessage(chatRoom.get().getId(), message);
+            logger.info("Sent meetup system message to chat room for swap: {}", swapId);
+        } else {
+            logger.warn("No chat room found for swap: {}, cannot send meetup system message", swapId);
+        }
+    }
+    
+    /**
      * 檢查聊天室是否可以發送消息
      */
     public boolean canSendMessage(Long chatRoomId) {

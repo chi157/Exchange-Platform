@@ -62,6 +62,23 @@ public class Swap {
     @Column(name = "b_confirmed_at")
     private LocalDateTime bConfirmedAt;
 
+    // 面交資訊
+    @Column(name = "meetup_location", length = 500)
+    private String meetupLocation;
+
+    @Column(name = "meetup_time")
+    private LocalDateTime meetupTime;
+
+    @Column(name = "meetup_notes", columnDefinition = "TEXT")
+    private String meetupNotes;
+
+    // 面交確認狀態
+    @Column(name = "a_meetup_confirmed")
+    private Boolean aMeetupConfirmed;
+
+    @Column(name = "b_meetup_confirmed")
+    private Boolean bMeetupConfirmed;
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

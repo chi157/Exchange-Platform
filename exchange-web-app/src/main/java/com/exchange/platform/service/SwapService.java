@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -175,6 +176,11 @@ public class SwapService {
                 .proposerDisplayName(proposerDisplayName)
                 .receiverId(receiverIdArray[0])
                 .receiverDisplayName(receiverDisplayName)
+                .meetupLocation(s.getMeetupLocation())
+                .meetupTime(s.getMeetupTime())
+                .meetupNotes(s.getMeetupNotes())
+                .aMeetupConfirmed(s.getAMeetupConfirmed())
+                .bMeetupConfirmed(s.getBMeetupConfirmed())
                 .build();
     }
 
@@ -251,7 +257,122 @@ public class SwapService {
         }
     }
 
+    /**
+     * 設置面交資訊
+     */
+    @Transactional
+    public SwapDTO setMeetupInfo(Long swapId, String location, LocalDateTime time, String notes, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        
+        // 驗證權限：只有參與者可以設置
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 獲取設置者的顯示名稱
+        String userName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("使用者");
+        
+        // 判斷是新增還是修改
+        boolean isNewMeetup = (swap.getMeetupLocation() == null || swap.getMeetupTime() == null);
+        
+        swap.setMeetupLocation(location);
+        swap.setMeetupTime(time);
+        swap.setMeetupNotes(notes);
+        
+        // 重置雙方確認狀態（因為資訊有變更）
+        swap.setAMeetupConfirmed(false);
+        swap.setBMeetupConfirmed(false);
+        
+        swap = swapRepository.save(swap);
+        
+        // 發送聊天室系統消息
+        try {
+            String timeStr = time.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            String message;
+            if (isNewMeetup) {
+                message = String.format("📍 %s 設置了面交資訊：\n地點：%s\n時間：%s", 
+                    userName, location, timeStr);
+            } else {
+                message = String.format("📍 %s 修改了面交資訊：\n地點：%s\n時間：%s\n⚠️ 請雙方重新確認", 
+                    userName, location, timeStr);
+            }
+            if (notes != null && !notes.trim().isEmpty()) {
+                message += "\n備註：" + notes;
+            }
+            
+            // 通過 ChatService 發送系統消息
+            chatService.sendMeetupSystemMessage(swapId, message);
+        } catch (Exception e) {
+            // 記錄錯誤但不影響面交資訊保存
+            System.err.println("Failed to send meetup system message: " + e.getMessage());
+        }
+        
+        return toDTO(swap);
+    }
+
+    /**
+     * 確認面交資訊
+     */
+    @Transactional
+    public SwapDTO confirmMeetup(Long swapId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        
+        // 驗證權限
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 檢查是否已設置面交資訊
+        if (swap.getMeetupLocation() == null || swap.getMeetupTime() == null) {
+            throw new IllegalStateException("尚未設置面交資訊");
+        }
+
+        // 獲取確認者的顯示名稱
+        String userName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("使用者");
+
+        // 設置對應用戶的確認狀態
+        boolean isA = swap.getAUserId().equals(userId);
+        if (isA) {
+            swap.setAMeetupConfirmed(true);
+        } else {
+            swap.setBMeetupConfirmed(true);
+        }
+
+        swap = swapRepository.save(swap);
+        
+        // 發送聊天室系統消息
+        try {
+            String message;
+            // 檢查是否雙方都已確認
+            if (swap.getAMeetupConfirmed() != null && swap.getAMeetupConfirmed() 
+                && swap.getBMeetupConfirmed() != null && swap.getBMeetupConfirmed()) {
+                message = "✅ 雙方已確認面交資訊！可以準備進行面交了。";
+            } else {
+                message = String.format("✅ %s 已確認面交資訊", userName);
+            }
+            
+            // 通過 ChatService 發送系統消息
+            chatService.sendMeetupSystemMessage(swapId, message);
+        } catch (Exception e) {
+            // 記錄錯誤但不影響確認操作
+            System.err.println("Failed to send meetup confirmation system message: " + e.getMessage());
+        }
+        
+        return toDTO(swap);
+    }
+
     public static class UnauthorizedException extends RuntimeException {}
     public static class NotFoundException extends RuntimeException {}
     public static class ForbiddenException extends RuntimeException {}
+    public static class ConflictException extends RuntimeException {}
 }

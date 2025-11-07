@@ -590,10 +590,12 @@
             });
             
             if (msg.type === 'SYSTEM') {
+                // 將換行符轉換為 <br> 標籤
+                const formattedContent = msg.content.replace(/\n/g, '<br>');
                 return `
                     <div class="message system">
                         <div class="message-content">
-                            ${msg.content}
+                            ${formattedContent}
                             <div class="message-time">${time}</div>
                         </div>
                     </div>

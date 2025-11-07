@@ -115,6 +115,68 @@
             </div>
         </div>
 
+        <!-- 面交資訊管理 -->
+        <div class="card">
+            <h2>📍 面交資訊</h2>
+            
+            <!-- 面交資訊顯示 -->
+            <div id="meetupInfoDisplay" style="display: none;">
+                <div class="info-row">
+                    <span class="label">面交地點：</span>
+                    <span id="displayMeetupLocation" style="font-weight: 600; color: var(--brand-700);">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">面交時間：</span>
+                    <span id="displayMeetupTime" style="font-weight: 600; color: var(--brand-700);">-</span>
+                </div>
+                <div class="info-row" id="displayMeetupNotesRow" style="display: none;">
+                    <span class="label">備註：</span>
+                    <span id="displayMeetupNotes" style="color: var(--text-700);">-</span>
+                </div>
+                
+                <!-- 確認狀態 -->
+                <div style="margin-top: 20px; padding: 16px; background: var(--surface-50); border-radius: 12px;">
+                    <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-800);">確認狀態</h3>
+                    <div class="info-row">
+                        <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span>：</span>
+                        <span id="aMeetupStatus" class="not-confirmed">尚未確認</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span>：</span>
+                        <span id="bMeetupStatus" class="not-confirmed">尚未確認</span>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 16px; display: flex; gap: 12px;">
+                    <button class="btn-edit" onclick="editMeetupInfo()">📝 修改面交資訊</button>
+                    <button id="confirmMeetupBtn" class="btn-confirm" onclick="confirmMeetupInfo()" style="display: none;">✅ 確認面交資訊</button>
+                </div>
+            </div>
+            
+            <!-- 面交資訊編輯表單 -->
+            <div id="meetupForm">
+                <div class="form-group">
+                    <label for="meetupLocation">面交地點：<span style="color: red;">*</span></label>
+                    <input type="text" id="meetupLocation" placeholder="例如：台北車站東三門" required>
+                </div>
+                <div class="form-group">
+                    <label for="meetupTime">面交時間：<span style="color: red;">*</span></label>
+                    <input type="datetime-local" id="meetupTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="meetupNotes">備註：</label>
+                    <textarea id="meetupNotes" rows="3" placeholder="例如：請穿紅色外套方便辨識"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-submit" onclick="submitMeetupInfo()">💾 儲存面交資訊</button>
+                    <button id="cancelMeetupBtn" class="btn-back" onclick="cancelMeetupEdit()" style="display: none;">取消</button>
+                </div>
+                <p class="hint" style="margin-top: 12px;">
+                    💡 提示：設定面交資訊後，雙方都需要確認才能繼續交換流程
+                </p>
+            </div>
+        </div>
+
         <!-- M4: 物流資訊管理 -->
         <div class="card">
             <h2>📦 我的寄出物流資訊</h2>
@@ -460,14 +522,14 @@
         }
         
         .btn-confirm {
-            padding: 14px 28px;
+            padding: 12px 24px;
             background: #28a745;
             color: white;
             border: none;
             border-radius: 12px;
             font-weight: 700;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
             transition: all 0.3s;
             box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
         }
@@ -476,8 +538,8 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
         }
-        
-        .btn-submit, .btn-edit {
+
+        .btn-submit, .btn-edit, .btn-confirm {
             padding: 12px 24px;
             background: var(--brand-600);
             color: white;
@@ -640,8 +702,172 @@
         const currentUserConfirmed = (currentUserId === aUserId && /*[[${swap.aConfirmedAt}]]*/ null !== null) ||
                                      (currentUserId === bUserId && /*[[${swap.bConfirmedAt}]]*/ null !== null);
 
+        // 保存當前面交資訊，用於編輯時回填
+        let currentMeetupData = {
+            location: '',
+            time: '',
+            notes: ''
+        };
+
+        // ========== 面交資訊管理 ==========
+        
+        async function loadMeetupInfo() {
+            try {
+                const response = await fetch(`/api/swaps/${swapId}`);
+                if (response.ok) {
+                    const swap = await response.json();
+                    if (swap.meetupLocation && swap.meetupTime) {
+                        // 保存原始數據供編輯使用
+                        currentMeetupData.location = swap.meetupLocation;
+                        currentMeetupData.time = swap.meetupTime;
+                        currentMeetupData.notes = swap.meetupNotes || '';
+                        
+                        // 顯示面交資訊
+                        document.getElementById('displayMeetupLocation').textContent = swap.meetupLocation;
+                        document.getElementById('displayMeetupTime').textContent = new Date(swap.meetupTime).toLocaleString('zh-TW');
+                        
+                        if (swap.meetupNotes) {
+                            document.getElementById('displayMeetupNotes').textContent = swap.meetupNotes;
+                            document.getElementById('displayMeetupNotesRow').style.display = 'flex';
+                        } else {
+                            document.getElementById('displayMeetupNotesRow').style.display = 'none';
+                        }
+                        
+                        // 更新確認狀態
+                        if (swap.aMeetupConfirmed) {
+                            document.getElementById('aMeetupStatus').className = 'confirmed';
+                            document.getElementById('aMeetupStatus').textContent = '✅ 已確認';
+                        } else {
+                            document.getElementById('aMeetupStatus').className = 'not-confirmed';
+                            document.getElementById('aMeetupStatus').textContent = '尚未確認';
+                        }
+                        if (swap.bMeetupConfirmed) {
+                            document.getElementById('bMeetupStatus').className = 'confirmed';
+                            document.getElementById('bMeetupStatus').textContent = '✅ 已確認';
+                        } else {
+                            document.getElementById('bMeetupStatus').className = 'not-confirmed';
+                            document.getElementById('bMeetupStatus').textContent = '尚未確認';
+                        }
+                        
+                        // 顯示確認按鈕（如果當前用戶還未確認）
+                        const isUserA = currentUserId === aUserId;
+                        const currentUserMeetupConfirmed = isUserA ? swap.aMeetupConfirmed : swap.bMeetupConfirmed;
+                        if (!currentUserMeetupConfirmed && swapStatus === 'IN_PROGRESS') {
+                            document.getElementById('confirmMeetupBtn').style.display = 'inline-block';
+                        } else {
+                            document.getElementById('confirmMeetupBtn').style.display = 'none';
+                        }
+                        
+                        // 隱藏表單，顯示資訊
+                        document.getElementById('meetupForm').style.display = 'none';
+                        document.getElementById('meetupInfoDisplay').style.display = 'block';
+                    } else {
+                        // 尚未設定面交資訊，顯示表單
+                        document.getElementById('meetupForm').style.display = 'block';
+                        document.getElementById('meetupInfoDisplay').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading meetup info:', error);
+            }
+        }
+        
+        async function submitMeetupInfo() {
+            const location = document.getElementById('meetupLocation').value.trim();
+            const timeValue = document.getElementById('meetupTime').value;
+            const notes = document.getElementById('meetupNotes').value.trim();
+            
+            if (!location || !timeValue) {
+                alert('請填寫面交地點和時間！');
+                return;
+            }
+            
+            // 轉換為 ISO 格式 (移除時區資訊，只保留本地時間)
+            const time = new Date(timeValue).toISOString().substring(0, 19);
+            
+            try {
+                const response = await fetch(`/api/swaps/${swapId}/meetup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ location, time, notes })
+                });
+                
+                if (response.ok) {
+                    alert('面交資訊已儲存！');
+                    await loadMeetupInfo();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(errorData.error || '儲存失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('Error submitting meetup info:', error);
+                alert('儲存失敗，請稍後再試');
+            }
+        }
+        
+        async function confirmMeetupInfo() {
+            if (!confirm('確認此面交資訊無誤？確認後其他人仍可修改資訊。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/swaps/${swapId}/meetup/confirm`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    alert('已確認面交資訊！');
+                    await loadMeetupInfo();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    alert(errorData.error || '確認失敗，請稍後再試');
+                }
+            } catch (error) {
+                console.error('Error confirming meetup:', error);
+                alert('確認失敗，請稍後再試');
+            }
+        }
+        
+        function editMeetupInfo() {
+            // 載入現有資訊到表單
+            document.getElementById('meetupLocation').value = currentMeetupData.location;
+            document.getElementById('meetupNotes').value = currentMeetupData.notes;
+            
+            // 轉換時間格式為 datetime-local 輸入框所需的格式 (YYYY-MM-DDTHH:mm)
+            if (currentMeetupData.time) {
+                try {
+                    const date = new Date(currentMeetupData.time);
+                    // 格式化為本地時間的 ISO 字串（不含秒和時區）
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const formattedTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    document.getElementById('meetupTime').value = formattedTime;
+                } catch (e) {
+                    console.error('Error formatting time:', e);
+                }
+            }
+            
+            // 顯示表單，隱藏資訊
+            document.getElementById('meetupForm').style.display = 'block';
+            document.getElementById('meetupInfoDisplay').style.display = 'none';
+            document.getElementById('cancelMeetupBtn').style.display = 'inline-block';
+        }
+        
+        function cancelMeetupEdit() {
+            // 取消編輯，恢復顯示
+            document.getElementById('meetupForm').style.display = 'none';
+            document.getElementById('meetupInfoDisplay').style.display = 'block';
+            document.getElementById('cancelMeetupBtn').style.display = 'none';
+        }
+
+        // ========== 物流資訊管理 ==========
+
         // Load existing shipments on page load
         window.addEventListener('DOMContentLoaded', () => {
+            loadMeetupInfo();
             loadMyShipment();
             loadOtherShipment();
             updateConfirmButtonVisibility();

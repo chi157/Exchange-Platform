@@ -35,6 +35,13 @@ public class SwapDTO {
     private Long receiverId;
     private String receiverDisplayName; // receiver's display name
 
+    // 面交資訊
+    private String meetupLocation;
+    private LocalDateTime meetupTime;
+    private String meetupNotes;
+    private Boolean aMeetupConfirmed;
+    private Boolean bMeetupConfirmed;
+
     @JsonProperty("aUserId")
     public Long getAUserId() {
         return aUserId;
@@ -93,5 +100,30 @@ public class SwapDTO {
     @JsonProperty("receiverDisplayName")
     public String getReceiverDisplayName() {
         return receiverDisplayName;
+    }
+
+    @JsonProperty("meetupLocation")
+    public String getMeetupLocation() {
+        return meetupLocation;
+    }
+
+    @JsonProperty("meetupTime")
+    public LocalDateTime getMeetupTime() {
+        return meetupTime;
+    }
+
+    @JsonProperty("meetupNotes")
+    public String getMeetupNotes() {
+        return meetupNotes;
+    }
+
+    @JsonProperty("aMeetupConfirmed")
+    public Boolean getAMeetupConfirmed() {
+        return aMeetupConfirmed;
+    }
+
+    @JsonProperty("bMeetupConfirmed")
+    public Boolean getBMeetupConfirmed() {
+        return bMeetupConfirmed;
     }
 }
