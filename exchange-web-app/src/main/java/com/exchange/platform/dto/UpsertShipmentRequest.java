@@ -11,6 +11,7 @@ public class UpsertShipmentRequest {
     @Pattern(regexp = "(?i)^(shipnow|face_to_face)$", message = "deliveryMethod must be shipnow or face_to_face")
     private String deliveryMethod;
 
+    private String preferredStore711;
     private String trackingNumber;
     private String trackingUrl;
 }

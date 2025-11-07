@@ -102,6 +102,71 @@ public class SwapController {
         }
     }
 
+    @PostMapping("/{id}/delivery-method/propose")
+    public ResponseEntity<?> proposeDeliveryMethod(@PathVariable Long id,
+                                                   @RequestBody Map<String, String> payload,
+                                                   HttpSession session) {
+        try {
+            String method = payload.get("method");
+            if (method == null || method.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "配送方式不能為空"));
+            }
+            
+            SwapDTO result = swapService.proposeDeliveryMethod(id, method, session);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SwapService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未授權"));
+        } catch (SwapService.ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "無權限"));
+        } catch (SwapService.NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "交換不存在"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "提議失敗: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/delivery-method/confirm")
+    public ResponseEntity<?> confirmDeliveryMethod(@PathVariable Long id, HttpSession session) {
+        try {
+            SwapDTO result = swapService.confirmDeliveryMethod(id, session);
+            return ResponseEntity.ok(result);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (SwapService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未授權"));
+        } catch (SwapService.ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "無權限"));
+        } catch (SwapService.NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "交換不存在"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "確認失敗: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/delivery-method/reject")
+    public ResponseEntity<?> rejectDeliveryMethod(@PathVariable Long id, HttpSession session) {
+        try {
+            SwapDTO result = swapService.rejectDeliveryMethod(id, session);
+            return ResponseEntity.ok(result);
+        } catch (SwapService.UnauthorizedException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未授權"));
+        } catch (SwapService.ForbiddenException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "無權限"));
+        } catch (SwapService.NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "交換不存在"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "拒絕失敗: " + e.getMessage()));
+        }
+    }
+
     @ExceptionHandler(SwapService.UnauthorizedException.class)
     public ResponseEntity<Void> handleUnauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); }
 

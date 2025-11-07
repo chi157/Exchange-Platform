@@ -58,13 +58,7 @@ public class ShipmentService {
         if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) throw new ForbiddenException();
 
         Shipment.DeliveryMethod method = parseMethod(req.getDeliveryMethod());
-        // Legacy DBs may enforce that SHIPNOW requires a tracking number via CHECK constraint
-        if (method == Shipment.DeliveryMethod.SHIPNOW) {
-            String tn = req.getTrackingNumber();
-            if (tn == null || tn.trim().isEmpty()) {
-                throw new BadRequestException();
-            }
-        }
+        // Note: For SHIPNOW, preferredStore711 can be filled first, trackingNumber can be filled later
 
     Long receiverId = swap.getAUserId().equals(userId) ? swap.getBUserId() : swap.getAUserId();
     Shipment shipment = shipmentRepository.findBySwapIdAndSenderId(swapId, userId)
@@ -72,6 +66,7 @@ public class ShipmentService {
             .swapId(swapId)
             .senderId(userId)
             .deliveryMethod(method)
+            .preferredStore711(req.getPreferredStore711())
             .trackingNumber(req.getTrackingNumber())
             .trackingUrl(req.getTrackingUrl())
             .build());
@@ -81,7 +76,9 @@ public class ShipmentService {
         if (method == Shipment.DeliveryMethod.FACE_TO_FACE) {
             shipment.setTrackingNumber(null);
             shipment.setTrackingUrl(null);
+            shipment.setPreferredStore711(null);
         } else {
+            shipment.setPreferredStore711(req.getPreferredStore711());
             shipment.setTrackingNumber(req.getTrackingNumber());
             shipment.setTrackingUrl(req.getTrackingUrl());
         }
@@ -117,6 +114,7 @@ public class ShipmentService {
                 .swapId(s.getSwapId())
                 .senderId(s.getSenderId())
                 .deliveryMethod(s.getDeliveryMethod())
+                .preferredStore711(s.getPreferredStore711())
                 .trackingNumber(s.getTrackingNumber())
                 .trackingUrl(s.getTrackingUrl())
                 .lastStatus(s.getLastStatus())

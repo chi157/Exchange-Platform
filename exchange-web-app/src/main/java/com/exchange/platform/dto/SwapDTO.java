@@ -42,6 +42,11 @@ public class SwapDTO {
     private Boolean aMeetupConfirmed;
     private Boolean bMeetupConfirmed;
 
+    // 配送方式協商
+    private String deliveryMethod;
+    private Boolean aDeliveryMethodConfirmed;
+    private Boolean bDeliveryMethodConfirmed;
+
     @JsonProperty("aUserId")
     public Long getAUserId() {
         return aUserId;
@@ -125,5 +130,20 @@ public class SwapDTO {
     @JsonProperty("bMeetupConfirmed")
     public Boolean getBMeetupConfirmed() {
         return bMeetupConfirmed;
+    }
+
+    @JsonProperty("deliveryMethod")
+    public String getDeliveryMethod() {
+        return deliveryMethod;
+    }
+
+    @JsonProperty("aDeliveryMethodConfirmed")
+    public Boolean getADeliveryMethodConfirmed() {
+        return aDeliveryMethodConfirmed;
+    }
+
+    @JsonProperty("bDeliveryMethodConfirmed")
+    public Boolean getBDeliveryMethodConfirmed() {
+        return bDeliveryMethodConfirmed;
     }
 }

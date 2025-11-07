@@ -13,6 +13,7 @@ public class ShipmentDTO {
     private Long swapId;
     private Long senderId;
     private Shipment.DeliveryMethod deliveryMethod;
+    private String preferredStore711;
     private String trackingNumber;
     private String trackingUrl;
     private String lastStatus;

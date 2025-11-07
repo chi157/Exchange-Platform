@@ -62,55 +62,76 @@ public class ChatService {
     
     /**
      * 更新聊天室的 Swap ID（當 Proposal 被接受時）
+     * 注意：保持 @Transactional，因為這是從 Controller 直接調用的獨立事務
      */
     @Transactional
     public void updateChatRoomSwapId(Long proposalId, Long swapId) {
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findByProposalId(proposalId);
-        if (chatRoom.isPresent()) {
-            ChatRoom room = chatRoom.get();
-            room.setSwapId(swapId);
-            room.setStatus(ChatRoom.ChatRoomStatus.ACTIVE); // 確保狀態為活躍
-            chatRoomRepository.save(room);
-            
-            // 創建系統通知消息
-            createSystemMessage(room.getId(), "✅ 提案已被接受！交換已開始，請確認配送方式和地址。");
-            
-            logger.info("Updated chat room swap ID for proposal: {}, swap ID: {}", proposalId, swapId);
+        try {
+            Optional<ChatRoom> chatRoom = chatRoomRepository.findByProposalId(proposalId);
+            if (chatRoom.isPresent()) {
+                ChatRoom room = chatRoom.get();
+                room.setSwapId(swapId);
+                room.setStatus(ChatRoom.ChatRoomStatus.ACTIVE); // 確保狀態為活躍
+                chatRoomRepository.save(room);
+                
+                // 創建系統通知消息
+                createSystemMessage(room.getId(), "✅ 提案已被接受！交換已開始，請確認配送方式和地址。");
+                
+                logger.info("Updated chat room swap ID for proposal: {}, swap ID: {}", proposalId, swapId);
+            } else {
+                logger.warn("No chat room found for proposal: {}, cannot update swap ID", proposalId);
+            }
+        } catch (Exception e) {
+            logger.error("Error updating chat room swap ID for proposal: {}", proposalId, e);
+            throw e; // 這裡可以拋出，因為是獨立事務
         }
     }
     
     /**
      * 將聊天室設為唯讀（當 Swap 完成時調用）
      * N 天後可以通過定時任務將唯讀聊天室歸檔
+     * 注意：不使用 @Transactional，因為這是從其他 @Transactional 方法調用的
      */
-    @Transactional
     public void setReadOnly(Long swapId) {
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
-        if (chatRoom.isPresent()) {
-            ChatRoom room = chatRoom.get();
-            room.setIsReadOnly(true);
-            room.setReadOnlySince(LocalDateTime.now());
-            room.setStatus(ChatRoom.ChatRoomStatus.READ_ONLY);
-            chatRoomRepository.save(room);
-            
-            // 創建系統通知消息
-            createSystemMessage(room.getId(), "🔒 交換已完成！聊天室已設為唯讀模式，可查看歷史記錄但無法發送新消息。");
-            
-            logger.info("Set chat room to read-only for swap: {}, room ID: {}", swapId, room.getId());
+        try {
+            Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
+            if (chatRoom.isPresent()) {
+                ChatRoom room = chatRoom.get();
+                room.setIsReadOnly(true);
+                room.setReadOnlySince(LocalDateTime.now());
+                room.setStatus(ChatRoom.ChatRoomStatus.READ_ONLY);
+                chatRoomRepository.save(room);
+                
+                // 創建系統通知消息
+                createSystemMessage(room.getId(), "🔒 交換已完成！聊天室已設為唯讀模式，可查看歷史記錄但無法發送新消息。");
+                
+                logger.info("Set chat room to read-only for swap: {}, room ID: {}", swapId, room.getId());
+            } else {
+                logger.warn("No chat room found for swap: {}, cannot set read-only", swapId);
+            }
+        } catch (Exception e) {
+            // 不拋出異常，避免影響父事務
+            logger.error("Error setting chat room to read-only for swap: {}", swapId, e);
         }
     }
     
     /**
-     * 發送面交相關的系統消息（透過 swapId 找到對應的聊天室）
+     * 發送面交相關的系統消息到聊天室
+     * 注意：不使用 @Transactional，因為這是從其他 @Transactional 方法調用的
+     * 如果找不到 chat room 不應該影響父事務
      */
-    @Transactional
     public void sendMeetupSystemMessage(Long swapId, String message) {
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
-        if (chatRoom.isPresent()) {
-            createSystemMessage(chatRoom.get().getId(), message);
-            logger.info("Sent meetup system message to chat room for swap: {}", swapId);
-        } else {
-            logger.warn("No chat room found for swap: {}, cannot send meetup system message", swapId);
+        try {
+            Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
+            if (chatRoom.isPresent()) {
+                createSystemMessage(chatRoom.get().getId(), message);
+                logger.info("Sent meetup system message to chat room for swap: {}", swapId);
+            } else {
+                logger.warn("No chat room found for swap: {}, cannot send meetup system message", swapId);
+            }
+        } catch (Exception e) {
+            // 不拋出異常，避免影響父事務
+            logger.error("Error sending meetup system message for swap: {}", swapId, e);
         }
     }
     

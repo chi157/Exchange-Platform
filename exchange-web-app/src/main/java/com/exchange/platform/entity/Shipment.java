@@ -37,6 +37,10 @@ public class Shipment {
     @Column(name = "delivery_method", nullable = false, length = 32)
     private DeliveryMethod deliveryMethod;
 
+    // 交貨便：使用者希望的收貨711門市
+    @Column(name = "preferred_store_711", length = 500)
+    private String preferredStore711;
+
     @Column(name = "tracking_number")
     private String trackingNumber;
 

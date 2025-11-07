@@ -4,9 +4,11 @@ import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.dto.SwapDTO;
 import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.ProposalItem;
+import com.exchange.platform.entity.Shipment;
 import com.exchange.platform.entity.Swap;
 import com.exchange.platform.repository.ListingRepository;
 import com.exchange.platform.repository.ProposalRepository;
+import com.exchange.platform.repository.ShipmentRepository;
 import com.exchange.platform.repository.SwapRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class SwapService {
     private final SwapRepository swapRepository;
     private final ProposalRepository proposalRepository;
     private final ListingRepository listingRepository;
+    private final ShipmentRepository shipmentRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
     private final ChatService chatService;
     private static final String SESSION_USER_ID = "userId";
@@ -72,20 +75,17 @@ public class SwapService {
             if (swap.getStatus() != Swap.Status.COMPLETED) {
                 swap.setStatus(Swap.Status.COMPLETED);
                 if (swap.getCompletedAt() == null) swap.setCompletedAt(java.time.LocalDateTime.now());
-                // Set chat room to read-only
-                try {
-                    chatService.setReadOnly(swap.getId());
-                } catch (Exception e) {
-                    // Log but don't fail the swap completion
-                    System.err.println("Failed to set chat room read-only for swap " + swap.getId() + ": " + e.getMessage());
-                }
+                // Set chat room to read-only (不會拋出異常)
+                chatService.setReadOnly(swap.getId());
             }
         }
 
         swap = swapRepository.save(swap);
+        
         if (swap.getStatus() == Swap.Status.COMPLETED) {
             finalizeListingsForCompletedSwap(swap);
         }
+        
         return toDTO(swap);
     }
 
@@ -181,6 +181,9 @@ public class SwapService {
                 .meetupNotes(s.getMeetupNotes())
                 .aMeetupConfirmed(s.getAMeetupConfirmed())
                 .bMeetupConfirmed(s.getBMeetupConfirmed())
+                .deliveryMethod(s.getDeliveryMethod())
+                .aDeliveryMethodConfirmed(s.getADeliveryMethodConfirmed())
+                .bDeliveryMethodConfirmed(s.getBDeliveryMethodConfirmed())
                 .build();
     }
 
@@ -305,7 +308,7 @@ public class SwapService {
                 message += "\n備註：" + notes;
             }
             
-            // 通過 ChatService 發送系統消息
+            // 通過 ChatService 發送系統消息（不會拋出異常）
             chatService.sendMeetupSystemMessage(swapId, message);
         } catch (Exception e) {
             // 記錄錯誤但不影響面交資訊保存
@@ -350,23 +353,164 @@ public class SwapService {
 
         swap = swapRepository.save(swap);
         
-        // 發送聊天室系統消息
-        try {
-            String message;
-            // 檢查是否雙方都已確認
-            if (swap.getAMeetupConfirmed() != null && swap.getAMeetupConfirmed() 
-                && swap.getBMeetupConfirmed() != null && swap.getBMeetupConfirmed()) {
-                message = "✅ 雙方已確認面交資訊！可以準備進行面交了。";
-            } else {
-                message = String.format("✅ %s 已確認面交資訊", userName);
-            }
-            
-            // 通過 ChatService 發送系統消息
-            chatService.sendMeetupSystemMessage(swapId, message);
-        } catch (Exception e) {
-            // 記錄錯誤但不影響確認操作
-            System.err.println("Failed to send meetup confirmation system message: " + e.getMessage());
+        // 確認面交資訊時，也創建該用戶的 Shipment 記錄（如果尚未創建）
+        // 這樣 loadOtherShipment() 才能正確檢測到對方已設定物流資訊
+        java.util.Optional<Shipment> existingShipment = shipmentRepository.findBySwapIdAndSenderId(swapId, userId);
+        if (existingShipment.isEmpty()) {
+            System.out.println("[confirmMeetup] Creating new Shipment for user " + userId + " on swap " + swapId);
+            Shipment shipment = new Shipment();
+            shipment.setSwapId(swapId);
+            shipment.setSenderId(userId);
+            shipment.setDeliveryMethod(Shipment.DeliveryMethod.FACE_TO_FACE);
+            shipment.setCreatedAt(java.time.LocalDateTime.now());
+            shipmentRepository.save(shipment);
+            System.out.println("[confirmMeetup] Successfully created Shipment for user " + userId);
+        } else {
+            System.out.println("[confirmMeetup] Shipment already exists for user " + userId + " on swap " + swapId);
         }
+        
+        // 發送聊天室系統消息（不會拋出異常）
+        String message;
+        // 檢查是否雙方都已確認
+        if (swap.getAMeetupConfirmed() != null && swap.getAMeetupConfirmed() 
+            && swap.getBMeetupConfirmed() != null && swap.getBMeetupConfirmed()) {
+            message = "✅ 雙方已確認面交資訊！可以準備進行面交了。";
+        } else {
+            message = String.format("✅ %s 已確認面交資訊", userName);
+        }
+        chatService.sendMeetupSystemMessage(swapId, message);
+        
+        return toDTO(swap);
+    }
+
+    /**
+     * 提議配送方式（面交或交貨便）
+     */
+    @Transactional
+    public SwapDTO proposeDeliveryMethod(Long swapId, String method, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        
+        // 驗證權限
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 驗證配送方式
+        if (!"FACE_TO_FACE".equals(method) && !"SHIPNOW".equals(method)) {
+            throw new IllegalArgumentException("無效的配送方式");
+        }
+
+        // 獲取提議者的顯示名稱
+        String userName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("使用者");
+
+        // 設置配送方式並重置確認狀態
+        swap.setDeliveryMethod(method);
+        
+        // 設置提議者為已確認，另一方為未確認
+        boolean isA = swap.getAUserId().equals(userId);
+        if (isA) {
+            swap.setADeliveryMethodConfirmed(true);
+            swap.setBDeliveryMethodConfirmed(false);
+        } else {
+            swap.setADeliveryMethodConfirmed(false);
+            swap.setBDeliveryMethodConfirmed(true);
+        }
+
+        swap = swapRepository.save(swap);
+        
+        // 發送聊天室系統消息（不會拋出異常）
+        String methodText = "FACE_TO_FACE".equals(method) ? "面交" : "交貨便";
+        String message = String.format("📋 %s 提議使用「%s」作為配送方式，等待對方確認", userName, methodText);
+        chatService.sendMeetupSystemMessage(swapId, message);
+        
+        return toDTO(swap);
+    }
+
+    /**
+     * 確認配送方式
+     */
+    @Transactional
+    public SwapDTO confirmDeliveryMethod(Long swapId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        
+        // 驗證權限
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 檢查是否已有提議的配送方式
+        if (swap.getDeliveryMethod() == null) {
+            throw new IllegalStateException("尚未提議配送方式");
+        }
+
+        // 獲取確認者的顯示名稱
+        String userName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("使用者");
+
+        // 設置對應用戶的確認狀態
+        boolean isA = swap.getAUserId().equals(userId);
+        if (isA) {
+            swap.setADeliveryMethodConfirmed(true);
+        } else {
+            swap.setBDeliveryMethodConfirmed(true);
+        }
+
+        swap = swapRepository.save(swap);
+        
+        // 發送聊天室系統消息（不會拋出異常）
+        String message;
+        // 檢查是否雙方都已確認
+        if (Boolean.TRUE.equals(swap.getADeliveryMethodConfirmed()) 
+            && Boolean.TRUE.equals(swap.getBDeliveryMethodConfirmed())) {
+            String methodText = "FACE_TO_FACE".equals(swap.getDeliveryMethod()) ? "面交" : "交貨便";
+            message = String.format("✅ 雙方已確認使用「%s」作為配送方式！", methodText);
+        } else {
+            message = String.format("✅ %s 已同意配送方式", userName);
+        }
+        chatService.sendMeetupSystemMessage(swapId, message);
+        
+        return toDTO(swap);
+    }
+
+    /**
+     * 拒絕配送方式（清空並重新開始）
+     */
+    @Transactional
+    public SwapDTO rejectDeliveryMethod(Long swapId, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) throw new UnauthorizedException();
+
+        Swap swap = swapRepository.findById(swapId).orElseThrow(NotFoundException::new);
+        
+        // 驗證權限
+        if (!swap.getAUserId().equals(userId) && !swap.getBUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 獲取拒絕者的顯示名稱
+        String userName = userRepository.findById(userId)
+                .map(user -> user.getDisplayName())
+                .orElse("使用者");
+
+        // 清空配送方式相關設定
+        swap.setDeliveryMethod(null);
+        swap.setADeliveryMethodConfirmed(false);
+        swap.setBDeliveryMethodConfirmed(false);
+
+        swap = swapRepository.save(swap);
+        
+        // 發送聊天室系統消息（不會拋出異常）
+        String message = String.format("❌ %s 不同意此配送方式，請重新協商", userName);
+        chatService.sendMeetupSystemMessage(swapId, message);
         
         return toDTO(swap);
     }

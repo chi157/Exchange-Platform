@@ -62,7 +62,17 @@ public class Swap {
     @Column(name = "b_confirmed_at")
     private LocalDateTime bConfirmedAt;
 
-    // 面交資訊
+    // 配送方式協商（面交或交貨便需要雙方同意）
+    @Column(name = "delivery_method", length = 20)
+    private String deliveryMethod; // "FACE_TO_FACE" 或 "SHIPNOW"
+
+    @Column(name = "a_delivery_method_confirmed")
+    private Boolean aDeliveryMethodConfirmed;
+
+    @Column(name = "b_delivery_method_confirmed")
+    private Boolean bDeliveryMethodConfirmed;
+
+    // 面交資訊（僅當 deliveryMethod = FACE_TO_FACE 時使用）
     @Column(name = "meetup_location", length = 500)
     private String meetupLocation;
 
