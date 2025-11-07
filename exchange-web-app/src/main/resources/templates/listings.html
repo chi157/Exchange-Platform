@@ -1246,7 +1246,7 @@
             preview.setAttribute('data-index', index);
             preview.innerHTML = `
                 <img src="${e.target.result}" 
-                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                     style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
                 <button type="button" onclick="removeImage(${index})" 
                         style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;">×</button>
             `;
@@ -1284,7 +1284,7 @@
                     preview.style.cssText = 'position: relative; display: inline-block; margin: 4px;';
                     preview.innerHTML = `
                         <img src="${e.target.result}" 
-                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+                             style="width: 80px; height: 120px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
                         <button type="button" onclick="removeImage(${index})" 
                                 style="position: absolute; top: -8px; right: -8px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; line-height: 1;">×</button>
                     `;

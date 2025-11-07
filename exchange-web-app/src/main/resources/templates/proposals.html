@@ -80,7 +80,7 @@
                                                           th:onclick="'goToItemSlide(\'my-' + ${it.id} + '-' + ${iterStat.index} + '\', ' + ${imgStat.index} + ')'"></span>
                                                 </div>
                                             </div>
-                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
+                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 180px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
                                                 📷
                                             </div>
                                         </div>
@@ -123,7 +123,7 @@
                                                           th:onclick="'goToItemSlide(\'their-' + ${it.id} + '-' + ${iterStat.index} + '\', ' + ${imgStat.index} + ')'"></span>
                                                 </div>
                                             </div>
-                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 160px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
+                                            <div th:if="${item.imageUrls == null || item.imageUrls.isEmpty()}" style="display: flex; align-items: center; justify-content: center; height: 180px; width: 120px; font-size: 48px; color: var(--text-400); background: #f3f3f3; border-radius: 12px; border: 2px solid var(--surface-300);">
                                                 📷
                                             </div>
                                         </div>
@@ -404,14 +404,14 @@
         .item-image-carousel {
             position: relative;
             width: 120px;
-            height: 160px;
+            height: 180px;
             overflow: hidden;
             border-radius: 12px;
         }
         
         .item-image {
             width: 120px;
-            height: 160px;
+            height: 180px;
             object-fit: cover;
             border-radius: 12px;
             border: 2px solid var(--surface-300);
