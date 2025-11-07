@@ -39,7 +39,7 @@ public class ChatController {
     @GetMapping("/api/chat/rooms")
     @ResponseBody
     public ResponseEntity<?> getChatRooms(HttpSession session) {
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
@@ -54,7 +54,7 @@ public class ChatController {
     @GetMapping("/api/chat/room/proposal/{proposalId}")
     @ResponseBody
     public ResponseEntity<?> getChatRoomByProposal(@PathVariable Long proposalId, HttpSession session) {
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
@@ -78,7 +78,7 @@ public class ChatController {
     @GetMapping("/api/chat/room/{chatRoomId}/messages")
     @ResponseBody
     public ResponseEntity<?> getChatMessages(@PathVariable Long chatRoomId, HttpSession session) {
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
@@ -98,7 +98,7 @@ public class ChatController {
     @PostMapping("/api/chat/room/{chatRoomId}/read")
     @ResponseBody
     public ResponseEntity<?> markAsRead(@PathVariable Long chatRoomId, HttpSession session) {
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
@@ -118,7 +118,7 @@ public class ChatController {
     @GetMapping("/api/chat/room/{chatRoomId}/unread")
     @ResponseBody
     public ResponseEntity<?> getUnreadCount(@PathVariable Long chatRoomId, HttpSession session) {
-        Long userId = (Long) session.getAttribute("SESSION_USER_ID");
+        Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
@@ -154,8 +154,21 @@ public class ChatController {
             
             logger.info("Message sent via WebSocket: chatRoom={}, sender={}", chatRoomId, senderId);
             
+        } catch (IllegalStateException e) {
+            // 聊天室為唯讀狀態
+            logger.warn("Cannot send message to read-only chat room: {}", e.getMessage());
+            messagingTemplate.convertAndSendToUser(
+                payload.get("senderId").toString(),
+                "/queue/errors",
+                Map.of("error", "此聊天室已設為唯讀，無法發送消息")
+            );
         } catch (Exception e) {
             logger.error("Error sending message via WebSocket", e);
+            messagingTemplate.convertAndSendToUser(
+                payload.get("senderId").toString(),
+                "/queue/errors",
+                Map.of("error", "發送消息失敗")
+            );
         }
     }
     
@@ -181,8 +194,21 @@ public class ChatController {
             
             logger.info("Image sent via WebSocket: chatRoom={}, sender={}", chatRoomId, senderId);
             
+        } catch (IllegalStateException e) {
+            // 聊天室為唯讀狀態
+            logger.warn("Cannot send image to read-only chat room: {}", e.getMessage());
+            messagingTemplate.convertAndSendToUser(
+                payload.get("senderId").toString(),
+                "/queue/errors",
+                Map.of("error", "此聊天室已設為唯讀，無法發送圖片")
+            );
         } catch (Exception e) {
             logger.error("Error sending image via WebSocket", e);
+            messagingTemplate.convertAndSendToUser(
+                payload.get("senderId").toString(),
+                "/queue/errors",
+                Map.of("error", "發送圖片失敗")
+            );
         }
     }
     

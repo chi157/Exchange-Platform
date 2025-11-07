@@ -125,6 +125,22 @@ public class ChatRoom {
         this.status = status;
     }
     
+    public Boolean getIsReadOnly() {
+        return isReadOnly;
+    }
+    
+    public void setIsReadOnly(Boolean isReadOnly) {
+        this.isReadOnly = isReadOnly;
+    }
+    
+    public LocalDateTime getReadOnlySince() {
+        return readOnlySince;
+    }
+    
+    public void setReadOnlySince(LocalDateTime readOnlySince) {
+        this.readOnlySince = readOnlySince;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -145,7 +161,8 @@ public class ChatRoom {
      * 聊天室狀態枚舉
      */
     public enum ChatRoomStatus {
-        ACTIVE,    // 活躍中
-        ARCHIVED   // 已歸檔 (交換完成後可歸檔，但聊天記錄永久保留)
+        ACTIVE,     // 活躍中 (Proposal 階段或 Swap 進行中)
+        READ_ONLY,  // 唯讀 (Swap 完成後 N 天內唯讀)
+        ARCHIVED    // 已歸檔 (唯讀期滿後歸檔，但聊天記錄永久保留)
     }
 }

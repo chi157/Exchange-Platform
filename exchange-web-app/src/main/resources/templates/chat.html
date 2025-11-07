@@ -316,6 +316,18 @@
             border-radius: 0 0 16px 16px;
         }
         
+        .read-only-banner {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+            color: white;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(255, 87, 34, 0.3);
+        }
+        
         .chat-input-box {
             display: flex;
             gap: 10px;
@@ -517,10 +529,13 @@
         
         // 載入聊天記錄
         function loadChatMessages(roomId, proposalId) {
+            // 先獲取聊天室信息以檢查是否唯讀
+            const currentRoom = chatRooms.find(r => r.id === roomId);
+            
             fetch(`/api/chat/room/${roomId}/messages`)
                 .then(response => response.json())
                 .then(messages => {
-                    renderChatWindow(roomId, proposalId, messages);
+                    renderChatWindow(roomId, proposalId, messages, currentRoom);
                     
                     // 訂閱此聊天室的消息
                     if (stompClient && stompClient.connected) {
@@ -536,8 +551,9 @@
         }
         
         // 渲染聊天窗口
-        function renderChatWindow(roomId, proposalId, messages) {
+        function renderChatWindow(roomId, proposalId, messages, chatRoom) {
             const chatWindow = document.getElementById('chatWindow');
+            const isReadOnly = chatRoom && chatRoom.isReadOnly;
             
             chatWindow.innerHTML = `
                 <div class="chat-header">
@@ -550,13 +566,14 @@
                     ${messages.map(msg => renderMessage(msg)).join('')}
                 </div>
                 <div class="chat-input-area">
+                    ${isReadOnly ? '<div class="read-only-banner">🔒 此聊天室已設為唯讀，無法發送新消息</div>' : ''}
                     <div class="chat-input-box">
-                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage()">
-                        <button class="image-upload-btn" onclick="document.getElementById('imageInput').click()">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage()" ${isReadOnly ? 'disabled' : ''}>
+                        <button class="image-upload-btn" onclick="document.getElementById('imageInput').click()" ${isReadOnly ? 'disabled' : ''}>
                             📷 圖片
                         </button>
-                        <textarea id="messageInput" rows="2" placeholder="輸入訊息..." onkeypress="handleKeyPress(event)"></textarea>
-                        <button onclick="sendMessage()">發送</button>
+                        <textarea id="messageInput" rows="2" placeholder="${isReadOnly ? '此聊天室為唯讀模式' : '輸入訊息...'}" onkeypress="handleKeyPress(event)" ${isReadOnly ? 'disabled' : ''}></textarea>
+                        <button onclick="sendMessage()" ${isReadOnly ? 'disabled' : ''}>發送</button>
                     </div>
                 </div>
             `;

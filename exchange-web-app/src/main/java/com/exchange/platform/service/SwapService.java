@@ -30,6 +30,7 @@ public class SwapService {
     private final ProposalRepository proposalRepository;
     private final ListingRepository listingRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
+    private final ChatService chatService;
     private static final String SESSION_USER_ID = "userId";
 
     @Transactional(readOnly = true)
@@ -70,6 +71,13 @@ public class SwapService {
             if (swap.getStatus() != Swap.Status.COMPLETED) {
                 swap.setStatus(Swap.Status.COMPLETED);
                 if (swap.getCompletedAt() == null) swap.setCompletedAt(java.time.LocalDateTime.now());
+                // Set chat room to read-only
+                try {
+                    chatService.setReadOnly(swap.getId());
+                } catch (Exception e) {
+                    // Log but don't fail the swap completion
+                    System.err.println("Failed to set chat room read-only for swap " + swap.getId() + ": " + e.getMessage());
+                }
             }
         }
 

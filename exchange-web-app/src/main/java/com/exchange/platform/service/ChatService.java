@@ -65,13 +65,49 @@ public class ChatService {
         if (chatRoom.isPresent()) {
             ChatRoom room = chatRoom.get();
             room.setSwapId(swapId);
+            room.setStatus(ChatRoom.ChatRoomStatus.ACTIVE); // 確保狀態為活躍
             chatRoomRepository.save(room);
             
             // 創建系統通知消息
-            createSystemMessage(room.getId(), "提案已被接受！交換已開始，請確認配送方式和地址。");
+            createSystemMessage(room.getId(), "✅ 提案已被接受！交換已開始，請確認配送方式和地址。");
             
             logger.info("Updated chat room swap ID for proposal: {}, swap ID: {}", proposalId, swapId);
         }
+    }
+    
+    /**
+     * 將聊天室設為唯讀（當 Swap 完成時調用）
+     * N 天後可以通過定時任務將唯讀聊天室歸檔
+     */
+    @Transactional
+    public void setReadOnly(Long swapId) {
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findBySwapId(swapId);
+        if (chatRoom.isPresent()) {
+            ChatRoom room = chatRoom.get();
+            room.setIsReadOnly(true);
+            room.setReadOnlySince(LocalDateTime.now());
+            room.setStatus(ChatRoom.ChatRoomStatus.READ_ONLY);
+            chatRoomRepository.save(room);
+            
+            // 創建系統通知消息
+            createSystemMessage(room.getId(), "🔒 交換已完成！聊天室已設為唯讀模式，可查看歷史記錄但無法發送新消息。");
+            
+            logger.info("Set chat room to read-only for swap: {}, room ID: {}", swapId, room.getId());
+        }
+    }
+    
+    /**
+     * 檢查聊天室是否可以發送消息
+     */
+    public boolean canSendMessage(Long chatRoomId) {
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findById(chatRoomId);
+        if (chatRoom.isEmpty()) {
+            return false;
+        }
+        
+        ChatRoom room = chatRoom.get();
+        // 只有 ACTIVE 狀態且非唯讀才能發送消息
+        return room.getStatus() == ChatRoom.ChatRoomStatus.ACTIVE && !room.getIsReadOnly();
     }
     
     /**
@@ -93,6 +129,11 @@ public class ChatService {
      */
     @Transactional
     public ChatMessage sendTextMessage(Long chatRoomId, Long senderId, String content) {
+        // 檢查是否可以發送消息
+        if (!canSendMessage(chatRoomId)) {
+            throw new IllegalStateException("此聊天室已設為唯讀，無法發送新消息");
+        }
+        
         ChatMessage message = new ChatMessage();
         message.setChatRoomId(chatRoomId);
         message.setSenderId(senderId);
@@ -114,6 +155,11 @@ public class ChatService {
      */
     @Transactional
     public ChatMessage sendImageMessage(Long chatRoomId, Long senderId, String imageUrl) {
+        // 檢查是否可以發送消息
+        if (!canSendMessage(chatRoomId)) {
+            throw new IllegalStateException("此聊天室已設為唯讀，無法發送新消息");
+        }
+        
         ChatMessage message = new ChatMessage();
         message.setChatRoomId(chatRoomId);
         message.setSenderId(senderId);
