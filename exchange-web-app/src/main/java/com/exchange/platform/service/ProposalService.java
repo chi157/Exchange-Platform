@@ -29,6 +29,7 @@ public class ProposalService {
     private final ListingRepository listingRepository;
     private final com.exchange.platform.repository.SwapRepository swapRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
+    private final ChatService chatService;
     private static final String SESSION_USER_ID = "userId";
 
     public ProposalDTO create(CreateProposalRequest req, HttpSession session) {
@@ -107,6 +108,9 @@ public class ProposalService {
         // Save again with items (cascade will save ProposalItems)
         p = proposalRepository.save(p);
         
+        // 自動創建聊天室
+        chatService.createChatRoom(p.getId(), userId, receiverListing.getUserId());
+        
         return toDTO(p);
     }
 
@@ -145,7 +149,10 @@ public class ProposalService {
                 .bUserId(p.getProposerId())
                 .status(com.exchange.platform.entity.Swap.Status.IN_PROGRESS)
                 .build();
-        swapRepository.save(swap);
+        swap = swapRepository.save(swap);
+        
+        // 更新聊天室的 Swap ID
+        chatService.updateChatRoomSwapId(p.getId(), swap.getId());
 
         // Lock all involved listings
         listing.setStatus(com.exchange.platform.entity.Listing.Status.LOCKED);

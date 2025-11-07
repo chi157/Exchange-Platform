@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天室 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <style>
+        /* 整體置中布局 */
+        body { 
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); 
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+        }
+        
+        /* 統一置中的 Header */
+        header { 
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .brand { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--brand-700);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .brand::before {
+            content: "🔄";
+            font-size: 28px;
+        }
+        header nav { 
+            display: flex; 
+            gap: 12px; 
+        }
+        
+        /* 使用者按鈕 - 懸停顯示登出 */
+        .user-btn-container {
+            position: relative;
+        }
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, var(--brand-50) 0%, var(--brand-100) 100%);
+            border-radius: 12px;
+            border: 2px solid var(--brand-200);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .user-btn:hover {
+            border-color: var(--brand-600);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        .user-btn-icon {
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+        .user-btn-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            transition: all 0.3s;
+        }
+        .user-btn-label {
+            font-size: 10px;
+            color: var(--text-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-btn-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-700);
+        }
+        .user-btn-logout {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--brand-600);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .user-btn:hover .user-btn-logout {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* 明確的按鈕樣式 */
+        .link-btn { 
+            text-decoration: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700); 
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .link-btn:hover { 
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--brand-700);
+            font-size: 32px;
+            margin: 20px 0;
+        }
+        
+        .chat-container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 200px);
+            margin-top: 20px;
+        }
+        
+        /* 聊天室列表 */
+        .chat-rooms {
+            width: 300px;
+            border: 2px solid var(--surface-200);
+            border-radius: 16px;
+            overflow-y: auto;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .chat-room-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chat-room-item:hover {
+            background: var(--surface-50);
+        }
+        
+        .chat-room-item.active {
+            background: linear-gradient(135deg, #e3f2fd 0%, #dbeafe 100%);
+            border-left: 4px solid var(--brand-600);
+        }
+        
+        .chat-room-user {
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--brand-700);
+            font-size: 14px;
+        }
+        
+        .chat-room-preview {
+            font-size: 0.9em;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .chat-room-time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .unread-badge {
+            display: inline-block;
+            background: #f44336;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        /* 聊天窗口 */
+        .chat-window {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid var(--surface-200);
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+        }
+        
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--surface-200);
+            background: linear-gradient(135deg, var(--surface-50) 0%, white 100%);
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .chat-header h3 {
+            margin: 0;
+            color: var(--brand-700);
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .chat-info {
+            font-size: 0.9em;
+            color: var(--text-500);
+            margin-top: 5px;
+        }
+        
+        .chat-info a {
+            color: var(--brand-600);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .chat-info a:hover {
+            color: var(--brand-700);
+            text-decoration: underline;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .message.mine {
+            flex-direction: row-reverse;
+        }
+        
+        .message-content {
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+        
+        .message.mine .message-content {
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.3);
+        }
+        
+        .message.other .message-content {
+            background: white;
+            border: 2px solid var(--surface-200);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .message.system {
+            justify-content: center;
+        }
+        
+        .message.system .message-content {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            border: 2px solid #ffc107;
+            font-size: 0.9em;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .message-time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .message-image {
+            max-width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .chat-input-area {
+            padding: 15px 20px;
+            border-top: 2px solid var(--surface-200);
+            background: white;
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .chat-input-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input-box textarea {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--surface-300);
+            border-radius: 12px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .chat-input-box textarea:focus {
+            outline: none;
+            border-color: var(--brand-600);
+            box-shadow: 0 0 0 3px rgba(106, 0, 214, 0.1);
+        }
+        
+        .chat-input-box button {
+            padding: 12px 24px;
+            background: var(--brand-600);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.3);
+        }
+        
+        .chat-input-box button:hover {
+            background: var(--brand-700);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.4);
+        }
+        
+        .chat-input-box button:disabled {
+            background: var(--surface-300);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .image-upload-btn {
+            padding: 12px 20px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+        }
+        
+        .image-upload-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+        
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-500);
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">Exchange Platform</div>
+            <nav>
+                <a class="link-btn" href="/ui/my-listings">📦 我的刊登</a>
+                <a class="link-btn" href="/ui/listings">📋 刊登列表</a>
+                <a class="link-btn" href="/ui/proposals/mine">� 提案管理</a>
+                <a class="link-btn" href="/ui/swaps/mine">🔄 我的交換</a>
+                <a class="link-btn" href="/ui/chat">💬 聊天室</a>
+                <a class="link-btn" href="/ui/profile">👤 個人資料</a>
+            </nav>
+            <div class="user-btn-container">
+                <form action="/ui/auth/logout" method="post" style="margin: 0;">
+                    <button type="submit" class="user-btn">
+                        <div class="user-btn-icon">👤</div>
+                        <div class="user-btn-text">
+                            <span class="user-btn-label">當前使用者</span>
+                            <span class="user-btn-name" th:text="${currentUserDisplayName}">使用者名稱</span>
+                        </div>
+                        <div class="user-btn-logout">🚪 登出</div>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <h1>💬 聊天室</h1>
+
+        <div class="chat-container">
+            <!-- 左側：聊天室列表 -->
+            <div class="chat-rooms" id="chatRoomsList">
+                <div class="empty-state">載入中...</div>
+            </div>
+
+            <!-- 右側：聊天窗口 -->
+            <div class="chat-window" id="chatWindow">
+                <div class="empty-state">請選擇一個聊天室</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SockJS and STOMP.js -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const currentUserId = /*[[${currentUserId}]]*/ null;
+        const currentUserName = /*[[${currentUserDisplayName}]]*/ '';
+        
+        let stompClient = null;
+        let currentChatRoomId = null;
+        let chatRooms = [];
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadChatRooms();
+            connectWebSocket();
+        });
+        
+        // 載入聊天室列表
+        function loadChatRooms() {
+            fetch('/api/chat/rooms')
+                .then(response => response.json())
+                .then(rooms => {
+                    chatRooms = rooms;
+                    renderChatRoomsList(rooms);
+                })
+                .catch(error => {
+                    console.error('載入聊天室失敗:', error);
+                    document.getElementById('chatRoomsList').innerHTML = 
+                        '<div class="empty-state">載入失敗</div>';
+                });
+        }
+        
+        // 渲染聊天室列表
+        function renderChatRoomsList(rooms) {
+            const container = document.getElementById('chatRoomsList');
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-state">暫無聊天室</div>';
+                return;
+            }
+            
+            container.innerHTML = rooms.map(room => {
+                const otherUserId = room.userAId === currentUserId ? room.userBId : room.userAId;
+                const lastMessageTime = new Date(room.lastMessageAt).toLocaleString('zh-TW', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="chat-room-item ${room.id === currentChatRoomId ? 'active' : ''}" 
+                         onclick="openChatRoom(${room.id}, ${room.proposalId})">
+                        <div class="chat-room-user">提案 #${room.proposalId}</div>
+                        <div class="chat-room-preview">點擊查看聊天記錄</div>
+                        <div class="chat-room-time">${lastMessageTime}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 打開聊天室
+        function openChatRoom(roomId, proposalId) {
+            currentChatRoomId = roomId;
+            
+            // 更新列表中的 active 狀態
+            document.querySelectorAll('.chat-room-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // 載入聊天記錄
+            loadChatMessages(roomId, proposalId);
+            
+            // 標記為已讀
+            markAsRead(roomId);
+        }
+        
+        // 載入聊天記錄
+        function loadChatMessages(roomId, proposalId) {
+            fetch(`/api/chat/room/${roomId}/messages`)
+                .then(response => response.json())
+                .then(messages => {
+                    renderChatWindow(roomId, proposalId, messages);
+                    
+                    // 訂閱此聊天室的消息
+                    if (stompClient && stompClient.connected) {
+                        stompClient.subscribe(`/topic/chat/${roomId}`, function(message) {
+                            const newMessage = JSON.parse(message.body);
+                            appendMessage(newMessage);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('載入聊天記錄失敗:', error);
+                });
+        }
+        
+        // 渲染聊天窗口
+        function renderChatWindow(roomId, proposalId, messages) {
+            const chatWindow = document.getElementById('chatWindow');
+            
+            chatWindow.innerHTML = `
+                <div class="chat-header">
+                    <h3>提案 #${proposalId}</h3>
+                    <div class="chat-info">
+                        <a href="/ui/proposals/mine" style="color: #2196f3;">查看提案詳情</a>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    ${messages.map(msg => renderMessage(msg)).join('')}
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-box">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="uploadImage()">
+                        <button class="image-upload-btn" onclick="document.getElementById('imageInput').click()">
+                            📷 圖片
+                        </button>
+                        <textarea id="messageInput" rows="2" placeholder="輸入訊息..." onkeypress="handleKeyPress(event)"></textarea>
+                        <button onclick="sendMessage()">發送</button>
+                    </div>
+                </div>
+            `;
+            
+            // 滾動到底部
+            scrollToBottom();
+        }
+        
+        // 渲染單條消息
+        function renderMessage(msg) {
+            const time = new Date(msg.sentAt).toLocaleTimeString('zh-TW', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            if (msg.type === 'SYSTEM') {
+                return `
+                    <div class="message system">
+                        <div class="message-content">
+                            ${msg.content}
+                            <div class="message-time">${time}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const isMine = msg.senderId === currentUserId;
+            const messageClass = isMine ? 'mine' : 'other';
+            
+            if (msg.type === 'IMAGE') {
+                return `
+                    <div class="message ${messageClass}">
+                        <div class="message-content">
+                            <img src="${msg.imageUrl}" class="message-image" onclick="window.open('${msg.imageUrl}')">
+                            <div class="message-time">${time}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="message ${messageClass}">
+                    <div class="message-content">
+                        ${msg.content}
+                        <div class="message-time">${time}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 添加新消息到聊天窗口
+        function appendMessage(msg) {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (messagesDiv) {
+                messagesDiv.insertAdjacentHTML('beforeend', renderMessage(msg));
+                scrollToBottom();
+            }
+        }
+        
+        // 發送消息
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content || !currentChatRoomId) return;
+            
+            if (stompClient && stompClient.connected) {
+                stompClient.send('/app/chat.sendMessage', {}, JSON.stringify({
+                    chatRoomId: currentChatRoomId,
+                    senderId: currentUserId,
+                    content: content
+                }));
+                
+                input.value = '';
+            }
+        }
+        
+        // 上傳圖片
+        function uploadImage() {
+            const input = document.getElementById('imageInput');
+            const file = input.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url && stompClient && stompClient.connected) {
+                    stompClient.send('/app/chat.sendImage', {}, JSON.stringify({
+                        chatRoomId: currentChatRoomId,
+                        senderId: currentUserId,
+                        imageUrl: data.url
+                    }));
+                }
+                input.value = '';
+            })
+            .catch(error => {
+                console.error('上傳圖片失敗:', error);
+                alert('上傳圖片失敗');
+            });
+        }
+        
+        // 標記已讀
+        function markAsRead(roomId) {
+            fetch(`/api/chat/room/${roomId}/read`, {
+                method: 'POST'
+            }).catch(error => console.error('標記已讀失敗:', error));
+        }
+        
+        // Enter 鍵發送
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // 滾動到底部
+        function scrollToBottom() {
+            const messagesDiv = document.getElementById('chatMessages');
+            if (messagesDiv) {
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+        
+        // 連接 WebSocket
+        function connectWebSocket() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('WebSocket 已連接');
+            }, function(error) {
+                console.error('WebSocket 連接失敗:', error);
+                setTimeout(connectWebSocket, 5000); // 5秒後重連
+            });
+        }
+        
+        // 頁面卸載時斷開連接
+        window.addEventListener('beforeunload', function() {
+            if (stompClient) {
+                stompClient.disconnect();
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

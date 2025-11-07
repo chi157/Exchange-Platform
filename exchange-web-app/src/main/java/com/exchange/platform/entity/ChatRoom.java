@@ -40,11 +40,23 @@ public class ChatRoom {
     private Long userBId;
     
     /**
-     * 聊天室狀態：ACTIVE(活躍), ARCHIVED(已歸檔)
+     * 聊天室狀態：ACTIVE(活躍), READ_ONLY(唯讀), ARCHIVED(已歸檔)
      */
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private ChatRoomStatus status = ChatRoomStatus.ACTIVE;
+    
+    /**
+     * 是否為唯讀模式（Swap 完成後變為唯讀）
+     */
+    @Column(name = "is_read_only", nullable = false)
+    private Boolean isReadOnly = false;
+    
+    /**
+     * 唯讀開始時間（Swap 完成時設定）
+     */
+    @Column(name = "read_only_since")
+    private LocalDateTime readOnlySince;
     
     /**
      * 創建時間
