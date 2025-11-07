@@ -212,7 +212,6 @@
                 <!-- 交貨便資訊設定 -->
                 <div id="shipnowSection" style="display: none;"></div>
             </div>
-        </div>
             
             <!-- 配送方式選擇 -->
             <div id="deliveryMethodSelector" style="margin-bottom: 20px;">
@@ -556,11 +555,24 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             border: 2px solid var(--surface-200);
             margin-bottom: 20px;
+            margin-left: 0;
+            margin-right: 0;
             transition: all 0.3s;
+            box-sizing: border-box;
+            width: 100% !important;
+            max-width: 100%;
+            min-width: 0;
+            overflow: hidden;
         }
         .card:hover {
             box-shadow: 0 6px 20px rgba(106, 0, 214, 0.12);
             border-color: var(--brand-300);
+        }
+        
+        /* 確保 card 內的所有子元素不會撐開 card */
+        .card > * {
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         .info-row {
@@ -572,12 +584,16 @@
             background: var(--surface-50);
             border-radius: 10px;
             border-left: 4px solid var(--brand-300);
+            overflow: hidden;
+            word-wrap: break-word;
+            min-width: 0;
         }
         .label {
             font-weight: 700;
             color: var(--brand-700);
             min-width: 140px;
             font-size: 15px;
+            flex-shrink: 0;
         }
         
         .badge {
