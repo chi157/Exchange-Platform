@@ -250,16 +250,16 @@
                 <p class="hint">💡 請提議一種配送方式，需要對方同意後才能繼續</p>
                 <div class="form-group">
                     <label style="font-weight: 600; font-size: 16px;">請選擇配送方式：</label>
-                    <div style="display: flex; gap: 20px; margin-top: 12px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; border: 2px solid var(--surface-300); border-radius: 10px; transition: all 0.3s;">
-                            <input type="radio" name="proposedDeliveryMethod" value="FACE_TO_FACE" onchange="showDeliveryMethodDetails()">
-                            <span style="font-size: 20px;">🤝</span>
-                            <span style="font-weight: 600;">面交</span>
+                    <div style="display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap;">
+                        <label class="delivery-option" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 16px 24px; border: 2px solid var(--surface-300); border-radius: 12px; transition: all 0.3s; background: white; flex: 1; min-width: 180px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                            <input type="radio" name="proposedDeliveryMethod" value="FACE_TO_FACE" onchange="showDeliveryMethodDetails()" style="margin: 0;">
+                            <span style="font-size: 24px;">🤝</span>
+                            <span style="font-weight: 600; font-size: 16px;">面交</span>
                         </label>
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 20px; border: 2px solid var(--surface-300); border-radius: 10px; transition: all 0.3s;">
-                            <input type="radio" name="proposedDeliveryMethod" value="SHIPNOW" onchange="showDeliveryMethodDetails()">
-                            <span style="font-size: 20px;">📦</span>
-                            <span style="font-weight: 600;">交貨便（7-11）</span>
+                        <label class="delivery-option" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 16px 24px; border: 2px solid var(--surface-300); border-radius: 12px; transition: all 0.3s; background: white; flex: 1; min-width: 180px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                            <input type="radio" name="proposedDeliveryMethod" value="SHIPNOW" onchange="showDeliveryMethodDetails()" style="margin: 0;">
+                            <span style="font-size: 24px;">📦</span>
+                            <span style="font-weight: 600; font-size: 16px;">交貨便（7-11）</span>
                         </label>
                     </div>
                 </div>
@@ -1058,6 +1058,35 @@
         .image-carousel:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        /* 配送方式選項按鈕樣式 */
+        .delivery-option {
+            position: relative;
+        }
+        
+        .delivery-option:hover {
+            border-color: var(--brand-500) !important;
+            background: var(--brand-50) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2) !important;
+        }
+        
+        .delivery-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--brand-600);
+        }
+        
+        .delivery-option input[type="radio"]:checked + span {
+            color: var(--brand-600);
+        }
+        
+        .delivery-option:has(input[type="radio"]:checked) {
+            border-color: var(--brand-600) !important;
+            background: linear-gradient(135deg, var(--brand-50) 0%, var(--brand-100) 100%) !important;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3) !important;
         }
     </style>
 
