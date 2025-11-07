@@ -151,10 +151,25 @@
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
 
-        <form id="registerForm">
+        <!-- 步驟 1: 輸入 Email 並發送驗證碼 -->
+        <form id="step1Form" style="display: block;">
             <div class="form-group">
                 <label for="email">電子郵件</label>
                 <input type="email" id="email" name="email" required placeholder="your@email.com">
+            </div>
+            <button type="submit" class="btn-primary">發送驗證碼</button>
+        </form>
+
+        <!-- 步驟 2: 輸入驗證碼和其他資訊完成註冊 -->
+        <form id="step2Form" style="display: none;">
+            <div class="form-group">
+                <label for="verificationCode">驗證碼</label>
+                <input type="text" id="verificationCode" name="verificationCode" required 
+                       placeholder="請輸入信箱收到的 6 位數驗證碼" maxlength="6"
+                       style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+                <p style="font-size: 13px; color: var(--text-500); margin-top: 8px;">
+                    📧 驗證碼已發送至 <strong><span id="displayEmail"></span></strong>
+                </p>
             </div>
 
             <div class="form-group">
@@ -167,7 +182,11 @@
                 <input type="password" id="password" name="password" required placeholder="至少 6 個字元">
             </div>
 
-            <button type="submit" class="btn-primary">註冊</button>
+            <button type="submit" class="btn-primary">完成註冊</button>
+            <button type="button" class="btn-google" onclick="backToStep1()" 
+                    style="margin-top: 12px; background: var(--surface-100);">
+                ← 返回修改 Email
+            </button>
         </form>
 
         <div style="position: relative; text-align: center; margin: 24px 0;">
@@ -191,10 +210,64 @@
     </div>
 
     <script>
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        let userEmail = '';
+
+        // 步驟 1: 發送驗證碼
+        document.getElementById('step1Form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            // 禁用按鈕防止重複點擊
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '發送中...';
+
+            try {
+                const response = await fetch('/api/auth/send-verification-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    userEmail = email;
+                    document.getElementById('displayEmail').textContent = email;
+                    
+                    // 切換到步驟 2
+                    document.getElementById('step1Form').style.display = 'none';
+                    document.getElementById('step2Form').style.display = 'block';
+                    
+                    successDiv.textContent = data.message || '驗證碼已發送！';
+                    successDiv.classList.add('show');
+                } else {
+                    errorDiv.textContent = data.message || '發送驗證碼失敗';
+                    errorDiv.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '發送驗證碼';
+                }
+            } catch (error) {
+                errorDiv.textContent = '發送驗證碼時發生錯誤，請稍後再試';
+                errorDiv.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '發送驗證碼';
+            }
+        });
+
+        // 步驟 2: 驗證並註冊
+        document.getElementById('step2Form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const verificationCode = document.getElementById('verificationCode').value;
             const displayName = document.getElementById('displayName').value;
             const password = document.getElementById('password').value;
             const errorDiv = document.getElementById('errorMessage');
@@ -203,13 +276,23 @@
             errorDiv.classList.remove('show');
             successDiv.classList.remove('show');
 
+            // 禁用按鈕防止重複點擊
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '註冊中...';
+
             try {
-                const response = await fetch('/api/auth/register', {
+                const response = await fetch('/api/auth/register-with-verification', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ email, displayName, password })
+                    body: JSON.stringify({ 
+                        email: userEmail, 
+                        displayName, 
+                        password, 
+                        verificationCode 
+                    })
                 });
 
                 const data = await response.json();
@@ -221,14 +304,32 @@
                         window.location.href = '/ui/auth/login';
                     }, 3000);
                 } else {
-                    errorDiv.textContent = data.message || '註冊失敗，請稍後再試';
+                    errorDiv.textContent = data.message || '註冊失敗，請檢查驗證碼是否正確';
                     errorDiv.classList.add('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '完成註冊';
                 }
             } catch (error) {
                 errorDiv.textContent = '註冊時發生錯誤，請稍後再試';
                 errorDiv.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '完成註冊';
             }
         });
+
+        // 返回步驟 1
+        function backToStep1() {
+            document.getElementById('step2Form').style.display = 'none';
+            document.getElementById('step1Form').style.display = 'block';
+            document.getElementById('email').value = userEmail;
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+            
+            // 重新啟用步驟 1 的按鈕
+            const step1Btn = document.querySelector('#step1Form button[type="submit"]');
+            step1Btn.disabled = false;
+            step1Btn.textContent = '發送驗證碼';
+        }
     </script>
 </body>
 </html>

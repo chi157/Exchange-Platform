@@ -15,4 +15,7 @@ public class RegisterRequest {
 
     @NotBlank
     private String displayName;
+
+    // 驗證碼（用於新的註冊流程）
+    private String verificationCode;
 }

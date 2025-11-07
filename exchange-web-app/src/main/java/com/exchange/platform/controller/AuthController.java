@@ -21,6 +21,31 @@ public class AuthController {
 
     private final AuthService authService;
 
+    /**
+     * 發送驗證碼
+     */
+    @PostMapping("/send-verification-code")
+    public ResponseEntity<AuthResponse> sendVerificationCode(@RequestBody RegisterRequest request) {
+        log.debug("POST /api/auth/send-verification-code - email: {}", request.getEmail());
+        AuthResponse response = authService.sendVerificationCode(request.getEmail());
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * 驗證並註冊
+     */
+    @PostMapping("/register-with-verification")
+    public ResponseEntity<AuthResponse> registerWithVerification(@Valid @RequestBody RegisterRequest request) {
+        log.debug("POST /api/auth/register-with-verification - email: {}", request.getEmail());
+        AuthResponse response = authService.registerWithVerification(request);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.CREATED : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * 舊的註冊端點（保留相容性）
+     */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         log.debug("POST /api/auth/register - email: {}", request.getEmail());

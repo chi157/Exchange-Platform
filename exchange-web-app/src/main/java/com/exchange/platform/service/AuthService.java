@@ -22,8 +22,85 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final VerificationCodeService verificationCodeService;
     private static final String SESSION_USER_ID = "userId";
 
+    /**
+     * 第一步：發送驗證碼
+     */
+    public AuthResponse sendVerificationCode(String email) {
+        log.debug("Sending verification code to email: {}", email);
+
+        // 檢查 Email 是否已被註冊
+        if (userRepository.existsByEmail(email)) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("此 Email 已被註冊")
+                    .build();
+        }
+
+        try {
+            verificationCodeService.generateAndSendCode(email);
+            return AuthResponse.builder()
+                    .success(true)
+                    .message("驗證碼已發送至您的信箱")
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to send verification code", e);
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("無法發送驗證碼，請稍後再試")
+                    .build();
+        }
+    }
+
+    /**
+     * 第二步：驗證驗證碼並完成註冊
+     */
+    public AuthResponse registerWithVerification(RegisterRequest request) {
+        log.debug("Registering user with verification: {}", request.getEmail());
+
+        // 驗證驗證碼
+        if (!verificationCodeService.verifyCode(request.getEmail(), request.getVerificationCode())) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("驗證碼錯誤或已過期")
+                    .build();
+        }
+
+        // 再次檢查 Email（避免競爭條件）
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("此 Email 已被註冊")
+                    .build();
+        }
+
+        // 建立使用者
+        User user = User.builder()
+                .email(request.getEmail())
+                .passwordHash(request.getPassword()) // 明碼存放（示範用）
+                .displayName(request.getDisplayName())
+                .verified(true) // 已驗證
+                .roles("USER")
+                .build();
+
+        user = userRepository.save(user);
+        log.info("User registered successfully with email verification: {}", user.getId());
+
+        return AuthResponse.builder()
+                .success(true)
+                .message("註冊成功")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .build();
+    }
+
+    /**
+     * 舊的註冊方法（保留相容性）
+     */
+    @Deprecated
     public AuthResponse register(RegisterRequest request) {
         log.debug("Registering new user with email: {}", request.getEmail());
 
