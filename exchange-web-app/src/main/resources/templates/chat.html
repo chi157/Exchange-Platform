@@ -661,18 +661,20 @@
             const formData = new FormData();
             formData.append('file', file);
             
-            fetch('/api/upload', {
+            fetch('/api/images/upload', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
-                if (data.url && stompClient && stompClient.connected) {
+                if (data.success && data.url && stompClient && stompClient.connected) {
                     stompClient.send('/app/chat.sendImage', {}, JSON.stringify({
                         chatRoomId: currentChatRoomId,
                         senderId: currentUserId,
                         imageUrl: data.url
                     }));
+                } else {
+                    alert(data.message || '上傳圖片失敗');
                 }
                 input.value = '';
             })
