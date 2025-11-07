@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片交換平台 - 郵件預覽</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: "Microsoft JhengHei", "Segoe UI", Arial, sans-serif;
+            background: #f3f4f6;
+        }
+        .preview-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #7c3aed;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .email-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+        }
+        .email-example {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .example-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>📧 卡片交換平台 - 郵件設計預覽</h1>
+        
+        <div class="email-examples">
+            <!-- 提案收到通知 -->
+            <div class="email-example">
+                <div class="example-title">📨 收到新提案通知</div>
+                <iframe srcdoc='<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片交換平台通知</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: &quot;Microsoft JhengHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(106, 0, 214, 0.15); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px 40px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📨</div>
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">卡片交換平台</h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exchange Platform</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #7c3aed; font-size: 22px; font-weight: 700; border-bottom: 3px solid #e9d5ff; padding-bottom: 12px;">您收到了一個新的交換提案！</h2>
+                            <div style="color: #374151; font-size: 16px; line-height: 1.8;">
+                                <p>有用戶對您的卡片感興趣，向您提出了交換提案！</p>
+                                <p><strong>提案編號：</strong>#12345</p>
+                                <p>請登入平台查看詳細內容並回應提案。</p>
+                            </div>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="http://localhost:8080" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);">🔗 前往平台查看</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f9fafb; padding: 30px 40px; border-top: 2px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">📧 此郵件由系統自動發送，請勿直接回覆</p>
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">⏰ 發送時間：2025年11月07日 14:30:00</p>
+                            <p style="margin: 0; color: #6b7280; font-size: 13px; text-align: center;">© 2025 卡片交換平台 Exchange Platform. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'></iframe>
+            </div>
+
+            <!-- 驗證碼郵件 -->
+            <div class="email-example">
+                <div class="example-title">🎉 註冊驗證碼</div>
+                <iframe srcdoc='<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片交換平台 - 驗證碼</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: &quot;Microsoft JhengHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(106, 0, 214, 0.15); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px 40px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">卡片交換平台</h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exchange Platform</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #7c3aed; font-size: 22px; font-weight: 700; border-bottom: 3px solid #e9d5ff; padding-bottom: 12px;">歡迎加入卡片交換平台！</h2>
+                            <div style="color: #374151; font-size: 16px; line-height: 1.8;">
+                                <p>感謝您註冊卡片交換平台！</p>
+                                <p>為了確保您的帳號安全，請使用以下驗證碼完成註冊：</p>
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <div style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; padding: 20px 40px; border-radius: 12px; font-size: 32px; font-weight: 700; letter-spacing: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);">
+                                        ABC123
+                                    </div>
+                                </div>
+                                <p style="color: #dc2626; font-weight: 600;">⏰ 驗證碼有效時間：10分鐘</p>
+                                <p style="color: #6b7280; font-size: 14px;">💡 如果您沒有註冊此帳號，請忽略此郵件。</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f9fafb; padding: 30px 40px; border-top: 2px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">📧 此郵件由系統自動發送，請勿直接回覆</p>
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">⏰ 發送時間：2025年11月07日 14:30:00</p>
+                            <p style="margin: 0; color: #6b7280; font-size: 13px; text-align: center;">© 2025 卡片交換平台 Exchange Platform. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'></iframe>
+            </div>
+
+            <!-- 提案接受通知 -->
+            <div class="email-example">
+                <div class="example-title">✅ 提案被接受通知</div>
+                <iframe srcdoc='<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: &quot;Microsoft JhengHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(106, 0, 214, 0.15); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px 40px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">卡片交換平台</h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exchange Platform</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #7c3aed; font-size: 22px; font-weight: 700; border-bottom: 3px solid #e9d5ff; padding-bottom: 12px;">恭喜！您的提案已被接受！</h2>
+                            <div style="color: #374151; font-size: 16px; line-height: 1.8;">
+                                <p>您的交換提案已被對方接受！</p>
+                                <p><strong>提案編號：</strong>#12345</p>
+                                <p>接下來請與對方協商配送方式，完成交換流程。</p>
+                            </div>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="http://localhost:8080" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);">🔗 前往平台查看</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f9fafb; padding: 30px 40px; border-top: 2px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">📧 此郵件由系統自動發送，請勿直接回覆</p>
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">⏰ 發送時間：2025年11月07日 14:30:00</p>
+                            <p style="margin: 0; color: #6b7280; font-size: 13px; text-align: center;">© 2025 卡片交換平台 Exchange Platform. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'></iframe>
+            </div>
+
+            <!-- 包裹寄出通知 -->
+            <div class="email-example">
+                <div class="example-title">📦 包裹已寄出通知</div>
+                <iframe srcdoc='<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: &quot;Microsoft JhengHei&quot;, &quot;Segoe UI&quot;, Arial, sans-serif; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(106, 0, 214, 0.15); overflow: hidden;">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); padding: 30px 40px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📦</div>
+                            <h1 style="margin: 0; color: white; font-size: 28px; font-weight: 700;">卡片交換平台</h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">Exchange Platform</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #7c3aed; font-size: 22px; font-weight: 700; border-bottom: 3px solid #e9d5ff; padding-bottom: 12px;">包裹已寄出！</h2>
+                            <div style="color: #374151; font-size: 16px; line-height: 1.8;">
+                                <p>對方已將包裹寄出！</p>
+                                <p><strong>交換編號：</strong>#67890</p>
+                                <p><strong>追蹤號碼：</strong>TW123456789</p>
+                                <p>您可以登入平台查看物流狀態。</p>
+                            </div>
+                            <div style="text-align: center; margin: 30px 0;">
+                                <a href="http://localhost:8080" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);">🔗 前往平台查看</a>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background: #f9fafb; padding: 30px 40px; border-top: 2px solid #e5e7eb;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">📧 此郵件由系統自動發送，請勿直接回覆</p>
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px; text-align: center;">⏰ 發送時間：2025年11月07日 14:30:00</p>
+                            <p style="margin: 0; color: #6b7280; font-size: 13px; text-align: center;">© 2025 卡片交換平台 Exchange Platform. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>'></iframe>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <h2 style="color: #7c3aed; margin-top: 0;">📝 設計說明</h2>
+            <ul style="line-height: 2; color: #374151;">
+                <li>✨ <strong>品牌識別</strong>：使用紫色漸層（#7c3aed - #6d28d9）作為主色調</li>
+                <li>🎨 <strong>圖標系統</strong>：每種通知類型都有對應的 emoji 圖標</li>
+                <li>📱 <strong>響應式設計</strong>：支援各種裝置和郵件客戶端</li>
+                <li>🔘 <strong>行動呼籲</strong>：醒目的按鈕引導用戶前往平台</li>
+                <li>📧 <strong>專業形象</strong>：清楚標示來自「卡片交換平台」</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
