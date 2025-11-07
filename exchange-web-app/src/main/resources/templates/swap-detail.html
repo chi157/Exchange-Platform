@@ -214,9 +214,9 @@
                 </div>
             </div>
             
-            <div class="info-row">
+            <div class="info-row" th:with="statusDisplay=${swap.status.name() == 'IN_PROGRESS' ? '進行中' : (swap.status.name() == 'COMPLETED' ? '已完成' : (swap.status.name() == 'PENDING' ? '待處理' : '已取消'))}">
                 <span class="label">狀態：</span>
-                <span class="badge" th:text="${swap.status}" 
+                <span class="badge" th:text="${statusDisplay}" 
                       th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
             </div>
             <div class="info-row">

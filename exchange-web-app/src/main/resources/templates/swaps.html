@@ -37,6 +37,7 @@
         <div class="list" th:if="${items != null and !items.isEmpty()}">
             <div class="card" th:each="swap : ${items}" 
                  th:with="statusName=${swap.status != null ? swap.status.name() : ''}, 
+                          statusDisplay=${statusName == 'IN_PROGRESS' ? '進行中' : (statusName == 'COMPLETED' ? '已完成' : (statusName == 'PENDING' ? '待處理' : '已取消'))},
                           otherUserName=${swap.proposerId == currentUserId ? swap.receiverDisplayName : swap.proposerDisplayName}">
                 <!-- 更有意義的標題 -->
                 <div class="item-title">
@@ -48,7 +49,7 @@
                         <span th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty() and swap.receiverItems != null and !swap.receiverItems.isEmpty()}" style="color: var(--text-600); font-weight: 400; font-size: 15px;">
                             (<span th:text="${swap.proposerItems.size()}">1</span> 項 ⇄ <span th:text="${swap.receiverItems.size()}">1</span> 項)
                         </span>
-                        <span class="badge" th:text="${swap.status}" 
+                        <span class="badge" th:text="${statusDisplay}" 
                               th:classappend="${statusName == 'IN_PROGRESS' ? 'badge-progress' : (statusName == 'COMPLETED' ? 'badge-success' : (statusName == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
                     </div>
                 </div>
