@@ -32,7 +32,7 @@
             </div>
         </header>
 
-        <h1>🔄 交換詳情 #<span th:text="${swap.id}">1</span></h1>
+        <h1>🔄 交換詳情</h1>
 
         <div class="card">
             <h2>📋 交換資訊</h2>
@@ -106,10 +106,7 @@
                                 
                                 <!-- 物品文字資訊 -->
                                 <div style="text-align: center;">
-                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 4px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                                    <div style="font-size: 12px; color: var(--text-600); margin-bottom: 8px;">
-                                        ID: <span th:text="${item.listingId}">1</span>
-                                    </div>
+                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 8px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
                                     <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
                                          style="font-size: 11px; color: var(--text-500);">
                                         📷 <span th:text="${#lists.size(item.imageUrls)}">1</span> 張照片
@@ -195,10 +192,7 @@
                                 
                                 <!-- 物品文字資訊 -->
                                 <div style="text-align: center;">
-                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 4px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                                    <div style="font-size: 12px; color: var(--text-600); margin-bottom: 8px;">
-                                        ID: <span th:text="${item.listingId}">1</span>
-                                    </div>
+                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 8px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
                                     <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
                                          style="font-size: 11px; color: var(--text-500);">
                                         📷 <span th:text="${#lists.size(item.imageUrls)}">1</span> 張照片
@@ -218,10 +212,6 @@
                 <span class="label">狀態：</span>
                 <span class="badge" th:text="${statusDisplay}" 
                       th:classappend="${swap.status.name() == 'IN_PROGRESS' ? 'badge-progress' : (swap.status.name() == 'COMPLETED' ? 'badge-success' : (swap.status.name() == 'PENDING' ? 'badge-pending' : 'badge-danger'))}">狀態</span>
-            </div>
-            <div class="info-row">
-                <span class="label">提案 ID：</span>
-                <span th:text="${swap.proposalId}">1</span>
             </div>
             <div class="info-row">
                 <span class="label">使用者 A：</span>
