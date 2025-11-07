@@ -117,6 +117,20 @@ public class AuthService {
 
         User user = userOpt.get();
 
+        // 更新 Email
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            // 檢查新 email 是否已被其他用戶使用
+            Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+                return AuthResponse.builder()
+                        .success(false)
+                        .message("此 Email 已被其他使用者使用")
+                        .build();
+            }
+            user.setEmail(request.getEmail());
+            log.info("Email updated for user: {}", userId);
+        }
+
         // 如果要更改密碼，需要驗證當前密碼
         if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
             if (request.getCurrentPassword() == null || 
