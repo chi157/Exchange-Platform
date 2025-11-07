@@ -115,95 +115,122 @@
             </div>
         </div>
 
-        <!-- 面交資訊管理 -->
+        <!-- 配送方式設定（面交 or 交貨便） -->
         <div class="card">
-            <h2>📍 面交資訊</h2>
+            <h2>📦 我的配送方式設定</h2>
             
-            <!-- 面交資訊顯示 -->
-            <div id="meetupInfoDisplay" style="display: none;">
-                <div class="info-row">
-                    <span class="label">面交地點：</span>
-                    <span id="displayMeetupLocation" style="font-weight: 600; color: var(--brand-700);">-</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">面交時間：</span>
-                    <span id="displayMeetupTime" style="font-weight: 600; color: var(--brand-700);">-</span>
-                </div>
-                <div class="info-row" id="displayMeetupNotesRow" style="display: none;">
-                    <span class="label">備註：</span>
-                    <span id="displayMeetupNotes" style="color: var(--text-700);">-</span>
-                </div>
-                
-                <!-- 確認狀態 -->
-                <div style="margin-top: 20px; padding: 16px; background: var(--surface-50); border-radius: 12px;">
-                    <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--text-800);">確認狀態</h3>
-                    <div class="info-row">
-                        <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span>：</span>
-                        <span id="aMeetupStatus" class="not-confirmed">尚未確認</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span>：</span>
-                        <span id="bMeetupStatus" class="not-confirmed">尚未確認</span>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 16px; display: flex; gap: 12px;">
-                    <button class="btn-edit" onclick="editMeetupInfo()">📝 修改面交資訊</button>
-                    <button id="confirmMeetupBtn" class="btn-confirm" onclick="confirmMeetupInfo()" style="display: none;">✅ 確認面交資訊</button>
-                </div>
-            </div>
-            
-            <!-- 面交資訊編輯表單 -->
-            <div id="meetupForm">
+            <!-- 配送方式選擇 -->
+            <div id="deliveryMethodSelector" style="margin-bottom: 20px;">
                 <div class="form-group">
-                    <label for="meetupLocation">面交地點：<span style="color: red;">*</span></label>
-                    <input type="text" id="meetupLocation" placeholder="例如：台北車站東三門" required>
-                </div>
-                <div class="form-group">
-                    <label for="meetupTime">面交時間：<span style="color: red;">*</span></label>
-                    <input type="datetime-local" id="meetupTime" required>
-                </div>
-                <div class="form-group">
-                    <label for="meetupNotes">備註：</label>
-                    <textarea id="meetupNotes" rows="3" placeholder="例如：請穿紅色外套方便辨識"></textarea>
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button class="btn-submit" onclick="submitMeetupInfo()">💾 儲存面交資訊</button>
-                    <button id="cancelMeetupBtn" class="btn-back" onclick="cancelMeetupEdit()" style="display: none;">取消</button>
-                </div>
-                <p class="hint" style="margin-top: 12px;">
-                    💡 提示：設定面交資訊後，雙方都需要確認才能繼續交換流程
-                </p>
-            </div>
-        </div>
-
-        <!-- M4: 物流資訊管理 -->
-        <div class="card">
-            <h2>📦 我的寄出物流資訊</h2>
-            <div id="shipmentForm">
-                <div class="form-group">
-                    <label for="deliveryMethod">配送方式：</label>
-                    <select id="deliveryMethod" onchange="toggleTrackingFields()">
-                        <option value="shipnow">交貨便（ShipNow）</option>
-                        <option value="face_to_face">面交</option>
+                    <label for="deliveryMethod" style="font-weight: 600; font-size: 16px;">請選擇配送方式：</label>
+                    <select id="deliveryMethod" onchange="toggleDeliveryForm()" style="font-size: 16px; padding: 10px;">
+                        <option value="">-- 請選擇 --</option>
+                        <option value="face_to_face">🤝 面交（Face-to-Face）</option>
+                        <option value="shipnow">� 交貨便（ShipNow）</option>
                     </select>
                 </div>
-                <div id="trackingFields">
-                    <div class="form-group">
-                        <label for="trackingNumber">交貨便服務代碼：</label>
-                        <input type="text" id="trackingNumber" placeholder="輸入交貨便服務代碼">
+                <p class="hint" style="margin-top: 8px;">
+                    💡 提示：面交和交貨便只能選擇其中一種方式
+                </p>
+            </div>
+
+            <!-- 已設定的配送資訊顯示 -->
+            <div id="deliveryInfoDisplay" style="display: none;">
+                <div style="padding: 16px; background: var(--surface-50); border-radius: 12px; border: 2px solid var(--brand-200); margin-bottom: 16px;">
+                    <div class="info-row">
+                        <span class="label">配送方式：</span>
+                        <span id="displayDeliveryMethod" style="font-weight: 600; color: var(--brand-700); font-size: 16px;">-</span>
+                    </div>
+                    
+                    <!-- 面交資訊顯示區 -->
+                    <div id="meetupInfoSection" style="display: none;">
+                        <div class="info-row" style="margin-top: 12px;">
+                            <span class="label">面交地點：</span>
+                            <span id="displayMeetupLocation" style="font-weight: 600; color: var(--brand-700);">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">面交時間：</span>
+                            <span id="displayMeetupTime" style="font-weight: 600; color: var(--brand-700);">-</span>
+                        </div>
+                        <div class="info-row" id="displayMeetupNotesRow" style="display: none;">
+                            <span class="label">備註：</span>
+                            <span id="displayMeetupNotes" style="color: var(--text-700);">-</span>
+                        </div>
+                        
+                        <!-- 面交確認狀態 -->
+                        <div style="margin-top: 16px; padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--surface-300);">
+                            <h3 style="font-size: 14px; margin-bottom: 8px; color: var(--text-800);">✅ 面交確認狀態</h3>
+                            <div class="info-row">
+                                <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span>：</span>
+                                <span id="aMeetupStatus" class="not-confirmed">尚未確認</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span>：</span>
+                                <span id="bMeetupStatus" class="not-confirmed">尚未確認</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 12px; display: flex; gap: 12px;">
+                            <button class="btn-edit" onclick="editDeliveryInfo()">📝 修改配送資訊</button>
+                            <button id="confirmMeetupBtn" class="btn-confirm" onclick="confirmMeetupInfo()" style="display: none;">✅ 確認面交資訊</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 交貨便資訊顯示區 -->
+                    <div id="shipmentInfoSection" style="display: none;">
+                        <div class="info-row" style="margin-top: 12px;">
+                            <span class="label">交貨便服務代碼：</span>
+                            <span id="displayTrackingNumber" style="font-weight: 600; color: var(--brand-700);">-</span>
+                        </div>
+                        <div style="margin-top: 12px; display: flex; gap: 12px;">
+                            <button class="btn-edit" onclick="editDeliveryInfo()">📝 修改配送資訊</button>
+                            <button id="myTrackingButton" class="btn-tracking" onclick="openMyTrackingModal()">🔍 查看我的貨物狀態</button>
+                        </div>
                     </div>
                 </div>
-                <button class="btn-submit" onclick="submitShipment()">儲存物流資訊</button>
             </div>
-            <div id="myShipmentInfo" style="display:none; margin-top:20px;">
-                <p><strong>配送方式：</strong> <span id="savedDeliveryMethod"></span></p>
-                <p id="savedTrackingInfo" style="display:none;">
-                    <strong>交貨便服務代碼：</strong> <span id="savedTrackingNumber"></span>
-                </p>
-                <div style="margin-top: 16px;">
-                    <button class="btn-edit" onclick="editShipment()">編輯物流資訊</button>
-                    <button id="myTrackingButton" class="btn-tracking" onclick="openMyTrackingModal()" style="display:none; margin-left: 12px;">🔍 查看我的貨物狀態</button>
+            
+            <!-- 面交表單 -->
+            <div id="meetupForm" style="display: none;">
+                <div style="padding: 16px; background: var(--surface-50); border-radius: 12px; border: 2px solid var(--brand-200);">
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--brand-700);">🤝 面交資訊設定</h3>
+                    <div class="form-group">
+                        <label for="meetupLocation">面交地點：<span style="color: red;">*</span></label>
+                        <input type="text" id="meetupLocation" placeholder="例如：台北車站東三門" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="meetupTime">面交時間：<span style="color: red;">*</span></label>
+                        <input type="datetime-local" id="meetupTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="meetupNotes">備註：</label>
+                        <textarea id="meetupNotes" rows="3" placeholder="例如：請穿紅色外套方便辨識"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-submit" onclick="submitMeetupInfo()">💾 儲存面交資訊</button>
+                        <button class="btn-back" onclick="cancelDeliveryEdit()">取消</button>
+                    </div>
+                    <p class="hint" style="margin-top: 12px;">
+                        💡 提示：設定面交資訊後，雙方都需要確認才能繼續交換流程
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 交貨便表單 -->
+            <div id="shipmentForm" style="display: none;">
+                <div style="padding: 16px; background: var(--surface-50); border-radius: 12px; border: 2px solid var(--success-200);">
+                    <h3 style="font-size: 16px; margin-bottom: 16px; color: var(--success-700);">📦 交貨便資訊設定</h3>
+                    <div class="form-group">
+                        <label for="trackingNumber">交貨便服務代碼：<span style="color: red;">*</span></label>
+                        <input type="text" id="trackingNumber" placeholder="輸入交貨便服務代碼" required>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-submit" onclick="submitShipment()">💾 儲存交貨便資訊</button>
+                        <button class="btn-back" onclick="cancelDeliveryEdit()">取消</button>
+                    </div>
+                    <p class="hint" style="margin-top: 12px;">
+                        💡 提示：請輸入交貨便提供的服務代碼以供追蹤
+                    </p>
                 </div>
             </div>
         </div>
@@ -702,14 +729,225 @@
         const currentUserConfirmed = (currentUserId === aUserId && /*[[${swap.aConfirmedAt}]]*/ null !== null) ||
                                      (currentUserId === bUserId && /*[[${swap.bConfirmedAt}]]*/ null !== null);
 
-        // 保存當前面交資訊，用於編輯時回填
+        // 保存當前配送資訊
         let currentMeetupData = {
             location: '',
             time: '',
             notes: ''
         };
+        let currentShipmentData = {
+            deliveryMethod: '',
+            trackingNumber: ''
+        };
 
-        // ========== 面交資訊管理 ==========
+        // ========== 統一配送方式管理 ==========
+        
+        // 當用戶選擇配送方式時切換顯示對應表單
+        function toggleDeliveryForm() {
+            const method = document.getElementById('deliveryMethod').value;
+            const meetupForm = document.getElementById('meetupForm');
+            const shipmentForm = document.getElementById('shipmentForm');
+            const deliverySelector = document.getElementById('deliveryMethodSelector');
+            const deliveryDisplay = document.getElementById('deliveryInfoDisplay');
+            
+            // 隱藏所有表單
+            meetupForm.style.display = 'none';
+            shipmentForm.style.display = 'none';
+            
+            // 根據選擇顯示對應表單
+            if (method === 'face_to_face') {
+                meetupForm.style.display = 'block';
+                // 如果從交貨便切換到面交，清空交貨便表單
+                if (currentShipmentData.deliveryMethod && currentShipmentData.deliveryMethod.toLowerCase() !== 'face_to_face') {
+                    document.getElementById('trackingNumber').value = '';
+                }
+            } else if (method === 'shipnow') {
+                shipmentForm.style.display = 'block';
+                // 如果從面交切換到交貨便，清空面交表單
+                if (currentShipmentData.deliveryMethod && currentShipmentData.deliveryMethod.toLowerCase() === 'face_to_face') {
+                    document.getElementById('meetupLocation').value = '';
+                    document.getElementById('meetupTime').value = '';
+                    document.getElementById('meetupNotes').value = '';
+                }
+            }
+        }
+        
+        // 編輯配送資訊
+        function editDeliveryInfo() {
+            // 隱藏顯示區塊
+            document.getElementById('deliveryInfoDisplay').style.display = 'none';
+            
+            // 顯示選擇器
+            document.getElementById('deliveryMethodSelector').style.display = 'block';
+            
+            // 預設選擇當前的配送方式（以 Shipment 的 deliveryMethod 為準）
+            const deliveryMethodSelect = document.getElementById('deliveryMethod');
+            if (currentShipmentData.deliveryMethod) {
+                const method = currentShipmentData.deliveryMethod.toUpperCase();
+                if (method === 'FACE_TO_FACE') {
+                    deliveryMethodSelect.value = 'face_to_face';
+                } else if (method === 'SHIPNOW') {
+                    deliveryMethodSelect.value = 'shipnow';
+                }
+            } else {
+                deliveryMethodSelect.value = '';
+            }
+            
+            // 觸發表單切換
+            toggleDeliveryForm();
+            
+            // 如果是面交，載入現有資訊
+            if (deliveryMethodSelect.value === 'face_to_face' && currentMeetupData.location) {
+                document.getElementById('meetupLocation').value = currentMeetupData.location;
+                document.getElementById('meetupNotes').value = currentMeetupData.notes || '';
+                if (currentMeetupData.time) {
+                    const date = new Date(currentMeetupData.time);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    document.getElementById('meetupTime').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+            }
+            
+            // 如果是交貨便，載入現有資訊
+            if (deliveryMethodSelect.value === 'shipnow' && currentShipmentData.trackingNumber) {
+                document.getElementById('trackingNumber').value = currentShipmentData.trackingNumber;
+            }
+        }
+        
+        // 取消編輯
+        function cancelDeliveryEdit() {
+            // 隱藏選擇器和表單
+            document.getElementById('deliveryMethodSelector').style.display = 'none';
+            document.getElementById('meetupForm').style.display = 'none';
+            document.getElementById('shipmentForm').style.display = 'none';
+            
+            // 顯示資訊區塊（如果已有配送資訊）
+            if (currentMeetupData.location || currentShipmentData.deliveryMethod) {
+                document.getElementById('deliveryInfoDisplay').style.display = 'block';
+            }
+        }
+        
+        // 載入並顯示配送資訊
+        async function loadDeliveryInfo() {
+            try {
+                // 優先檢查 Shipment 表（這是最終決定使用哪種配送方式的依據）
+                const shipmentResponse = await fetch(`/api/swaps/${swapId}/shipments/my`);
+                let hasShipment = false;
+                
+                if (shipmentResponse.ok) {
+                    const shipment = await shipmentResponse.json();
+                    if (shipment && shipment.deliveryMethod) {
+                        hasShipment = true;
+                        currentShipmentData.deliveryMethod = shipment.deliveryMethod;
+                        currentShipmentData.trackingNumber = shipment.trackingNumber || '';
+                        
+                        // 根據 deliveryMethod 決定顯示哪一種
+                        if (shipment.deliveryMethod === 'FACE_TO_FACE') {
+                            // 面交：需要從 Swap 載入詳細資訊
+                            const swapResponse = await fetch(`/api/swaps/${swapId}`);
+                            if (swapResponse.ok) {
+                                const swap = await swapResponse.json();
+                                currentMeetupData.location = swap.meetupLocation || '';
+                                currentMeetupData.time = swap.meetupTime || '';
+                                currentMeetupData.notes = swap.meetupNotes || '';
+                                
+                                if (swap.meetupLocation && swap.meetupTime) {
+                                    displayMeetupInfo(swap);
+                                } else {
+                                    // Shipment 設為 FACE_TO_FACE 但沒有詳細資訊
+                                    document.getElementById('deliveryMethodSelector').style.display = 'block';
+                                    document.getElementById('deliveryInfoDisplay').style.display = 'none';
+                                    return;
+                                }
+                            }
+                        } else {
+                            // 交貨便（SHIPNOW）
+                            displayShipmentInfoUnified(shipment);
+                        }
+                        
+                        // 隱藏選擇器，顯示資訊
+                        document.getElementById('deliveryMethodSelector').style.display = 'none';
+                        document.getElementById('deliveryInfoDisplay').style.display = 'block';
+                        document.getElementById('meetupForm').style.display = 'none';
+                        document.getElementById('shipmentForm').style.display = 'none';
+                        return;
+                    }
+                }
+                
+                // 如果沒有 Shipment 記錄，顯示選擇器
+                document.getElementById('deliveryMethodSelector').style.display = 'block';
+                document.getElementById('deliveryInfoDisplay').style.display = 'none';
+                document.getElementById('meetupForm').style.display = 'none';
+                document.getElementById('shipmentForm').style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error loading delivery info:', error);
+            }
+        }
+        
+        // 顯示面交資訊
+        function displayMeetupInfo(swap) {
+            document.getElementById('displayDeliveryMethod').textContent = '🤝 面交（Face-to-Face）';
+            document.getElementById('meetupInfoSection').style.display = 'block';
+            document.getElementById('shipmentInfoSection').style.display = 'none';
+            
+            document.getElementById('displayMeetupLocation').textContent = swap.meetupLocation;
+            document.getElementById('displayMeetupTime').textContent = new Date(swap.meetupTime).toLocaleString('zh-TW');
+            
+            if (swap.meetupNotes) {
+                document.getElementById('displayMeetupNotes').textContent = swap.meetupNotes;
+                document.getElementById('displayMeetupNotesRow').style.display = 'flex';
+            } else {
+                document.getElementById('displayMeetupNotesRow').style.display = 'none';
+            }
+            
+            // 更新確認狀態
+            if (swap.aMeetupConfirmed) {
+                document.getElementById('aMeetupStatus').className = 'confirmed';
+                document.getElementById('aMeetupStatus').textContent = '✅ 已確認';
+            } else {
+                document.getElementById('aMeetupStatus').className = 'not-confirmed';
+                document.getElementById('aMeetupStatus').textContent = '尚未確認';
+            }
+            if (swap.bMeetupConfirmed) {
+                document.getElementById('bMeetupStatus').className = 'confirmed';
+                document.getElementById('bMeetupStatus').textContent = '✅ 已確認';
+            } else {
+                document.getElementById('bMeetupStatus').className = 'not-confirmed';
+                document.getElementById('bMeetupStatus').textContent = '尚未確認';
+            }
+            
+            // 顯示確認按鈕（如果當前用戶還未確認）
+            const isUserA = currentUserId === aUserId;
+            const currentUserMeetupConfirmed = isUserA ? swap.aMeetupConfirmed : swap.bMeetupConfirmed;
+            if (!currentUserMeetupConfirmed && swapStatus === 'IN_PROGRESS') {
+                document.getElementById('confirmMeetupBtn').style.display = 'inline-block';
+            } else {
+                document.getElementById('confirmMeetupBtn').style.display = 'none';
+            }
+        }
+        
+        // 顯示交貨便資訊
+        function displayShipmentInfoUnified(shipment) {
+            const methodText = shipment.deliveryMethod === 'SHIPNOW' ? '📦 交貨便（ShipNow）' : '🤝 面交（Face-to-Face）';
+            document.getElementById('displayDeliveryMethod').textContent = methodText;
+            document.getElementById('meetupInfoSection').style.display = 'none';
+            document.getElementById('shipmentInfoSection').style.display = 'block';
+            
+            if (shipment.trackingNumber) {
+                document.getElementById('displayTrackingNumber').textContent = shipment.trackingNumber;
+                // 設定 window.myTrackingNumber 供追蹤功能使用
+                window.myTrackingNumber = shipment.trackingNumber;
+            } else {
+                document.getElementById('displayTrackingNumber').textContent = '-';
+                window.myTrackingNumber = null;
+            }
+        }
+
+        // ========== 面交資訊提交 ==========
         
         async function loadMeetupInfo() {
             try {
@@ -786,18 +1024,39 @@
             const time = new Date(timeValue).toISOString().substring(0, 19);
             
             try {
-                const response = await fetch(`/api/swaps/${swapId}/meetup`, {
+                // 1. 儲存面交資訊到 Swap
+                const meetupResponse = await fetch(`/api/swaps/${swapId}/meetup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ location, time, notes })
                 });
                 
-                if (response.ok) {
+                if (!meetupResponse.ok) {
+                    const errorData = await meetupResponse.json().catch(() => ({}));
+                    alert(errorData.error || '儲存面交資訊失敗，請稍後再試');
+                    return;
+                }
+                
+                // 2. 建立 FACE_TO_FACE 的 Shipment 記錄
+                const shipmentResponse = await fetch(`/api/swaps/${swapId}/shipments/my`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deliveryMethod: 'face_to_face',
+                        trackingNumber: null,
+                        trackingUrl: null
+                    })
+                });
+                
+                if (shipmentResponse.ok) {
                     alert('面交資訊已儲存！');
-                    await loadMeetupInfo();
+                    await loadDeliveryInfo(); // 重新載入配送資訊
+                    await loadOtherShipment(); // 更新對方的配送資訊
                 } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    alert(errorData.error || '儲存失敗，請稍後再試');
+                    // 即使 Shipment 建立失敗，面交資訊已儲存，仍提示成功
+                    alert('面交資訊已儲存！');
+                    await loadDeliveryInfo();
+                    await loadOtherShipment();
                 }
             } catch (error) {
                 console.error('Error submitting meetup info:', error);
@@ -867,9 +1126,8 @@
 
         // Load existing shipments on page load
         window.addEventListener('DOMContentLoaded', () => {
-            loadMeetupInfo();
-            loadMyShipment();
-            loadOtherShipment();
+            loadDeliveryInfo(); // 載入統一的配送資訊
+            loadOtherShipment(); // 載入對方的配送資訊
             updateConfirmButtonVisibility();
         });
 
@@ -1043,17 +1301,16 @@
                 return;
             }
             
-            const deliveryMethod = document.getElementById('deliveryMethod').value;
-            const trackingNumber = document.getElementById('trackingNumber').value;
+            const trackingNumber = document.getElementById('trackingNumber').value.trim();
 
-            if (deliveryMethod === 'shipnow' && (!trackingNumber || trackingNumber.trim() === '')) {
-                alert('交貨便模式下，交貨便服務代碼為必填！');
+            if (!trackingNumber) {
+                alert('請填寫交貨便服務代碼！');
                 return;
             }
 
             const payload = {
-                deliveryMethod: deliveryMethod,
-                trackingNumber: deliveryMethod === 'shipnow' ? trackingNumber : null,
+                deliveryMethod: 'shipnow',
+                trackingNumber: trackingNumber,
                 trackingUrl: null
             };
 
@@ -1065,9 +1322,9 @@
                 });
 
                 if (response.ok) {
-                    alert('物流資訊已儲存！');
-                    const shipment = await response.json();
-                    displayShipmentInfo(shipment);
+                    alert('交貨便資訊已儲存！');
+                    await loadDeliveryInfo(); // 重新載入配送資訊
+                    await loadOtherShipment(); // 更新對方的配送資訊
                 } else if (response.status === 401) {
                     alert('請先登入');
                     window.location.href = '/ui/auth/login';
