@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email 測試 - Exchange Platform</title>
+    <link rel="stylesheet" href="/css/theme.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">🔄 Exchange Platform</div>
+            <nav>
+                <a class="link-btn" href="/ui/listings">📋 返回首頁</a>
+            </nav>
+        </header>
+
+        <h1>📧 Email 寄送測試</h1>
+
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <h2 style="color: var(--brand-700); margin-bottom: 20px;">測試郵件發送</h2>
+            
+            <div id="result" style="display: none; margin-bottom: 20px;"></div>
+            
+            <div class="form-group">
+                <label class="form-label" for="testEmail">📧 收件人 Email</label>
+                <input type="email" id="testEmail" class="form-input" placeholder="輸入要測試的 Email 地址" required>
+                <span class="form-hint">請輸入您的真實 Email 地址以接收測試郵件</span>
+            </div>
+
+            <button id="sendBtn" class="btn btn-primary" style="width: 100%;">
+                📤 發送測試郵件
+            </button>
+
+            <div style="margin-top: 30px; padding: 20px; background: #fef3c7; border-radius: 12px; border-left: 4px solid #f59e0b;">
+                <h3 style="color: #d97706; margin-top: 0;">⚠️ 使用 Gmail 前的設定步驟：</h3>
+                <ol style="color: #92400e; line-height: 1.8;">
+                    <li>前往 <a href="https://myaccount.google.com/security" target="_blank" style="color: #d97706; font-weight: 600;">Google 帳戶安全性設定</a></li>
+                    <li>開啟「兩步驟驗證」</li>
+                    <li>在「應用程式密碼」中建立新的應用程式密碼</li>
+                    <li>將生成的密碼填入 application.yml 的 spring.mail.password</li>
+                    <li>將您的 Gmail 地址填入 spring.mail.username</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body { 
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); 
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+        }
+        
+        header { 
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--brand-700);
+        }
+        
+        .link-btn { 
+            text-decoration: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700); 
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .link-btn:hover { 
+            background: var(--brand-600);
+            color: white;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--brand-700);
+            font-size: 32px;
+            margin: 20px 0;
+        }
+        
+        .card { 
+            background: white; 
+            border-radius: 16px; 
+            padding: 32px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--surface-200);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-900);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--surface-300);
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--brand-600);
+        }
+        
+        .form-hint {
+            font-size: 14px;
+            color: var(--text-500);
+            margin-top: 6px;
+            display: block;
+        }
+        
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--brand-600);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: var(--brand-700);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #dc2626;
+        }
+    </style>
+
+    <script>
+        document.getElementById('sendBtn').addEventListener('click', async function() {
+            const email = document.getElementById('testEmail').value.trim();
+            const resultDiv = document.getElementById('result');
+            const btn = this;
+            
+            if (!email) {
+                alert('請輸入 Email 地址');
+                return;
+            }
+            
+            // 簡單的 email 格式驗證
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('請輸入有效的 Email 地址');
+                return;
+            }
+            
+            // 禁用按鈕並顯示載入中
+            btn.disabled = true;
+            btn.textContent = '📤 發送中...';
+            resultDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`/api/test/email/send?to=${encodeURIComponent(email)}`);
+                const data = await response.json();
+                
+                resultDiv.style.display = 'block';
+                
+                if (data.success) {
+                    resultDiv.className = 'alert alert-success';
+                    resultDiv.innerHTML = `✅ ${data.message}<br><small style="opacity: 0.8;">請檢查您的信箱（包括垃圾郵件）</small>`;
+                } else {
+                    resultDiv.className = 'alert alert-error';
+                    resultDiv.innerHTML = `❌ ${data.message}`;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'alert alert-error';
+                resultDiv.innerHTML = `❌ 網路錯誤：${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📤 發送測試郵件';
+            }
+        });
+    </script>
+</body>
+</html>
