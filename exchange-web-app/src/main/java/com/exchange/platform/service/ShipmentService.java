@@ -3,6 +3,7 @@ package com.exchange.platform.service;
 import com.exchange.platform.dto.CreateShipmentEventRequest;
 import com.exchange.platform.dto.ShipmentDTO;
 import com.exchange.platform.dto.UpsertShipmentRequest;
+import com.exchange.platform.entity.EmailNotification.NotificationType;
 import com.exchange.platform.entity.Shipment;
 import com.exchange.platform.entity.ShipmentEvent;
 import com.exchange.platform.entity.Swap;
@@ -23,6 +24,7 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final ShipmentEventRepository shipmentEventRepository;
     private final SwapRepository swapRepository;
+    private final EmailNotificationService emailNotificationService;
 
     private static final String SESSION_USER_ID = "userId";
 
@@ -85,7 +87,25 @@ public class ShipmentService {
     // Always (re)assign legacy receiver_id for compatibility and to satisfy DB CHECKs
     shipment.setReceiverIdLegacy(receiverId);
 
+        // 檢查是否有追蹤號碼（表示已寄出）
+        boolean isShipped = req.getTrackingNumber() != null && !req.getTrackingNumber().trim().isEmpty();
+        boolean wasAlreadyShipped = shipment.getShippedAt() != null;
+        
         shipment = shipmentRepository.save(shipment);
+        
+        // 如果剛寄出（有追蹤號碼且之前沒有寄出記錄），發送通知
+        if (isShipped && !wasAlreadyShipped) {
+            // 設置寄出時間
+            shipment.setShippedAt(java.time.LocalDateTime.now());
+            shipment = shipmentRepository.save(shipment);
+            
+            // 發送電子郵件通知給收件人
+            emailNotificationService.sendShipmentNotification(shipment, 
+                    NotificationType.SHIPMENT_SENT, 
+                    receiverId, 
+                    req.getTrackingNumber());
+        }
+        
         return toDTO(shipment);
     }
 

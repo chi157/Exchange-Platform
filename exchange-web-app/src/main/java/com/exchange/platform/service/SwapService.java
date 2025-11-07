@@ -2,6 +2,7 @@ package com.exchange.platform.service;
 
 import com.exchange.platform.dto.ProposalDTO;
 import com.exchange.platform.dto.SwapDTO;
+import com.exchange.platform.entity.EmailNotification.NotificationType;
 import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.ProposalItem;
 import com.exchange.platform.entity.Shipment;
@@ -36,6 +37,7 @@ public class SwapService {
     private final ShipmentRepository shipmentRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
     private final ChatService chatService;
+    private final EmailNotificationService emailNotificationService;
     private static final String SESSION_USER_ID = "userId";
 
     @Transactional(readOnly = true)
@@ -454,6 +456,12 @@ public class SwapService {
 
         swap = swapRepository.save(swap);
         
+        // 發送電子郵件通知給對方
+        Long recipientId = isA ? swap.getBUserId() : swap.getAUserId();
+        emailNotificationService.sendSwapNotification(swap, 
+                NotificationType.DELIVERY_METHOD_PROPOSED, 
+                recipientId);
+        
         // 發送聊天室系統消息（不會拋出異常）
         String methodText = "FACE_TO_FACE".equals(method) ? "面交" : "交貨便";
         String message = String.format("📋 %s 提議使用「%s」作為配送方式，等待對方確認", userName, methodText);
@@ -504,6 +512,14 @@ public class SwapService {
             && Boolean.TRUE.equals(swap.getBDeliveryMethodConfirmed())) {
             String methodText = "FACE_TO_FACE".equals(swap.getDeliveryMethod()) ? "面交" : "交貨便";
             message = String.format("✅ 雙方已確認使用「%s」作為配送方式！", methodText);
+            
+            // 發送電子郵件通知給雙方
+            emailNotificationService.sendSwapNotification(swap, 
+                    NotificationType.DELIVERY_METHOD_ACCEPTED, 
+                    swap.getAUserId());
+            emailNotificationService.sendSwapNotification(swap, 
+                    NotificationType.DELIVERY_METHOD_ACCEPTED, 
+                    swap.getBUserId());
         } else {
             message = String.format("✅ %s 已同意配送方式", userName);
         }

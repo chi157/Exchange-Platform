@@ -2,6 +2,7 @@ package com.exchange.platform.service;
 
 import com.exchange.platform.dto.CreateProposalRequest;
 import com.exchange.platform.dto.ProposalDTO;
+import com.exchange.platform.entity.EmailNotification.NotificationType;
 import com.exchange.platform.entity.Listing;
 import com.exchange.platform.entity.Proposal;
 import com.exchange.platform.entity.ProposalItem;
@@ -30,6 +31,7 @@ public class ProposalService {
     private final com.exchange.platform.repository.SwapRepository swapRepository;
     private final com.exchange.platform.repository.UserRepository userRepository;
     private final ChatService chatService;
+    private final EmailNotificationService emailNotificationService;
     private static final String SESSION_USER_ID = "userId";
 
     public ProposalDTO create(CreateProposalRequest req, HttpSession session) {
@@ -111,6 +113,11 @@ public class ProposalService {
         // 自動創建聊天室
         chatService.createChatRoom(p.getId(), userId, receiverListing.getUserId());
         
+        // 發送電子郵件通知給接收者
+        emailNotificationService.sendProposalNotification(p, 
+                NotificationType.PROPOSAL_RECEIVED, 
+                receiverListing.getUserId());
+        
         return toDTO(p);
     }
 
@@ -153,6 +160,11 @@ public class ProposalService {
         
         // 更新聊天室的 Swap ID
         chatService.updateChatRoomSwapId(p.getId(), swap.getId());
+
+        // 發送電子郵件通知給提案者
+        emailNotificationService.sendProposalNotification(p, 
+                NotificationType.PROPOSAL_ACCEPTED, 
+                p.getProposerId());
 
         // Lock all involved listings
         listing.setStatus(com.exchange.platform.entity.Listing.Status.LOCKED);
