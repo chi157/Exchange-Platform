@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首頁 - Exchange Platform</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="/ui/home" class="brand" style="text-decoration: none;">Exchange Platform</a>
+            <nav>
+                <a class="link-btn" href="/ui/my-listings">📦 我的刊登</a>
+                <a class="link-btn" href="/ui/listings">📋 刊登列表</a>
+                <a class="link-btn" href="/ui/proposals/mine">💼 提案管理</a>
+                <a class="link-btn" href="/ui/swaps/mine">🔄 我的交換</a>
+                <a class="link-btn" href="/ui/chat">💬 聊天室</a>
+                <a class="link-btn" href="/ui/profile">👤 個人資料</a>
+            </nav>
+            <div class="user-btn-container" th:if="${currentUserDisplayName != null}">
+                <form action="/ui/auth/logout" method="post" style="margin: 0;">
+                    <button type="submit" class="user-btn">
+                        <div class="user-btn-icon">👤</div>
+                        <div class="user-btn-text">
+                            <span class="user-btn-label">當前使用者</span>
+                            <span class="user-btn-name" th:text="${currentUserDisplayName}">使用者名稱</span>
+                        </div>
+                        <div class="user-btn-logout">🚪 登出</div>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <!-- 歡迎區塊 -->
+        <div class="hero">
+            <h1>🎉 歡迎來到 Exchange Platform</h1>
+            <p class="hero-subtitle">一個安全、便利的卡片交換平台</p>
+            <div class="hero-buttons">
+                <a href="/ui/listings" class="btn-primary">🚀 開始瀏覽刊登</a>
+                <a href="#tutorial" class="btn-secondary">📖 查看教學</a>
+            </div>
+        </div>
+
+        <!-- 平台特色 -->
+        <div class="features">
+            <h2>✨ 平台特色</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>安全交易</h3>
+                    <p>完整的交易流程管理，確保雙方權益</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>即時溝通</h3>
+                    <p>內建聊天室功能，隨時與交易對象溝通</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📦</div>
+                    <h3>物流追蹤</h3>
+                    <p>支援面交與交貨便，追蹤貨物狀態</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⭐</div>
+                    <h3>評價系統</h3>
+                    <p>建立良好的交易信譽，打造可信賴社群</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用教學 -->
+        <div class="tutorial" id="tutorial">
+            <h2>📖 使用教學</h2>
+            
+            <div class="tutorial-section">
+                <h3>🎯 新手入門</h3>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>📝 註冊帳號</h4>
+                            <p>使用您的 Email 註冊帳號，設定個人資料</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>📦 刊登物品</h4>
+                            <p>到「我的刊登」新增您想交換的卡片，上傳照片並填寫詳細資訊</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>🔍 瀏覽與搜尋</h4>
+                            <p>在「刊登列表」尋找您想要的卡片，使用篩選功能快速找到目標</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>💼 發起提案</h4>
+                            <p>找到想要的卡片後，選擇您的卡片發起交換提案</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>💬 協商溝通</h4>
+                            <p>使用聊天室與對方溝通，討論交換細節</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">6</div>
+                        <div class="step-content">
+                            <h4>🚚 完成交換</h4>
+                            <p>選擇配送方式（面交或交貨便），完成物品交換</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tutorial-section">
+                <h3>🔄 交換流程詳解</h3>
+                <div class="flow-cards">
+                    <div class="flow-card">
+                        <h4>💼 提案階段</h4>
+                        <ul>
+                            <li>選擇對方的刊登物品</li>
+                            <li>選擇您要提供的物品</li>
+                            <li>發送提案等待對方回應</li>
+                            <li>對方可以接受、拒絕或提出反提案</li>
+                        </ul>
+                    </div>
+                    <div class="flow-card">
+                        <h4>🚚 配送階段</h4>
+                        <ul>
+                            <li><strong>面交模式：</strong>協商面交地點與時間，雙方確認後當面交換</li>
+                            <li><strong>交貨便模式：</strong>各自設定收貨門市，到任意門市寄往對方的收貨門市</li>
+                            <li>輸入交貨便服務代碼供對方追蹤</li>
+                            <li>查看對方的物流狀態</li>
+                        </ul>
+                    </div>
+                    <div class="flow-card">
+                        <h4>✅ 確認階段</h4>
+                        <ul>
+                            <li>收到物品後確認收貨</li>
+                            <li>檢查物品狀態是否符合描述</li>
+                            <li>雙方都確認後交換完成</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q&A 區塊 -->
+        <div class="qna" id="qna">
+            <h2>❓ 常見問題 Q&A</h2>
+            
+            <div class="qna-section">
+                <h3>📦 關於刊登</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 如何刊登我的卡片？</div>
+                    <div class="answer">A: 點選「我的刊登」→「新增刊登」，填寫卡片名稱、藝人名稱、上傳照片等資訊即可。建議上傳清晰的照片以提高交換成功率。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 可以刊登多張卡片嗎？</div>
+                    <div class="answer">A: 可以！您可以刊登任意數量的卡片，每張卡片都需要分別刊登。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 可以修改或刪除已刊登的物品嗎？</div>
+                    <div class="answer">A: 可以。在「我的刊登」頁面找到該物品，點選「編輯」修改資訊，或點選「刪除」移除刊登。</div>
+                </div>
+            </div>
+
+            <div class="qna-section">
+                <h3>💼 關於提案</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 如何發起交換提案？</div>
+                    <div class="answer">A: 在「刊登列表」找到想要的卡片，點選「發起提案」，選擇您要提供的卡片，送出提案即可。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 對方沒有回應我的提案怎麼辦？</div>
+                    <div class="answer">A: 您可以透過聊天室與對方溝通，或者等待一段時間後取消提案，尋找其他交易對象。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 可以用多張卡片交換對方的一張卡片嗎？</div>
+                    <div class="answer">A: 可以！提案時可以選擇多張您的卡片，也可以要求對方提供多張卡片。</div>
+                </div>
+            </div>
+
+            <div class="qna-section">
+                <h3>🚚 關於配送</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 面交和交貨便有什麼差別？</div>
+                    <div class="answer">A: <br><strong>面交：</strong>雙方約定同一個地點和時間，當面交換物品。<br><strong>交貨便：</strong>使用 7-11 交貨便服務，各自設定收貨門市後，到任意門市寄往對方的收貨門市。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 交貨便如何使用？</div>
+                    <div class="answer">A: <br>1) 在系統中設定您希望的收貨門市 <br>2) 看到對方的收貨門市後，攜帶物品到任意 7-11 門市 <br>3) 告知店員使用「交貨便」服務，寄往對方指定的門市 4) 將服務代碼輸入系統供對方追蹤。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 運費誰負擔？</div>
+                    <div class="answer">A: 目前系統預設各付各的運費。如需特殊約定，請在聊天室與對方協商。</div>
+                </div>
+            </div>
+
+            <div class="qna-section">
+                <h3>💬 關於聊天</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 如何與交易對象聊天？</div>
+                    <div class="answer">A: 點選「聊天室」，會顯示所有相關的交易對話。點選對應的聊天室即可開始對話。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 未讀訊息如何查看？</div>
+                    <div class="answer">A: 聊天室列表會顯示未讀訊息數量，以紅色圓圈標示。點進該聊天室即可查看。</div>
+                </div>
+            </div>
+
+            <div class="qna-section">
+                <h3>⚠️ 安全與注意事項</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 如何確保交易安全？</div>
+                    <div class="answer">A: <br>1) 透過聊天室充分溝通 <br>2) 要求對方提供清晰的物品照片 <br>3) 面交選擇公共場所 <br>4) 收到物品後仔細檢查再確認收貨。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 遇到糾紛怎麼辦？</div>
+                    <div class="answer">A: 若物品與描述不符或有其他糾紛，請先與對方溝通協調。如無法解決，可以聯繫平台客服協助處理。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 可以取消已確認的交換嗎？</div>
+                    <div class="answer">A: 交換確認後原則上不建議取消。如有特殊情況，請盡早與對方溝通說明，尋求雙方都能接受的解決方案。</div>
+                </div>
+            </div>
+
+            <div class="qna-section">
+                <h3>📊 其他問題</h3>
+                <div class="qa-item">
+                    <div class="question">Q: 如何修改個人資料？</div>
+                    <div class="answer">A: 點選右上角的「個人資料」，即可編輯您的暱稱、聯絡方式等資訊。</div>
+                </div>
+                <div class="qa-item">
+                    <div class="question">Q: 忘記密碼怎麼辦？</div>
+                    <div class="answer">A: 點選右上角的「個人資料」，即可編輯您的密碼，但若是Google登入者，則無法修改密碼。</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 聯絡資訊 -->
+        <div class="contact">
+            <h2>📧 需要協助？</h2>
+            <p>如有任何問題，歡迎透過以下方式聯繫我們：</p>
+            <div class="contact-info">
+                <p>📧 Email: support@exchangeplatform.com</p>
+                <p>⏰ 客服時間: 週一至週五 09:00-18:00</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="/ui/listings" class="btn-back">🚀 立即開始使用</a>
+        </div>
+    </div>
+
+    <style>
+        /* 整體置中布局 */
+        body { 
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); 
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px 0;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 0 20px; 
+        }
+        
+        /* 統一置中的 Header */
+        header { 
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(106, 0, 214, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .brand { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--brand-700);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .brand:hover {
+            color: var(--brand-600);
+            transform: scale(1.05);
+        }
+        header nav { 
+            display: flex; 
+            gap: 12px; 
+        }
+        
+        /* 使用者按鈕 */
+        .user-btn-container {
+            position: relative;
+        }
+        .user-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, var(--brand-50) 0%, var(--brand-100) 100%);
+            border-radius: 12px;
+            border: 2px solid var(--brand-200);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .user-btn:hover {
+            border-color: var(--brand-600);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+        .user-btn-icon {
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+        .user-btn-text {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            transition: all 0.3s;
+        }
+        .user-btn-label {
+            font-size: 10px;
+            color: var(--text-500);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .user-btn-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--brand-700);
+        }
+        .user-btn-logout {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--brand-600);
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .user-btn:hover .user-btn-logout {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* 按鈕樣式 */
+        .link-btn { 
+            text-decoration: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            border: 2px solid var(--brand-600);
+            color: var(--brand-700); 
+            background: white;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .link-btn:hover { 
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+
+        /* Hero 區塊 */
+        .hero {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(106, 0, 214, 0.1);
+        }
+        .hero h1 {
+            font-size: 48px;
+            color: var(--brand-700);
+            margin-bottom: 16px;
+        }
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-600);
+            margin-bottom: 32px;
+        }
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-primary, .btn-secondary {
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: var(--brand-600);
+            color: white;
+            border: 2px solid var(--brand-600);
+        }
+        .btn-primary:hover {
+            background: var(--brand-700);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(106, 0, 214, 0.3);
+        }
+        .btn-secondary {
+            background: white;
+            color: var(--brand-700);
+            border: 2px solid var(--brand-600);
+        }
+        .btn-secondary:hover {
+            background: var(--brand-50);
+            transform: translateY(-2px);
+        }
+
+        /* 特色區塊 */
+        .features {
+            margin-bottom: 60px;
+        }
+        .features h2 {
+            text-align: center;
+            font-size: 36px;
+            color: var(--brand-700);
+            margin-bottom: 32px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border: 2px solid var(--surface-200);
+        }
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(106, 0, 214, 0.15);
+            border-color: var(--brand-300);
+        }
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .feature-card h3 {
+            font-size: 20px;
+            color: var(--brand-700);
+            margin-bottom: 12px;
+        }
+        .feature-card p {
+            color: var(--text-600);
+            line-height: 1.6;
+            font-size: 20px;
+        }
+
+        /* 教學區塊 */
+        .tutorial {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .tutorial h2 {
+            font-size: 36px;
+            color: var(--brand-700);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .tutorial-section {
+            margin-bottom: 40px;
+        }
+        .tutorial-section h3 {
+            font-size: 24px;
+            color: var(--brand-700);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--brand-200);
+        }
+        .steps {
+            display: grid;
+            gap: 20px;
+        }
+        .step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding: 20px;
+            background: var(--surface-50);
+            border-radius: 12px;
+            border-left: 4px solid var(--brand-500);
+            transition: all 0.3s;
+        }
+        .step:hover {
+            background: var(--brand-50);
+            transform: translateX(4px);
+        }
+        .step-number {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: var(--brand-600);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .step-content h4 {
+            font-size: 18px;
+            color: var(--brand-700);
+            margin-bottom: 8px;
+        }
+        .step-content p {
+            color: var(--text-600);
+            line-height: 1.6;
+            font-size: 20px;
+        }
+        .flow-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .flow-card {
+            background: var(--surface-50);
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid var(--brand-200);
+        }
+        .flow-card h4 {
+            font-size: 18px;
+            color: var(--brand-700);
+            margin-bottom: 16px;
+        }
+        .flow-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .flow-card li {
+            padding: 8px 0;
+            color: var(--text-700);
+            line-height: 1.6;
+            padding-left: 24px;
+            position: relative;
+            font-size: 20px;
+        }
+        .flow-card li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--brand-600);
+            font-weight: 700;
+        }
+
+        /* Q&A 區塊 */
+        .qna {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .qna h2 {
+            font-size: 36px;
+            color: var(--brand-700);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .qna-section {
+            margin-bottom: 32px;
+        }
+        .qna-section h3 {
+            font-size: 24px;
+            color: var(--brand-700);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--brand-200);
+        }
+        .qa-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--surface-50);
+            border-radius: 12px;
+            border-left: 4px solid var(--success-500);
+        }
+        .question {
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--brand-700);
+            margin-bottom: 8px;
+        }
+        .answer {
+            color: var(--text-700);
+            line-height: 1.6;
+            font-size: 20px;
+        }
+
+        /* 聯絡區塊 */
+        .contact {
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .contact h2 {
+            font-size: 32px;
+            margin-bottom: 16px;
+        }
+        .contact p {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .contact-info {
+            margin-top: 24px;
+        }
+        .contact-info p {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 14px 32px;
+            background: white;
+            color: var(--brand-700);
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 2px solid var(--brand-600);
+            font-weight: 600;
+            font-size: 20px;
+        }
+        .btn-back:hover {
+            background: var(--brand-600);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 32px;
+            }
+            .hero-subtitle {
+                font-size: 16px;
+            }
+            .features h2, .tutorial h2, .qna h2 {
+                font-size: 28px;
+            }
+            header {
+                flex-direction: column;
+                gap: 16px;
+            }
+            header nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html>

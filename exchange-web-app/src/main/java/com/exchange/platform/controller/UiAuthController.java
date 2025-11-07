@@ -1,12 +1,31 @@
 package com.exchange.platform.controller;
 
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Controller
+@RequiredArgsConstructor
 public class UiAuthController {
+
+    private final com.exchange.platform.repository.UserRepository userRepository;
+
+    // 首頁/教學/Q&A 頁面
+    @GetMapping("/ui/home")
+    public String homePage(HttpSession session, Model model) {
+        // 如果已登入，加入使用者資訊
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId != null) {
+            String currentUserDisplayName = userRepository.findById(userId)
+                    .map(user -> user.getDisplayName())
+                    .orElse(null);
+            model.addAttribute("currentUserDisplayName", currentUserDisplayName);
+        }
+        return "home";
+    }
 
     // 根路徑重定向
     @GetMapping("/")
@@ -14,14 +33,14 @@ public class UiAuthController {
         if (session.getAttribute("userId") == null) {
             return "redirect:/ui/auth/login";
         }
-        return "redirect:/ui/listings";
+        return "redirect:/ui/home";
     }
 
     @GetMapping("/ui/auth/login")
     public String loginPage(HttpSession session) {
         // 如果已登入，重定向到首頁
         if (session.getAttribute("userId") != null) {
-            return "redirect:/ui/listings";
+            return "redirect:/ui/home";
         }
         return "login";
     }
@@ -30,7 +49,7 @@ public class UiAuthController {
     public String registerPage(HttpSession session) {
         // 如果已登入，重定向到首頁
         if (session.getAttribute("userId") != null) {
-            return "redirect:/ui/listings";
+            return "redirect:/ui/home";
         }
         return "register";
     }
