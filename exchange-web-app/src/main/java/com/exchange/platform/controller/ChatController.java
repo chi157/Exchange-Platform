@@ -1,5 +1,6 @@
 package com.exchange.platform.controller;
 
+import com.exchange.platform.dto.ChatRoomListDTO;
 import com.exchange.platform.entity.ChatMessage;
 import com.exchange.platform.entity.ChatRoom;
 import com.exchange.platform.service.ChatService;
@@ -44,7 +45,7 @@ public class ChatController {
             return ResponseEntity.status(401).body(Map.of("error", "未登入"));
         }
         
-        List<ChatRoom> chatRooms = chatService.getUserChatRooms(userId);
+        List<ChatRoomListDTO> chatRooms = chatService.getEnrichedChatRooms(userId);
         return ResponseEntity.ok(chatRooms);
     }
     

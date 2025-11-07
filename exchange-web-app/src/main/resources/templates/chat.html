@@ -174,9 +174,15 @@
             border-left: 4px solid var(--brand-600);
         }
         
+        .chat-room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
         .chat-room-user {
             font-weight: 700;
-            margin-bottom: 5px;
             color: var(--brand-700);
             font-size: 14px;
         }
@@ -459,11 +465,17 @@
         let stompClient = null;
         let currentChatRoomId = null;
         let chatRooms = [];
+        let subscribedRooms = new Set(); // 追蹤已訂閱的聊天室
         
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadChatRooms();
             connectWebSocket();
+            
+            // 每30秒自動更新一次聊天室列表（更新未讀數字）
+            setInterval(() => {
+                loadChatRooms();
+            }, 30000);
         });
         
         // 載入聊天室列表
@@ -473,6 +485,14 @@
                 .then(rooms => {
                     chatRooms = rooms;
                     renderChatRoomsList(rooms);
+                    
+                    // 如果有當前選中的聊天室，重新標記為 active
+                    if (currentChatRoomId) {
+                        const activeItem = document.querySelector(`.chat-room-item[data-room-id="${currentChatRoomId}"]`);
+                        if (activeItem) {
+                            activeItem.classList.add('active');
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error('載入聊天室失敗:', error);
@@ -491,7 +511,6 @@
             }
             
             container.innerHTML = rooms.map(room => {
-                const otherUserId = room.userAId === currentUserId ? room.userBId : room.userAId;
                 const lastMessageTime = new Date(room.lastMessageAt).toLocaleString('zh-TW', {
                     month: '2-digit',
                     day: '2-digit',
@@ -499,11 +518,19 @@
                     minute: '2-digit'
                 });
                 
+                // 顯示未讀數量徽章
+                const unreadBadge = room.unreadCount > 0 ? 
+                    `<span class="unread-badge">${room.unreadCount}</span>` : '';
+                
                 return `
                     <div class="chat-room-item ${room.id === currentChatRoomId ? 'active' : ''}" 
+                         data-room-id="${room.id}"
                          onclick="openChatRoom(${room.id}, ${room.proposalId})">
-                        <div class="chat-room-user">提案 #${room.proposalId}</div>
-                        <div class="chat-room-preview">點擊查看聊天記錄</div>
+                        <div class="chat-room-header">
+                            <div class="chat-room-user">${room.otherUserName}</div>
+                            ${unreadBadge}
+                        </div>
+                        <div class="chat-room-preview">${room.itemsSummary || '交換物品資訊'}</div>
                         <div class="chat-room-time">${lastMessageTime}</div>
                     </div>
                 `;
@@ -527,7 +554,7 @@
             markAsRead(roomId);
         }
         
-        // 載入聊天記錄
+        // 載入聊天室的消息歷史
         function loadChatMessages(roomId, proposalId) {
             // 先獲取聊天室信息以檢查是否唯讀
             const currentRoom = chatRooms.find(r => r.id === roomId);
@@ -537,12 +564,16 @@
                 .then(messages => {
                     renderChatWindow(roomId, proposalId, messages, currentRoom);
                     
-                    // 訂閱此聊天室的消息
-                    if (stompClient && stompClient.connected) {
+                    // 訂閱此聊天室的消息（避免重複訂閱）
+                    if (stompClient && stompClient.connected && !subscribedRooms.has(roomId)) {
                         stompClient.subscribe(`/topic/chat/${roomId}`, function(message) {
                             const newMessage = JSON.parse(message.body);
-                            appendMessage(newMessage);
+                            console.log(`收到聊天室 ${roomId} 的訊息:`, newMessage);
+                            console.log(`當前聊天室: ${currentChatRoomId}`);
+                            appendMessage(newMessage, roomId);
                         });
+                        subscribedRooms.add(roomId);
+                        console.log(`已訂閱聊天室 ${roomId}`);
                     }
                 })
                 .catch(error => {
@@ -627,11 +658,34 @@
         }
         
         // 添加新消息到聊天窗口
-        function appendMessage(msg) {
-            const messagesDiv = document.getElementById('chatMessages');
-            if (messagesDiv) {
-                messagesDiv.insertAdjacentHTML('beforeend', renderMessage(msg));
-                scrollToBottom();
+        function appendMessage(msg, msgRoomId) {
+            console.log(`appendMessage 被調用 - 訊息所屬聊天室: ${msgRoomId}, 當前聊天室: ${currentChatRoomId}`);
+            
+            // 只在當前聊天室添加消息到聊天窗口
+            if (msgRoomId === currentChatRoomId) {
+                const messagesDiv = document.getElementById('chatMessages');
+                if (messagesDiv) {
+                    console.log('添加訊息到當前聊天窗口');
+                    messagesDiv.insertAdjacentHTML('beforeend', renderMessage(msg));
+                    scrollToBottom();
+                } else {
+                    console.warn('找不到聊天訊息容器');
+                }
+            } else {
+                console.log(`訊息不屬於當前聊天室，不顯示`);
+            }
+            
+            // 如果收到的是別人發的消息，更新未讀數字（無論是哪個聊天室）
+            if (msg.senderId !== currentUserId) {
+                console.log('收到別人的訊息，準備更新未讀數字');
+                // 使用 setTimeout 避免頻繁更新
+                if (window.chatRoomUpdateTimer) {
+                    clearTimeout(window.chatRoomUpdateTimer);
+                }
+                window.chatRoomUpdateTimer = setTimeout(() => {
+                    console.log('執行聊天室列表更新');
+                    loadChatRooms();
+                }, 500); // 500ms 延遲合併多個更新
             }
         }
         
@@ -690,7 +744,12 @@
         function markAsRead(roomId) {
             fetch(`/api/chat/room/${roomId}/read`, {
                 method: 'POST'
-            }).catch(error => console.error('標記已讀失敗:', error));
+            })
+            .then(() => {
+                // 重新載入聊天室列表以更新未讀數字
+                loadChatRooms();
+            })
+            .catch(error => console.error('標記已讀失敗:', error));
         }
         
         // Enter 鍵發送

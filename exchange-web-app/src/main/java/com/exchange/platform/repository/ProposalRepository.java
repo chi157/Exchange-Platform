@@ -16,6 +16,9 @@ public interface ProposalRepository extends JpaRepository<Proposal, Long> {
 	@Query("SELECT DISTINCT p FROM Proposal p LEFT JOIN FETCH p.proposalItems pi LEFT JOIN FETCH pi.listing WHERE p.receiverId = :receiverId")
 	Page<Proposal> findByReceiverIdWithItems(@Param("receiverId") Long receiverId, Pageable pageable);
 	
+	@Query("SELECT DISTINCT p FROM Proposal p LEFT JOIN FETCH p.proposalItems pi LEFT JOIN FETCH pi.listing WHERE p.id = :proposalId")
+	Optional<Proposal> findByIdWithItems(@Param("proposalId") Long proposalId);
+	
 	Page<Proposal> findByProposerId(Long proposerId, Pageable pageable);
 	Page<Proposal> findByReceiverId(Long receiverId, Pageable pageable);
 	Page<Proposal> findByListingId(Long listingId, Pageable pageable);

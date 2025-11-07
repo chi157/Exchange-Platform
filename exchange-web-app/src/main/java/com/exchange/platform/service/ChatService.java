@@ -1,9 +1,14 @@
 package com.exchange.platform.service;
 
+import com.exchange.platform.dto.ChatRoomListDTO;
 import com.exchange.platform.entity.ChatMessage;
 import com.exchange.platform.entity.ChatRoom;
+import com.exchange.platform.entity.Proposal;
+import com.exchange.platform.entity.User;
 import com.exchange.platform.repository.ChatMessageRepository;
 import com.exchange.platform.repository.ChatRoomRepository;
+import com.exchange.platform.repository.ProposalRepository;
+import com.exchange.platform.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 聊天服務
@@ -32,6 +39,12 @@ public class ChatService {
     
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    
+    @Autowired
+    private ProposalRepository proposalRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     /**
      * 創建聊天室（當 Proposal 創建時自動調用）
@@ -303,5 +316,114 @@ public class ChatService {
         
         ChatRoom room = chatRoom.get();
         return room.getUserAId().equals(userId) || room.getUserBId().equals(userId);
+    }
+    
+    /**
+     * 獲取用戶的聊天室列表（豐富版本，包含對方用戶名、物品資訊和未讀數量）
+     */
+    public List<ChatRoomListDTO> getEnrichedChatRooms(Long userId) {
+        List<ChatRoom> chatRooms = getUserChatRooms(userId);
+        if (chatRooms.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 批次獲取所有需要的資料
+        List<Long> proposalIds = chatRooms.stream()
+                .map(ChatRoom::getProposalId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        List<Long> userIds = chatRooms.stream()
+                .flatMap(room -> List.of(room.getUserAId(), room.getUserBId()).stream())
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 批次查詢所有用戶
+        List<User> users = userIds.isEmpty() ? new ArrayList<>() : userRepository.findAllById(userIds);
+        java.util.Map<Long, String> userNameMap = users.stream()
+                .collect(Collectors.toMap(User::getId, User::getDisplayName));
+        
+        // 批次查詢所有提案（帶 JOIN FETCH）
+        java.util.Map<Long, Proposal> proposalMap = new java.util.HashMap<>();
+        for (Long proposalId : proposalIds) {
+            proposalRepository.findByIdWithItems(proposalId).ifPresent(p -> proposalMap.put(proposalId, p));
+        }
+        
+        // 批次查詢所有聊天室的未讀數量
+        java.util.Map<Long, Long> unreadCountMap = new java.util.HashMap<>();
+        for (ChatRoom room : chatRooms) {
+            long count = getUnreadMessageCount(room.getId(), userId);
+            unreadCountMap.put(room.getId(), count);
+        }
+        
+        // 組裝 DTO
+        List<ChatRoomListDTO> enrichedRooms = new ArrayList<>();
+        for (ChatRoom room : chatRooms) {
+            try {
+                // 確定對方用戶ID
+                Long otherUserId = room.getUserAId().equals(userId) ? room.getUserBId() : room.getUserAId();
+                String otherUserName = userNameMap.getOrDefault(otherUserId, "未知使用者");
+                
+                // 獲取物品資訊摘要
+                String itemsSummary = "";
+                if (room.getProposalId() != null && proposalMap.containsKey(room.getProposalId())) {
+                    Proposal proposal = proposalMap.get(room.getProposalId());
+                    
+                    // 獲取提案者和接收者的物品列表
+                    List<String> proposerItems = proposal.getProposalItems().stream()
+                            .filter(item -> item.getSide() == com.exchange.platform.entity.ProposalItem.Side.OFFERED)
+                            .map(item -> item.getListing().getCardName())
+                            .collect(Collectors.toList());
+                    
+                    List<String> receiverItems = proposal.getProposalItems().stream()
+                            .filter(item -> item.getSide() == com.exchange.platform.entity.ProposalItem.Side.REQUESTED)
+                            .map(item -> item.getListing().getCardName())
+                            .collect(Collectors.toList());
+                    
+                    // 判斷當前用戶是提案者還是接收者
+                    if (proposal.getProposerId().equals(userId)) {
+                        // 當前用戶是提案者
+                        itemsSummary = String.format("你的: %s ⇄ 對方的: %s",
+                                proposerItems.isEmpty() ? "無" : String.join(", ", proposerItems),
+                                receiverItems.isEmpty() ? "無" : String.join(", ", receiverItems));
+                    } else {
+                        // 當前用戶是接收者
+                        itemsSummary = String.format("你的: %s ⇄ 對方的: %s",
+                                receiverItems.isEmpty() ? "無" : String.join(", ", receiverItems),
+                                proposerItems.isEmpty() ? "無" : String.join(", ", proposerItems));
+                    }
+                }
+                
+                // 創建DTO
+                ChatRoomListDTO dto = new ChatRoomListDTO(
+                        room.getId(),
+                        room.getProposalId(),
+                        room.getSwapId(),
+                        otherUserName,
+                        itemsSummary,
+                        unreadCountMap.getOrDefault(room.getId(), 0L),
+                        room.getLastMessageAt(),
+                        room.getStatus().name()
+                );
+                
+                enrichedRooms.add(dto);
+            } catch (Exception e) {
+                logger.error("Error enriching chat room: {}", room.getId(), e);
+                // 如果出錯，仍然添加基本信息
+                enrichedRooms.add(new ChatRoomListDTO(
+                        room.getId(),
+                        room.getProposalId(),
+                        room.getSwapId(),
+                        "未知使用者",
+                        "無法載入物品資訊",
+                        0L,
+                        room.getLastMessageAt(),
+                        room.getStatus().name()
+                ));
+            }
+        }
+        
+        return enrichedRooms;
     }
 }
