@@ -39,16 +39,6 @@ public class UiListingController {
         return "redirect:/ui/listings";
     }
 
-    // Email 測試頁面
-    @GetMapping("/email-test")
-    public String emailTest(HttpSession session) {
-        // 如果未登入，重定向到登入頁
-        if (session.getAttribute("userId") == null) {
-            return "redirect:/ui/auth/login";
-        }
-        return "email-test";
-    }
-
     // M1: 搜尋/分頁 畫面（排除自己的刊登）
     @GetMapping("/listings")
     public String listings(@RequestParam(required = false) Integer page,

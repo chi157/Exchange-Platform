@@ -51,55 +51,14 @@
                 <span th:text="${error}">錯誤訊息</span>
             </div>
 
-            <!-- Email 區塊（獨立處理） -->
-            <div class="card" style="margin-bottom: 20px;">
-                <h3 style="margin-top: 0; color: var(--brand-700);">📧 Email 設定</h3>
-                <div id="emailSection">
-                    <!-- 步驟 1: 顯示當前 Email 和修改按鈕 -->
-                    <div id="emailDisplay">
-                        <div class="form-group">
-                            <label class="form-label">當前 Email</label>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <input type="email" class="form-input" th:value="${user.email}" readonly style="flex: 1; background: var(--surface-100);">
-                                <button type="button" class="btn btn-primary" onclick="showEmailChangeForm()" style="white-space: nowrap;">修改 Email</button>
-                            </div>
-                            <span class="form-hint email-warning">⚠️ 請確保 Email 正確，系統通知將會寄送至此信箱</span>
-                        </div>
-                    </div>
-
-                    <!-- 步驟 2: 輸入新 Email 並發送驗證碼 -->
-                    <div id="emailChangeStep1" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">新 Email</label>
-                            <input type="email" id="newEmail" class="form-input" placeholder="輸入新的 Email 地址" required>
-                        </div>
-                        <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn btn-secondary" onclick="cancelEmailChange()">取消</button>
-                            <button type="button" class="btn btn-primary" onclick="sendEmailChangeCode()">發送驗證碼</button>
-                        </div>
-                    </div>
-
-                    <!-- 步驟 3: 輸入驗證碼完成更改 -->
-                    <div id="emailChangeStep2" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">驗證碼</label>
-                            <input type="text" id="emailVerificationCode" class="form-input" 
-                                   placeholder="輸入收到的 6 位數驗證碼" maxlength="6"
-                                   style="text-align: center; font-size: 20px; letter-spacing: 4px; font-weight: bold;">
-                            <span class="form-hint">📧 驗證碼已發送至 <strong><span id="newEmailDisplay"></span></strong></span>
-                        </div>
-                        <div style="display: flex; gap: 12px;">
-                            <button type="button" class="btn btn-secondary" onclick="backToEmailInput()">返回</button>
-                            <button type="button" class="btn btn-primary" onclick="verifyAndUpdateEmail()">確認更改</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 其他個人資料表單 -->
             <form th:action="@{/ui/profile/update}" method="post">
                 <div class="form-group">
-                    <label class="form-label" for="displayName">👤 顯示名稱</label>
+                    <label class="form-label" for="email"> Email（不可修改）</label>
+                    <input type="email" id="email" class="form-input" th:value="${user.email}" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="displayName"> 顯示名稱</label>
                     <input type="text" id="displayName" name="displayName" class="form-input" th:value="${user.displayName}" required>
                     <span class="form-hint">此名稱將顯示給其他使用者</span>
                 </div>
@@ -359,15 +318,6 @@
             display: block;
         }
         
-        .form-hint.email-warning {
-            color: #d97706;
-            font-weight: 600;
-            background: #fef3c7;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border-left: 3px solid #f59e0b;
-        }
-        
         .form-divider {
             margin: 32px 0;
             border-top: 2px solid var(--surface-200);
@@ -489,99 +439,5 @@
             line-height: 1.5;
         }
     </style>
-
-    <script>
-        let newEmailValue = '';
-
-        // 顯示 Email 修改表單
-        function showEmailChangeForm() {
-            document.getElementById('emailDisplay').style.display = 'none';
-            document.getElementById('emailChangeStep1').style.display = 'block';
-            document.getElementById('newEmail').value = '';
-        }
-
-        // 取消 Email 修改
-        function cancelEmailChange() {
-            document.getElementById('emailChangeStep1').style.display = 'none';
-            document.getElementById('emailChangeStep2').style.display = 'none';
-            document.getElementById('emailDisplay').style.display = 'block';
-        }
-
-        // 返回輸入 Email
-        function backToEmailInput() {
-            document.getElementById('emailChangeStep2').style.display = 'none';
-            document.getElementById('emailChangeStep1').style.display = 'block';
-        }
-
-        // 發送驗證碼
-        async function sendEmailChangeCode() {
-            const newEmail = document.getElementById('newEmail').value;
-            
-            if (!newEmail || !newEmail.includes('@')) {
-                alert('請輸入有效的 Email 地址');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/send-email-change-code', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ email: newEmail })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    newEmailValue = newEmail;
-                    document.getElementById('newEmailDisplay').textContent = newEmail;
-                    document.getElementById('emailChangeStep1').style.display = 'none';
-                    document.getElementById('emailChangeStep2').style.display = 'block';
-                    alert(data.message || '驗證碼已發送！');
-                } else {
-                    alert(data.message || '發送驗證碼失敗');
-                }
-            } catch (error) {
-                alert('發送驗證碼時發生錯誤，請稍後再試');
-            }
-        }
-
-        // 驗證並更新 Email
-        async function verifyAndUpdateEmail() {
-            const verificationCode = document.getElementById('emailVerificationCode').value;
-
-            if (!verificationCode || verificationCode.length !== 6) {
-                alert('請輸入 6 位數驗證碼');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/auth/update-email-with-verification', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        email: newEmailValue, 
-                        verificationCode: verificationCode 
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(data.message || 'Email 更新成功！頁面即將重新載入...');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    alert(data.message || '驗證碼錯誤或已過期');
-                }
-            } catch (error) {
-                alert('更新 Email 時發生錯誤，請稍後再試');
-            }
-        }
-    </script>
 </body>
 </html>
