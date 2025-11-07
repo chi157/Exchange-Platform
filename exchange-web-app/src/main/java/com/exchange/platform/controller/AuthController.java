@@ -53,4 +53,22 @@ public class AuthController {
         }
         return ResponseEntity.ok(user);
     }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<AuthResponse> verifyEmail(
+            @RequestParam String email,
+            @RequestParam String code) {
+        log.debug("POST /api/auth/verify-email - email: {}", email);
+        AuthResponse response = authService.verifyEmail(email, code);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<AuthResponse> resendVerificationCode(@RequestParam String email) {
+        log.debug("POST /api/auth/resend-verification - email: {}", email);
+        AuthResponse response = authService.resendVerificationCode(email);
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
 }

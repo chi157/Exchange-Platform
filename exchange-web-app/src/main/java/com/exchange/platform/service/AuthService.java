@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final EmailNotificationService emailNotificationService;
     private static final String SESSION_USER_ID = "userId";
 
     public AuthResponse register(RegisterRequest request) {
@@ -34,23 +37,157 @@ public class AuthService {
                     .build();
         }
 
+        // 生成 6 位數驗證碼
+        String verificationCode = generateVerificationCode();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(10);
+
         User user = User.builder()
                 .email(request.getEmail())
                 .passwordHash(request.getPassword()) // 明碼存放（示範用）
                 .displayName(request.getDisplayName())
                 .verified(false)
+                .verificationCode(verificationCode)
+                .verificationCodeExpiresAt(expiresAt)
                 .roles("USER")
                 .build();
 
         user = userRepository.save(user);
         log.info("User registered successfully: {}", user.getId());
 
+        // 發送驗證碼郵件
+        try {
+            emailNotificationService.sendVerificationCode(
+                    user.getEmail(), 
+                    verificationCode, 
+                    "REGISTER"
+            );
+            log.info("Verification code sent to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send verification code: {}", e.getMessage());
+        }
+
         return AuthResponse.builder()
                 .success(true)
-                .message("Registration successful")
+                .message("Registration successful. Please check your email for verification code.")
                 .userId(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
+                .build();
+    }
+
+    /**
+     * 生成 6 位數驗證碼
+     */
+    private String generateVerificationCode() {
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    /**
+     * 驗證驗證碼
+     */
+    public AuthResponse verifyEmail(String email, String code) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("User not found")
+                    .build();
+        }
+
+        User user = userOpt.get();
+
+        // 檢查是否已驗證
+        if (user.getVerified()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Email already verified")
+                    .build();
+        }
+
+        // 檢查驗證碼是否正確
+        if (user.getVerificationCode() == null || !user.getVerificationCode().equals(code)) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Invalid verification code")
+                    .build();
+        }
+
+        // 檢查驗證碼是否過期
+        if (user.getVerificationCodeExpiresAt() == null || 
+            LocalDateTime.now().isAfter(user.getVerificationCodeExpiresAt())) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Verification code expired")
+                    .build();
+        }
+
+        // 驗證成功
+        user.setVerified(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
+        userRepository.save(user);
+
+        log.info("Email verified successfully for user: {}", user.getId());
+
+        return AuthResponse.builder()
+                .success(true)
+                .message("Email verified successfully")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .build();
+    }
+
+    /**
+     * 重新發送驗證碼
+     */
+    public AuthResponse resendVerificationCode(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("User not found")
+                    .build();
+        }
+
+        User user = userOpt.get();
+
+        if (user.getVerified()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Email already verified")
+                    .build();
+        }
+
+        // 生成新的驗證碼
+        String verificationCode = generateVerificationCode();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(10);
+
+        user.setVerificationCode(verificationCode);
+        user.setVerificationCodeExpiresAt(expiresAt);
+        userRepository.save(user);
+
+        // 發送驗證碼郵件
+        try {
+            emailNotificationService.sendVerificationCode(
+                    user.getEmail(), 
+                    verificationCode, 
+                    "REGISTER"
+            );
+            log.info("Verification code resent to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to resend verification code: {}", e.getMessage());
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Failed to send verification code")
+                    .build();
+        }
+
+        return AuthResponse.builder()
+                .success(true)
+                .message("Verification code resent successfully")
                 .build();
     }
 
@@ -66,6 +203,15 @@ public class AuthService {
         }
 
         User user = userOpt.get();
+        
+        // 檢查郵箱是否已驗證
+        if (!user.getVerified()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("Please verify your email before logging in")
+                    .build();
+        }
+
         session.setAttribute(SESSION_USER_ID, user.getId());
         log.info("User logged in successfully: {}", user.getId());
 

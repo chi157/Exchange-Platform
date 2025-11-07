@@ -40,6 +40,12 @@ public class User {
     @Builder.Default
     private Boolean verified = false;
 
+    @Column(name = "verification_code", length = 10)
+    private String verificationCode;
+
+    @Column(name = "verification_code_expires_at")
+    private LocalDateTime verificationCodeExpiresAt;
+
     // 為避免 JSON 欄位帶來的 DDL 問題，先用簡單的逗號字串儲存角色
     @Column(name = "roles", nullable = false, length = 100)
     @Builder.Default

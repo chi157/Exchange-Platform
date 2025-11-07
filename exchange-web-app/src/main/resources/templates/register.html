@@ -151,7 +151,8 @@
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
 
-        <form id="registerForm">
+        <!-- 註冊表單 -->
+        <form id="registerForm" style="display: block;">
             <div class="form-group">
                 <label for="email">電子郵件</label>
                 <input type="email" id="email" name="email" required placeholder="your@email.com">
@@ -169,6 +170,28 @@
 
             <button type="submit" class="btn-primary">註冊</button>
         </form>
+
+        <!-- 驗證碼表單 -->
+        <div id="verificationForm" style="display: none;">
+            <p style="color: var(--text-600); margin-bottom: 20px; line-height: 1.6;">
+                ✉️ 我們已經將驗證碼發送到您的郵箱 <strong id="registeredEmail" style="color: var(--brand-600);"></strong>
+                <br>請查收並輸入驗證碼以完成註冊
+            </p>
+            
+            <div class="form-group">
+                <label for="verificationCode">驗證碼（6位數字）</label>
+                <input type="text" id="verificationCode" maxlength="6" required placeholder="請輸入驗證碼" 
+                       style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: 700;">
+            </div>
+
+            <button type="button" class="btn-primary" onclick="verifyCode()">驗證並完成註冊</button>
+            
+            <div style="text-align: center; margin-top: 16px;">
+                <button type="button" style="background: none; border: none; color: var(--brand-600); text-decoration: underline; cursor: pointer; font-size: 14px;" onclick="resendCode()">
+                    沒收到驗證碼？重新發送
+                </button>
+            </div>
+        </div>
 
         <div style="position: relative; text-align: center; margin: 24px 0;">
             <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: var(--surface-200);"></div>
@@ -191,6 +214,8 @@
     </div>
 
     <script>
+        let registeredUserEmail = '';
+
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -215,11 +240,13 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    successDiv.textContent = '註冊成功！3 秒後自動跳轉登入頁面...';
+                    // 註冊成功，顯示驗證碼輸入表單
+                    registeredUserEmail = email;
+                    document.getElementById('registeredEmail').textContent = email;
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('verificationForm').style.display = 'block';
+                    successDiv.textContent = '✅ ' + (data.message || '註冊成功！請檢查您的郵箱並輸入驗證碼');
                     successDiv.classList.add('show');
-                    setTimeout(() => {
-                        window.location.href = '/ui/auth/login';
-                    }, 3000);
                 } else {
                     errorDiv.textContent = data.message || '註冊失敗，請稍後再試';
                     errorDiv.classList.add('show');
@@ -229,6 +256,70 @@
                 errorDiv.classList.add('show');
             }
         });
+
+        async function verifyCode() {
+            const code = document.getElementById('verificationCode').value;
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            if (code.length !== 6) {
+                errorDiv.textContent = '請輸入6位數驗證碼';
+                errorDiv.classList.add('show');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/auth/verify-email?email=${encodeURIComponent(registeredUserEmail)}&code=${code}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successDiv.textContent = '🎉 驗證成功！3 秒後自動跳轉登入頁面...';
+                    successDiv.classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = '/ui/auth/login';
+                    }, 3000);
+                } else {
+                    errorDiv.textContent = data.message || '驗證碼錯誤，請重新輸入';
+                    errorDiv.classList.add('show');
+                }
+            } catch (error) {
+                errorDiv.textContent = '驗證時發生錯誤，請稍後再試';
+                errorDiv.classList.add('show');
+            }
+        }
+
+        async function resendCode() {
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            try {
+                const response = await fetch(`/api/auth/resend-verification?email=${encodeURIComponent(registeredUserEmail)}`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successDiv.textContent = '✅ 驗證碼已重新發送，請檢查您的郵箱';
+                    successDiv.classList.add('show');
+                } else {
+                    errorDiv.textContent = data.message || '重新發送失敗，請稍後再試';
+                    errorDiv.classList.add('show');
+                }
+            } catch (error) {
+                errorDiv.textContent = '重新發送時發生錯誤，請稍後再試';
+                errorDiv.classList.add('show');
+            }
+        }
     </script>
 </body>
 </html>
