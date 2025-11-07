@@ -3,6 +3,7 @@ package com.exchange.platform.controller;
 import com.exchange.platform.dto.AuthResponse;
 import com.exchange.platform.dto.LoginRequest;
 import com.exchange.platform.dto.RegisterRequest;
+import com.exchange.platform.dto.UpdateProfileRequest;
 import com.exchange.platform.dto.UserDTO;
 import com.exchange.platform.service.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -77,5 +78,37 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(user);
+    }
+
+    /**
+     * 發送 Email 更改驗證碼
+     */
+    @PostMapping("/send-email-change-code")
+    public ResponseEntity<AuthResponse> sendEmailChangeCode(@RequestBody UpdateProfileRequest request, HttpSession session) {
+        log.debug("POST /api/auth/send-email-change-code");
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.builder().success(false).message("未登入").build());
+        }
+        AuthResponse response = authService.sendEmailChangeVerificationCode(userId, request.getEmail());
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * 驗證並更新 Email
+     */
+    @PostMapping("/update-email-with-verification")
+    public ResponseEntity<AuthResponse> updateEmailWithVerification(@RequestBody UpdateProfileRequest request, HttpSession session) {
+        log.debug("POST /api/auth/update-email-with-verification");
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(AuthResponse.builder().success(false).message("未登入").build());
+        }
+        AuthResponse response = authService.updateEmailWithVerification(userId, request.getEmail(), request.getVerificationCode());
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.BAD_REQUEST)
+                .body(response);
     }
 }

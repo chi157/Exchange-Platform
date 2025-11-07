@@ -44,7 +44,7 @@ public class VerificationCodeService {
         try {
             String subject = "註冊驗證碼";
             String text = String.format(
-                "您的註冊驗證碼是: %s\n\n" +
+                "您的驗證碼是: %s\n\n" +
                 "此驗證碼將在 %d 分鐘後失效。\n\n" +
                 "如果您沒有要求此驗證碼，請忽略此郵件。",
                 code, CODE_EXPIRY_MINUTES

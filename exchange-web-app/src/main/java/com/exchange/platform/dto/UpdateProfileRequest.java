@@ -11,4 +11,5 @@ public class UpdateProfileRequest {
     private String displayName;
     private String currentPassword;
     private String newPassword;
+    private String verificationCode; // Email 更改驗證碼
 }

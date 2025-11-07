@@ -181,6 +181,91 @@ public class AuthService {
                 .orElse(null);
     }
 
+    /**
+     * 發送 Email 更改驗證碼
+     */
+    public AuthResponse sendEmailChangeVerificationCode(Long userId, String newEmail) {
+        log.debug("Sending email change verification code to: {}", newEmail);
+
+        // 檢查用戶是否存在
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("用戶不存在")
+                    .build();
+        }
+
+        // 檢查新 Email 是否已被其他用戶使用
+        Optional<User> existingUser = userRepository.findByEmail(newEmail);
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("此 Email 已被其他使用者使用")
+                    .build();
+        }
+
+        try {
+            verificationCodeService.generateAndSendCode(newEmail);
+            return AuthResponse.builder()
+                    .success(true)
+                    .message("驗證碼已發送至新的 Email")
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to send email change verification code", e);
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("無法發送驗證碼，請稍後再試")
+                    .build();
+        }
+    }
+
+    /**
+     * 驗證並更新 Email
+     */
+    public AuthResponse updateEmailWithVerification(Long userId, String newEmail, String verificationCode) {
+        log.debug("Updating email with verification for user: {}", userId);
+
+        // 驗證驗證碼
+        if (!verificationCodeService.verifyCode(newEmail, verificationCode)) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("驗證碼錯誤或已過期")
+                    .build();
+        }
+
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("用戶不存在")
+                    .build();
+        }
+
+        User user = userOpt.get();
+
+        // 再次檢查新 Email（避免競爭條件）
+        Optional<User> existingUser = userRepository.findByEmail(newEmail);
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+            return AuthResponse.builder()
+                    .success(false)
+                    .message("此 Email 已被其他使用者使用")
+                    .build();
+        }
+
+        user.setEmail(newEmail);
+        userRepository.save(user);
+        log.info("Email updated for user: {}", userId);
+
+        return AuthResponse.builder()
+                .success(true)
+                .message("Email 更新成功")
+                .userId(user.getId())
+                .email(user.getEmail())
+                .displayName(user.getDisplayName())
+                .build();
+    }
+
     public AuthResponse updateProfile(Long userId, UpdateProfileRequest request) {
         log.debug("Updating profile for user: {}", userId);
 
@@ -194,19 +279,8 @@ public class AuthService {
 
         User user = userOpt.get();
 
-        // 更新 Email
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            // 檢查新 email 是否已被其他用戶使用
-            Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
-                return AuthResponse.builder()
-                        .success(false)
-                        .message("此 Email 已被其他使用者使用")
-                        .build();
-            }
-            user.setEmail(request.getEmail());
-            log.info("Email updated for user: {}", userId);
-        }
+        // Email 更改需要通過驗證碼流程，這裡不處理
+        // 只處理密碼和顯示名稱
 
         // 如果要更改密碼，需要驗證當前密碼
         if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
