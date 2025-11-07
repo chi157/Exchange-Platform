@@ -39,51 +39,177 @@
             
             <!-- 交換物品詳情 -->
             <div style="margin: 16px 0; padding: 16px; background: var(--surface-50); border-radius: 12px; border: 2px solid var(--surface-200);">
-                <!-- 提案者提供的物品 -->
-                <div style="margin-bottom: 16px;">
-                    <div style="font-weight: 700; color: var(--brand-700); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
-                        <span>🎁 提案者提供的物品</span>
-                        <span style="font-size: 12px; color: var(--text-600); font-weight: 400;">
-                            (提案者: <span th:text="${swap.proposerDisplayName}">使用者名稱</span>)
-                        </span>
-                    </div>
-                    <div th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty()}">
-                        <div th:each="item : ${swap.proposerItems}" 
-                             style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--brand-500);">
-                            <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                            <div style="font-size: 12px; color: var(--text-600);">
-                                ID: <span th:text="${item.listingId}">1</span>
+                <!-- 左右並排布局 -->
+                <div class="exchange-layout" style="display: flex; align-items: flex-start; gap: 20px;">
+                    
+                    <!-- 提案者提供的物品 (左側) -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 700; color: var(--brand-700); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span>🎁 提案者提供的物品</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-600); margin-bottom: 12px;">
+                            提案者: <span th:text="${swap.proposerDisplayName}" style="font-weight: 600;">使用者名稱</span>
+                        </div>
+                        
+                        <div th:if="${swap.proposerItems != null and !swap.proposerItems.isEmpty()}">
+                            <div th:each="item, itemStat : ${swap.proposerItems}" 
+                                 style="padding: 12px; margin: 8px 0; background: white; border-radius: 12px; border: 2px solid var(--brand-300); box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                
+                                <!-- 照片輪播區塊 -->
+                                <div style="margin-bottom: 12px;">
+                                    <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
+                                         style="width: 100%; display: flex; justify-content: center;">
+                                        <div th:id="'proposer-carousel-' + ${itemStat.index}" class="image-carousel item-carousel-mobile" style="position: relative; width: 200px; height: 200px; border-radius: 12px; overflow: hidden; background: var(--surface-100); border: 2px solid var(--brand-200);">
+                                            <!-- 圖片容器 -->
+                                            <div class="carousel-images" style="position: relative; width: 100%; height: 100%;">
+                                                <img th:each="imageUrl, imageStat : ${item.imageUrls}" 
+                                                     th:src="${imageUrl}" 
+                                                     th:alt="${item.listingDisplay}"
+                                                     th:style="'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: ' + (${imageStat.index} == 0 ? 'block' : 'none')"
+                                                     onerror="this.src='/images/placeholder.jpg'">
+                                            </div>
+                                            
+                                            <!-- 左右切換按鈕 (只在多張圖片時顯示) -->
+                                            <div th:if="${#lists.size(item.imageUrls) > 1}">
+                                                <button th:onclick="'changeImage(' + ${itemStat.index} + ', -1, \'proposer\')'" 
+                                                        class="carousel-btn carousel-btn-prev" 
+                                                        style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                    ‹
+                                                </button>
+                                                <button th:onclick="'changeImage(' + ${itemStat.index} + ', 1, \'proposer\')'" 
+                                                        class="carousel-btn carousel-btn-next" 
+                                                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                    ›
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- 圖片指示器 (只在多張圖片時顯示) -->
+                                            <div th:if="${#lists.size(item.imageUrls) > 1}" 
+                                                 class="carousel-indicators" 
+                                                 style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
+                                                <span th:each="imageUrl, imageStat2 : ${item.imageUrls}" 
+                                                      th:onclick="'showImage(' + ${itemStat.index} + ', ' + ${imageStat2.index} + ', \'proposer\')'"
+                                                      th:style="'width: 8px; height: 8px; border-radius: 50%; cursor: pointer; background: ' + (${imageStat2.index} == 0 ? 'white' : 'rgba(255,255,255,0.6)') + '; box-shadow: 0 1px 3px rgba(0,0,0,0.4);'">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 沒有照片時的佔位符 -->
+                                    <div th:if="${item.imageUrls == null or item.imageUrls.isEmpty()}" 
+                                         style="width: 100%; display: flex; justify-content: center;">
+                                        <div class="item-carousel-mobile" style="width: 200px; height: 200px; background: var(--surface-200); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-400); font-size: 16px; border: 2px dashed var(--surface-400);">
+                                            📷<br>無照片
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 物品文字資訊 -->
+                                <div style="text-align: center;">
+                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 4px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
+                                    <div style="font-size: 12px; color: var(--text-600); margin-bottom: 8px;">
+                                        ID: <span th:text="${item.listingId}">1</span>
+                                    </div>
+                                    <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
+                                         style="font-size: 11px; color: var(--text-500);">
+                                        📷 <span th:text="${#lists.size(item.imageUrls)}">1</span> 張照片
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty()}" 
-                         style="padding: 8px; color: var(--text-500); font-size: 14px;">
-                        未提供物品資訊
-                    </div>
-                </div>
-                
-                <!-- 交換箭頭 -->
-                <div style="text-align: center; margin: 12px 0;">
-                    <span style="font-size: 20px; color: var(--brand-600);">⇅</span>
-                </div>
-                
-                <!-- 接收者的物品 -->
-                <div>
-                    <div style="font-weight: 700; color: var(--success-700); margin-bottom: 8px;">
-                        💎 接收者的物品
-                    </div>
-                    <div th:if="${swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
-                        <div th:each="item : ${swap.receiverItems}" 
-                             style="padding: 8px 12px; margin: 4px 0; background: white; border-radius: 8px; border-left: 4px solid var(--success-500);">
-                            <div style="font-weight: 600; color: var(--text-900);" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
-                            <div style="font-size: 12px; color: var(--text-600);">
-                                ID: <span th:text="${item.listingId}">1</span>
-                            </div>
+                        <div th:if="${swap.proposerItems == null or swap.proposerItems.isEmpty()}" 
+                             style="padding: 20px; color: var(--text-500); font-size: 14px; text-align: center; border: 2px dashed var(--surface-300); border-radius: 12px;">
+                            未提供物品資訊
                         </div>
                     </div>
-                    <div th:if="${swap.receiverItems == null or swap.receiverItems.isEmpty()}" 
-                         style="padding: 8px; color: var(--text-500); font-size: 14px;">
-                        未指定物品
+                    
+                    <!-- 交換箭頭 (中間) -->
+                    <div style="display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 20px 10px;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                            <span class="exchange-arrow" style="font-size: 32px; color: var(--brand-600); animation: pulse 2s infinite;">⇄</span>
+                            <span style="font-size: 12px; color: var(--brand-700); font-weight: 600; text-align: center;">交換</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 接收者的物品 (右側) -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 700; color: var(--success-700); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span>💎 接收者的物品</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-600); margin-bottom: 12px;">
+                            接收者: <span th:text="${swap.receiverDisplayName}" style="font-weight: 600;">使用者名稱</span>
+                        </div>
+                        
+                        <div th:if="${swap.receiverItems != null and !swap.receiverItems.isEmpty()}">
+                            <div th:each="item, itemStat : ${swap.receiverItems}" 
+                                 style="padding: 12px; margin: 8px 0; background: white; border-radius: 12px; border: 2px solid var(--success-300); box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                
+                                <!-- 照片輪播區塊 -->
+                                <div style="margin-bottom: 12px;">
+                                    <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
+                                         style="width: 100%; display: flex; justify-content: center;">
+                                        <div th:id="'receiver-carousel-' + ${itemStat.index}" class="image-carousel item-carousel-mobile" style="position: relative; width: 200px; height: 200px; border-radius: 12px; overflow: hidden; background: var(--surface-100); border: 2px solid var(--success-200);">
+                                            <!-- 圖片容器 -->
+                                            <div class="carousel-images" style="position: relative; width: 100%; height: 100%;">
+                                                <img th:each="imageUrl, imageStat : ${item.imageUrls}" 
+                                                     th:src="${imageUrl}" 
+                                                     th:alt="${item.listingDisplay}"
+                                                     th:style="'position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: ' + (${imageStat.index} == 0 ? 'block' : 'none')"
+                                                     onerror="this.src='/images/placeholder.jpg'">
+                                            </div>
+                                            
+                                            <!-- 左右切換按鈕 (只在多張圖片時顯示) -->
+                                            <div th:if="${#lists.size(item.imageUrls) > 1}">
+                                                <button th:onclick="'changeImage(' + ${itemStat.index} + ', -1, \'receiver\')'" 
+                                                        class="carousel-btn carousel-btn-prev" 
+                                                        style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                    ‹
+                                                </button>
+                                                <button th:onclick="'changeImage(' + ${itemStat.index} + ', 1, \'receiver\')'" 
+                                                        class="carousel-btn carousel-btn-next" 
+                                                        style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                    ›
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- 圖片指示器 (只在多張圖片時顯示) -->
+                                            <div th:if="${#lists.size(item.imageUrls) > 1}" 
+                                                 class="carousel-indicators" 
+                                                 style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px;">
+                                                <span th:each="imageUrl, imageStat2 : ${item.imageUrls}" 
+                                                      th:onclick="'showImage(' + ${itemStat.index} + ', ' + ${imageStat2.index} + ', \'receiver\')'"
+                                                      th:style="'width: 8px; height: 8px; border-radius: 50%; cursor: pointer; background: ' + (${imageStat2.index} == 0 ? 'white' : 'rgba(255,255,255,0.6)') + '; box-shadow: 0 1px 3px rgba(0,0,0,0.4);'">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 沒有照片時的佔位符 -->
+                                    <div th:if="${item.imageUrls == null or item.imageUrls.isEmpty()}" 
+                                         style="width: 100%; display: flex; justify-content: center;">
+                                        <div class="item-carousel-mobile" style="width: 200px; height: 200px; background: var(--surface-200); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-400); font-size: 16px; border: 2px dashed var(--surface-400);">
+                                            📷<br>無照片
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 物品文字資訊 -->
+                                <div style="text-align: center;">
+                                    <div style="font-weight: 600; color: var(--text-900); font-size: 16px; margin-bottom: 4px;" th:text="${item.listingDisplay}">卡片名稱 - 藝人名稱</div>
+                                    <div style="font-size: 12px; color: var(--text-600); margin-bottom: 8px;">
+                                        ID: <span th:text="${item.listingId}">1</span>
+                                    </div>
+                                    <div th:if="${item.imageUrls != null and !item.imageUrls.isEmpty()}" 
+                                         style="font-size: 11px; color: var(--text-500);">
+                                        📷 <span th:text="${#lists.size(item.imageUrls)}">1</span> 張照片
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${swap.receiverItems == null or swap.receiverItems.isEmpty()}" 
+                             style="padding: 20px; color: var(--text-500); font-size: 14px; text-align: center; border: 2px dashed var(--surface-300); border-radius: 12px;">
+                            未指定物品
+                        </div>
                     </div>
                 </div>
             </div>
@@ -826,6 +952,112 @@
         .modal-close:hover,
         .modal-close:focus {
             color: #000;
+        }
+        
+        /* 照片輪播樣式 */
+        .image-carousel {
+            position: relative;
+            border: 2px solid var(--surface-300);
+            transition: all 0.3s ease;
+        }
+        
+        .image-carousel:hover {
+            border-color: var(--brand-400);
+            box-shadow: 0 4px 12px rgba(106, 0, 214, 0.15);
+        }
+        
+        .carousel-images img {
+            transition: opacity 0.3s ease;
+        }
+        
+        .carousel-btn {
+            z-index: 10;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .carousel-btn:hover {
+            background: rgba(0,0,0,0.7) !important;
+            transform: translateY(-50%) scale(1.1) !important;
+        }
+        
+        .carousel-btn:active {
+            transform: translateY(-50%) scale(0.95) !important;
+        }
+        
+        .carousel-indicators {
+            z-index: 10;
+        }
+        
+        .carousel-indicators span {
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .carousel-indicators span:hover {
+            background: white !important;
+            transform: scale(1.3);
+        }
+        
+        /* 滑動效果 */
+        .image-carousel .carousel-images {
+            overflow: hidden;
+        }
+        
+        /* 手機端優化 */
+        @media (max-width: 768px) {
+            .image-carousel {
+                width: 100px !important;
+                height: 100px !important;
+            }
+            
+            .carousel-btn {
+                width: 20px !important;
+                height: 20px !important;
+                font-size: 10px !important;
+            }
+            
+            .carousel-indicators span {
+                width: 5px !important;
+                height: 5px !important;
+            }
+            
+            /* 手機端交換物品布局改為上下排列 */
+            .exchange-layout {
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            
+            .exchange-arrow {
+                transform: rotate(90deg) !important;
+            }
+            
+            .item-carousel-mobile {
+                width: 150px !important;
+                height: 150px !important;
+            }
+        }
+        
+        /* 交換箭頭動畫 */
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1); 
+                opacity: 1; 
+            }
+            50% { 
+                transform: scale(1.1); 
+                opacity: 0.8; 
+            }
+        }
+        
+        /* 改善照片輪播的視覺效果 */
+        .image-carousel {
+            transition: all 0.3s ease;
+        }
+        
+        .image-carousel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
     </style>
 
@@ -2328,6 +2560,112 @@
 
         // Initialize on load
         toggleTrackingFields();
+        
+        // ============ 照片輪播功能 ============
+        
+        // 儲存每個輪播的當前圖片索引
+        const carouselCurrentIndex = {
+            proposer: {},
+            receiver: {}
+        };
+        
+        /**
+         * 切換圖片 (上一張/下一張)
+         * @param {number} itemIndex - 物品在列表中的索引
+         * @param {number} direction - 方向：-1 為上一張，1 為下一張
+         * @param {string} type - 類型：'proposer' 或 'receiver'
+         */
+        function changeImage(itemIndex, direction, type) {
+            const carousel = document.getElementById(`${type}-carousel-${itemIndex}`);
+            if (!carousel) return;
+            
+            const images = carousel.querySelectorAll('.carousel-images img');
+            const indicators = carousel.querySelectorAll('.carousel-indicators span');
+            
+            if (images.length <= 1) return;
+            
+            // 初始化當前索引
+            if (carouselCurrentIndex[type][itemIndex] === undefined) {
+                carouselCurrentIndex[type][itemIndex] = 0;
+            }
+            
+            // 隱藏當前圖片
+            images[carouselCurrentIndex[type][itemIndex]].style.display = 'none';
+            if (indicators[carouselCurrentIndex[type][itemIndex]]) {
+                indicators[carouselCurrentIndex[type][itemIndex]].style.background = 'rgba(255,255,255,0.5)';
+            }
+            
+            // 計算新索引
+            carouselCurrentIndex[type][itemIndex] += direction;
+            if (carouselCurrentIndex[type][itemIndex] >= images.length) {
+                carouselCurrentIndex[type][itemIndex] = 0;
+            } else if (carouselCurrentIndex[type][itemIndex] < 0) {
+                carouselCurrentIndex[type][itemIndex] = images.length - 1;
+            }
+            
+            // 顯示新圖片
+            images[carouselCurrentIndex[type][itemIndex]].style.display = 'block';
+            if (indicators[carouselCurrentIndex[type][itemIndex]]) {
+                indicators[carouselCurrentIndex[type][itemIndex]].style.background = 'white';
+            }
+        }
+        
+        /**
+         * 直接跳到指定圖片
+         * @param {number} itemIndex - 物品在列表中的索引
+         * @param {number} imageIndex - 要顯示的圖片索引
+         * @param {string} type - 類型：'proposer' 或 'receiver'
+         */
+        function showImage(itemIndex, imageIndex, type) {
+            const carousel = document.getElementById(`${type}-carousel-${itemIndex}`);
+            if (!carousel) return;
+            
+            const images = carousel.querySelectorAll('.carousel-images img');
+            const indicators = carousel.querySelectorAll('.carousel-indicators span');
+            
+            if (imageIndex < 0 || imageIndex >= images.length) return;
+            
+            // 隱藏當前圖片
+            if (carouselCurrentIndex[type][itemIndex] !== undefined) {
+                images[carouselCurrentIndex[type][itemIndex]].style.display = 'none';
+                if (indicators[carouselCurrentIndex[type][itemIndex]]) {
+                    indicators[carouselCurrentIndex[type][itemIndex]].style.background = 'rgba(255,255,255,0.5)';
+                }
+            }
+            
+            // 更新索引並顯示新圖片
+            carouselCurrentIndex[type][itemIndex] = imageIndex;
+            images[imageIndex].style.display = 'block';
+            if (indicators[imageIndex]) {
+                indicators[imageIndex].style.background = 'white';
+            }
+        }
+        
+        // 為輪播按鈕添加懸停效果
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加輪播按鈕的懸停效果
+            const style = document.createElement('style');
+            style.textContent = `
+                .carousel-btn:hover {
+                    background: rgba(0,0,0,0.7) !important;
+                    transform: translateY(-50%) scale(1.1);
+                    transition: all 0.2s ease;
+                }
+                .carousel-indicators span:hover {
+                    background: white !important;
+                    transform: scale(1.2);
+                    transition: all 0.2s ease;
+                }
+                .image-carousel:hover .carousel-btn {
+                    opacity: 1;
+                }
+                .carousel-btn {
+                    opacity: 0.8;
+                    transition: opacity 0.3s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        });
     </script>
 </body>
 </html>
