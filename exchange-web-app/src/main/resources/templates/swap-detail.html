@@ -287,11 +287,11 @@
                     </div>
                     <div class="info-row">
                         <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span>：</span>
-                        <span id="aMethodStatus" class="not-confirmed">尚未確認</span>
+                        <span id="aMethodStatus" class="not-confirmed">⚠️ 尚未確認</span>
                     </div>
                     <div class="info-row">
                         <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span>：</span>
-                        <span id="bMethodStatus" class="not-confirmed">尚未確認</span>
+                        <span id="bMethodStatus" class="not-confirmed">⚠️ 尚未確認</span>
                     </div>
                 </div>
             </div>
@@ -336,7 +336,7 @@
                     <select id="deliveryMethod" onchange="toggleDeliveryForm()" style="font-size: 16px; padding: 10px;">
                         <option value="">-- 請選擇 --</option>
                         <option value="face_to_face">🤝 面交（Face-to-Face）</option>
-                        <option value="shipnow">� 交貨便（ShipNow）</option>
+                        <option value="shipnow">📥 交貨便（ShipNow）</option>
                     </select>
                 </div>
                 <p class="hint" style="margin-top: 8px;">
@@ -372,11 +372,11 @@
                             <h3 style="font-size: 14px; margin-bottom: 8px; color: var(--text-800);">✅ 雙方確認狀態</h3>
                             <div class="info-row">
                                 <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span>：</span>
-                                <span id="aMeetupStatus" class="not-confirmed">尚未確認</span>
+                                <span id="aMeetupStatus" class="not-confirmed">⚠️ 尚未確認</span>
                             </div>
                             <div class="info-row">
                                 <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span>：</span>
-                                <span id="bMeetupStatus" class="not-confirmed">尚未確認</span>
+                                <span id="bMeetupStatus" class="not-confirmed">⚠️ 尚未確認</span>
                             </div>
                         </div>
                         
@@ -461,12 +461,12 @@
             <div class="info-row">
                 <span class="label"><span th:text="${swap.aUserDisplayName}">使用者A</span> 確認：</span>
                 <span th:if="${swap.aConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.aConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
-                <span th:if="${swap.aConfirmedAt == null}" class="not-confirmed">尚未確認</span>
+                <span th:if="${swap.aConfirmedAt == null}" class="not-confirmed">⚠️ 尚未確認</span>
             </div>
             <div class="info-row">
                 <span class="label"><span th:text="${swap.bUserDisplayName}">使用者B</span> 確認：</span>
                 <span th:if="${swap.bConfirmedAt != null}" class="confirmed"> 已確認 (<span th:text="${#temporals.format(swap.bConfirmedAt, 'yyyy-MM-dd HH:mm')}">time</span>)</span>
-                <span th:if="${swap.bConfirmedAt == null}" class="not-confirmed">尚未確認</span>
+                <span th:if="${swap.bConfirmedAt == null}" class="not-confirmed">⚠️ 尚未確認</span>
             </div>
 
             <div th:if="${swap.status.name() == 'IN_PROGRESS'}" style="margin-top: 20px;">
@@ -775,6 +775,7 @@
             box-shadow: 0 4px 12px rgba(106, 0, 214, 0.2);
         }
         
+        /* Positive action (confirm) 按鈕獨立樣式，避免被通用提交按鈕覆蓋 */
         .btn-confirm {
             padding: 12px 24px;
             background: #28a745;
@@ -793,7 +794,8 @@
             box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
         }
 
-        .btn-submit, .btn-edit, .btn-confirm {
+        /* 提交/編輯類按鈕（保持品牌色，不再影響確認按鈕） */
+        .btn-submit, .btn-edit {
             padding: 12px 24px;
             background: var(--brand-600);
             color: white;
@@ -810,6 +812,27 @@
             background: var(--brand-700);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(106, 0, 214, 0.4);
+        }
+
+        /* 配送方式確認區塊：讓同意/不同意兩顆按鈕寬度一致、垂直對齊 */
+        #confirmDeliveryMethod .btn-confirm,
+        #confirmDeliveryMethod .btn-cancel {
+            flex: 1;
+            min-width: 220px;
+            margin-top: 0; /* 移除通用 margin-top 造成的上下不對齊 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: normal; /* 允許多行但保持居中 */
+        }
+
+        /* 小螢幕避免超出畫面，允許變窄並自動換行 */
+        @media (max-width: 480px) {
+            #confirmDeliveryMethod .btn-confirm,
+            #confirmDeliveryMethod .btn-cancel {
+                min-width: auto;
+                flex: 1 1 0;
+            }
         }
         
         .hint {
@@ -882,9 +905,9 @@
             border-radius: 12px;
             font-weight: 700;
             cursor: pointer;
-            margin-left: 12px;
-            transition: all 0.3s;
             font-size: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px #5a6268;
         }
         .btn-cancel:hover {
             background: #5a6268;
@@ -1229,7 +1252,7 @@
                 aStatus.textContent = '✅ 已確認';
             } else {
                 aStatus.className = 'not-confirmed';
-                aStatus.textContent = '尚未確認';
+                aStatus.textContent = '⚠️ 尚未確認';
             }
             
             if (swap.bDeliveryMethodConfirmed) {
@@ -1237,7 +1260,7 @@
                 bStatus.textContent = '✅ 已確認';
             } else {
                 bStatus.className = 'not-confirmed';
-                bStatus.textContent = '尚未確認';
+                bStatus.textContent = '⚠️ 尚未確認';
             }
         }
         
@@ -1364,13 +1387,13 @@
                             <div class="info-row">
                                 <span class="label">${swap.aUserDisplayName || '使用者A'}：</span>
                                 <span class="${swap.aMeetupConfirmed ? 'confirmed' : 'not-confirmed'}">
-                                    ${swap.aMeetupConfirmed ? '✅ 已確認' : '尚未確認'}
+                                    ${swap.aMeetupConfirmed ? '✅ 已確認' : '⚠️ 尚未確認'}
                                 </span>
                             </div>
                             <div class="info-row">
                                 <span class="label">${swap.bUserDisplayName || '使用者B'}：</span>
                                 <span class="${swap.bMeetupConfirmed ? 'confirmed' : 'not-confirmed'}">
-                                    ${swap.bMeetupConfirmed ? '✅ 已確認' : '尚未確認'}
+                                    ${swap.bMeetupConfirmed ? '✅ 已確認' : '⚠️ 尚未確認'}
                                 </span>
                             </div>
                         </div>
@@ -1920,14 +1943,14 @@
                 document.getElementById('aMeetupStatus').textContent = '✅ 已確認';
             } else {
                 document.getElementById('aMeetupStatus').className = 'not-confirmed';
-                document.getElementById('aMeetupStatus').textContent = '尚未確認';
+                document.getElementById('aMeetupStatus').textContent = '⚠️ 尚未確認';
             }
             if (swap.bMeetupConfirmed) {
                 document.getElementById('bMeetupStatus').className = 'confirmed';
                 document.getElementById('bMeetupStatus').textContent = '✅ 已確認';
             } else {
                 document.getElementById('bMeetupStatus').className = 'not-confirmed';
-                document.getElementById('bMeetupStatus').textContent = '尚未確認';
+                document.getElementById('bMeetupStatus').textContent = '⚠️ 尚未確認';
             }
             
             // 顯示確認按鈕（如果當前用戶還未確認）
@@ -1991,14 +2014,14 @@
                             document.getElementById('aMeetupStatus').textContent = '✅ 已確認';
                         } else {
                             document.getElementById('aMeetupStatus').className = 'not-confirmed';
-                            document.getElementById('aMeetupStatus').textContent = '尚未確認';
+                            document.getElementById('aMeetupStatus').textContent = '⚠️ 尚未確認';
                         }
                         if (swap.bMeetupConfirmed) {
                             document.getElementById('bMeetupStatus').className = 'confirmed';
                             document.getElementById('bMeetupStatus').textContent = '✅ 已確認';
                         } else {
                             document.getElementById('bMeetupStatus').className = 'not-confirmed';
-                            document.getElementById('bMeetupStatus').textContent = '尚未確認';
+                            document.getElementById('bMeetupStatus').textContent = '⚠️ 尚未確認';
                         }
                         
                         // 顯示確認按鈕（如果當前用戶還未確認）
