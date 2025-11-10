@@ -256,6 +256,38 @@ public class ListingService {
         return toDTO(listing, userId);
     }
 
+    public void delete(Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SESSION_USER_ID);
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        Listing listing = listingRepository.findById(id).orElseThrow(NotFoundException::new);
+        
+        // 檢查是否為自己的物品
+        if (!listing.getUserId().equals(userId)) {
+            throw new ForbiddenException();
+        }
+
+        // 檢查是否有 pending proposal 或正在交換中
+        boolean hasPendingProposal = proposalRepository
+                .findByListingId(id, PageRequest.of(0, 1))
+                .stream()
+                .anyMatch(p -> p.getStatus() == com.exchange.platform.entity.Proposal.Status.PENDING);
+        
+        if (hasPendingProposal) {
+            throw new ConflictException();
+        }
+
+        // 檢查狀態是否允許刪除 (只有 AVAILABLE 可以刪除)
+        if (listing.getStatus() != Listing.Status.AVAILABLE) {
+            throw new ConflictException();
+        }
+
+        // 執行刪除
+        listingRepository.delete(listing);
+    }
+
     // === 圖片處理相關方法 ===
     private String serializeImagePaths(List<String> imageFileNames) {
         System.out.println("DEBUG - serializeImagePaths(): 輸入參數: " + imageFileNames);

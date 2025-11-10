@@ -49,6 +49,12 @@ public class ListingController {
         return ResponseEntity.ok(dto);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id, HttpSession session) {
+        listingService.delete(id, session);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}/proposals")
     public ResponseEntity<java.util.List<com.exchange.platform.dto.ProposalDTO>> listProposalsByListing(@PathVariable Long id,
                                                                                                          @RequestParam(required = false) Integer page,

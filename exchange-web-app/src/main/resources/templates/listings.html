@@ -372,20 +372,46 @@
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
             animation: fadeIn 0.3s;
+            overflow: hidden; /* 由內容視窗自已滾動，外層不滾動以保中心對齊 */
+            padding: 24px; /* 四邊留白，仍保持置中 */
         }
         .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;            /* 簡潔置中 */
+            place-items: center;      /* 水平垂直置中 */
         }
         .modal-content {
             background: white;
             border-radius: 16px;
             padding: 30px;
             max-width: 500px;
-            width: 90%;
+            width: min(90%, 700px);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             animation: slideUp 0.3s;
+            max-height: 85vh; /* 限制高度避免超出視窗 */
+            overflow-y: auto; /* 內容過多時獨立滾動 */
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch; /* 行動裝置平滑滾動 */
+        }
+        /* 提案大視窗也套用滾動控制 */
+        #proposalModal .modal-content {
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        /* 自訂滾動條（僅支援 WebKit） */
+        .modal-content::-webkit-scrollbar {
+            width: 10px;
+        }
+        .modal-content::-webkit-scrollbar-track {
+            background: var(--surface-100);
+            border-radius: 10px;
+        }
+        .modal-content::-webkit-scrollbar-thumb {
+            background: var(--surface-300);
+            border-radius: 10px;
+            border: 2px solid var(--surface-100);
+        }
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: var(--surface-400);
         }
         .modal-header {
             display: flex;
