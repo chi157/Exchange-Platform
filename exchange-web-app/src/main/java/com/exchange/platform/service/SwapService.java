@@ -436,6 +436,22 @@ public class SwapService {
             throw new IllegalArgumentException("無效的配送方式");
         }
 
+        // 【防止競態條件】檢查是否已有配送方式提議
+        boolean isA = swap.getAUserId().equals(userId);
+        boolean isB = swap.getBUserId().equals(userId);
+        
+        // 如果已經有配送方式，檢查對方是否已經確認
+        if (swap.getDeliveryMethod() != null) {
+            boolean otherUserConfirmed = isA ? swap.getBDeliveryMethodConfirmed() : swap.getADeliveryMethodConfirmed();
+            
+            // 如果對方已經確認了不同的配送方式，不允許覆蓋
+            if (otherUserConfirmed) {
+                throw new IllegalArgumentException("對方已提議配送方式，請先確認或拒絕對方的提議");
+            }
+            
+            // 如果對方尚未確認，允許修改自己的提議
+        }
+
         // 獲取提議者的顯示名稱
         String userName = userRepository.findById(userId)
                 .map(user -> user.getDisplayName())
@@ -445,7 +461,6 @@ public class SwapService {
         swap.setDeliveryMethod(method);
         
         // 設置提議者為已確認，另一方為未確認
-        boolean isA = swap.getAUserId().equals(userId);
         if (isA) {
             swap.setADeliveryMethodConfirmed(true);
             swap.setBDeliveryMethodConfirmed(false);
