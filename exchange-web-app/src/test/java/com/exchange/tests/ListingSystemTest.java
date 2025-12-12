@@ -1,4 +1,4 @@
-﻿package com.exchange.tests;
+package com.exchange.tests;
 
 import com.exchange.platform.ExchangeWebAppApplication;
 import com.exchange.platform.entity.Listing;
