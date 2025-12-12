@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 系統完整性測試（System Integrity Test）
  * 
  * 測試目的：
