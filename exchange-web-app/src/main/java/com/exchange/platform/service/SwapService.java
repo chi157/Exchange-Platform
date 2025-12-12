@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -315,6 +316,8 @@ public class SwapService {
         
         // 判斷是新增還是修改
         boolean isNewMeetup = (swap.getMeetupLocation() == null || swap.getMeetupTime() == null);
+        // 記錄修改前是否雙方都已確認
+        boolean wasConfirmedByBoth = swap.getAMeetupConfirmed() && swap.getBMeetupConfirmed();
         
         swap.setMeetupLocation(location);
         swap.setMeetupTime(time);
@@ -328,7 +331,8 @@ public class SwapService {
         
         // 發送聊天室系統消息
         try {
-            String timeStr = time.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            String timeStr = time.format(formatter);
             String message;
             if (isNewMeetup) {
                 message = String.format("📍 %s 設置了面交資訊：\n地點：%s\n時間：%s", 
@@ -346,6 +350,34 @@ public class SwapService {
         } catch (Exception e) {
             // 記錄錯誤但不影響面交資訊保存
             System.err.println("Failed to send meetup system message: " + e.getMessage());
+        }
+        
+        // 如果是修改已確認的面交資訊，發送郵件通知給另一方
+        if (!isNewMeetup && wasConfirmedByBoth) {
+            try {
+                Long otherUserId = swap.getAUserId().equals(userId) ? swap.getBUserId() : swap.getAUserId();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                String timeStr = time.format(formatter);
+                
+                // 使用簡單的通知訊息，不獲取標題（避免複雜查詢）
+                String notificationContent = String.format(
+                    "面交資訊已修改，請重新確認。\n地點：%s\n時間：%s%s",
+                    location,
+                    timeStr,
+                    (notes != null && !notes.trim().isEmpty()) ? "\n備註：" + notes : ""
+                );
+                
+                emailNotificationService.createAndSendNotification(
+                    otherUserId,
+                    NotificationType.MEETUP_SCHEDULED,
+                    "Swap",
+                    swapId,
+                    notificationContent
+                );
+            } catch (Exception e) {
+                // 記錄錯誤但不影響面交資訊保存
+                System.err.println("Failed to send email notification: " + e.getMessage());
+            }
         }
         
         return toDTO(swap);
@@ -438,7 +470,6 @@ public class SwapService {
 
         // 【防止競態條件】檢查是否已有配送方式提議
         boolean isA = swap.getAUserId().equals(userId);
-        boolean isB = swap.getBUserId().equals(userId);
         
         // 如果已經有配送方式，檢查對方是否已經確認
         if (swap.getDeliveryMethod() != null) {
