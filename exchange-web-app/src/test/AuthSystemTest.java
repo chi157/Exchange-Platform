@@ -10,7 +10,7 @@
  * @author 陳欣妤（測試工程師）
  */
 
-package com.exchange.tests;
+package test;
 
 import com.exchange.platform.ExchangeWebAppApplication;
 import com.exchange.platform.dto.AuthResponse;
