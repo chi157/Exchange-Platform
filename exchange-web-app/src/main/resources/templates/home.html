@@ -265,14 +265,50 @@
             <h2>📧 需要協助？</h2>
             <p>如有任何問題，歡迎透過以下方式聯繫我們：</p>
             <div class="contact-info">
-                <p>📧 Email: support@exchangeplatform.com</p>
-                <p>⏰ 客服時間: 週一至週五 09:00-18:00</p>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="avatar" aria-hidden="true">陳</div>
+                        <div class="member">
+                            <div class="name">陳欣妤</div>
+                            <a class="email" href="mailto:114423020@cc.ncu.edu.tw">114423020@cc.ncu.edu.tw</a>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="avatar" aria-hidden="true">蕭</div>
+                        <div class="member">
+                            <div class="name">蕭筑云</div>
+                            <a class="email" href="mailto:114423037@cc.ncu.edu.tw">114423037@cc.ncu.edu.tw</a>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="avatar" aria-hidden="true">張</div>
+                        <div class="member">
+                            <div class="name">張謦麒</div>
+                            <a class="email" href="mailto:114423051@cc.ncu.edu.tw">114423051@cc.ncu.edu.tw</a>
+                        </div>
+                    </div>
+                    <div class="team-card">
+                        <div class="avatar" aria-hidden="true">廖</div>
+                        <div class="member">
+                            <div class="name">廖承偉</div>
+                            <a class="email" href="mailto:114423068@cc.ncu.edu.tw">114423068@cc.ncu.edu.tw</a>
+                        </div>
+                    </div>
+                </div>
+                <p class="service-hours">⏰ 客服時間：週一至週五 09:00–18:00</p>
             </div>
         </div>
 
         <div style="margin-top: 30px; text-align: center;">
             <a href="/ui/listings" class="btn-back">🚀 立即開始使用</a>
         </div>
+        
+        <footer class="site-footer">
+            <div class="footer-inner">
+                <span>© 2025 Exchange Platform 開發團隊</span>
+                <span>All rights reserved.</span>
+            </div>
+        </footer>
     </div>
 
     <style>
@@ -670,6 +706,75 @@
             font-weight: 600;
         }
 
+        /* 聯絡卡片樣式 */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+        }
+        .team-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .team-card:hover {
+            transform: translateY(-2px);
+            border-color: #ffffff;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            color: var(--brand-700);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+        }
+        .member {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .member .name {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .member .email {
+            color: #ffffff;
+            opacity: 0.95;
+            text-decoration: underline;
+            font-weight: 600;
+            word-break: break-all;
+        }
+        .service-hours {
+            margin-top: 20px;
+            opacity: 0.95;
+        }
+
+        /* 版權頁腳 */
+        .site-footer {
+            text-align: center;
+            color: var(--text-600);
+            font-size: 14px;
+            padding: 24px 0 8px;
+        }
+        .site-footer .footer-inner {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .btn-back {
             display: inline-block;
             padding: 14px 32px;
@@ -707,6 +812,9 @@
             header nav {
                 flex-wrap: wrap;
                 justify-content: center;
+            }
+            .team-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
