@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -53,18 +54,22 @@ public class SwapController {
                 return ResponseEntity.badRequest().body(Map.of("error", "時間不能為空"));
             }
             
-            // 嘗試解析多種日期格式
+            // 解析日期時間 - 支援 YYYY-MM-DDTHH:mm:ss 格式
             LocalDateTime time;
             try {
-                // 嘗試 ISO_DATE_TIME (2024-11-07T14:30:00.000Z)
-                if (timeStr.contains("Z") || timeStr.contains("+")) {
-                    time = LocalDateTime.parse(timeStr.substring(0, 19));
-                } else {
-                    // ISO_LOCAL_DATE_TIME (2024-11-07T14:30:00 or 2024-11-07T14:30)
-                    time = LocalDateTime.parse(timeStr);
-                }
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                time = LocalDateTime.parse(timeStr, formatter);
             } catch (Exception e) {
-                return ResponseEntity.badRequest().body(Map.of("error", "時間格式錯誤"));
+                // 容錯：嘗試 ISO 格式
+                try {
+                    if (timeStr.contains("Z") || timeStr.contains("+")) {
+                        time = LocalDateTime.parse(timeStr.substring(0, 19));
+                    } else {
+                        time = LocalDateTime.parse(timeStr);
+                    }
+                } catch (Exception ex) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "時間格式錯誤"));
+                }
             }
             
             SwapDTO result = swapService.setMeetupInfo(id, location, time, notes, session);

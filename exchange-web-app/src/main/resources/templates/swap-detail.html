@@ -1446,7 +1446,8 @@
                 return;
             }
             
-            const time = new Date(timeValue).toISOString().substring(0, 19);
+            // 直接使用 datetime-local 的值，格式為 YYYY-MM-DDTHH:mm
+            const time = timeValue + ':00'; // 加上秒數成為 YYYY-MM-DDTHH:mm:ss
             
             try {
                 const meetupResponse = await fetch(`/api/swaps/${swapId}/meetup`, {
