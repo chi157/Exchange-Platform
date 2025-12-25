@@ -131,6 +131,12 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+        .google-note {
+            color: var(--text-600);
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -170,6 +176,10 @@
             </svg>
             <span style="vertical-align: middle;">使用 Google 帳號登入</span>
         </button>
+
+        <div class="google-note">
+            注意：Google 登入僅支援 localhost。Google 不接受沒有網域（僅 IP）的回呼網址，因此以 IP 存取伺服器時無法使用 Google 登入；若在本機開發 (localhost) 則可使用。
+        </div>
 
         <div class="auth-footer">
             還沒有帳號？<a th:href="@{/ui/auth/register}">立即註冊</a>
