@@ -133,8 +133,8 @@ mysql --version
 ### 📥 步驟 1：下載專案程式碼
 
 ```bash
-# 克隆專案儲存庫
-git clone https://github.com/your-org/Exchange-Platform.git
+# clone專案儲存庫
+git clone https://github.com/chi157/Exchange-Platform.git
 
 # 進入專案目錄
 cd Exchange-Platform/exchange-web-app
@@ -233,7 +233,7 @@ spring:
     from-email: your_email@gmail.com   # ⚠️ 替換為寄件者信箱
 ```
 
-> **注意**：若不需測試郵件功能，可跳過此步驟，系統仍可正常運行其他功能。
+> **注意**：若不需測試郵件功能，可跳過此步驟，系統仍可正常運行其他功能。且Google因安全性限制請使用有網域名稱之伺服器或localhost。
 
 ---
 
