@@ -5,6 +5,8 @@
 
 *   **核心理念**：以物易物 (Barter only)、無金流介入、完整的物流追蹤與狀態管理。
 *   **關鍵功能**：第三方登入 (Google OAuth2)、小卡刊登管理、交換提案鎖定機制 (Row-level locking)、即時聊天協商、雙向物流追蹤 (7-11/面交)。
+*   **系統Demo影片**：![Youbube連結](https://www.youtube.com/watch?v=eUCjgAOF_o0)
+
 
 ---
 
